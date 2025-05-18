@@ -1,4 +1,4 @@
-import { createUserUseCase } from '@/lib/modules/user/applications/create-user';
+import { createUserUseCase } from '@/lib/modules/user/applications/user_app';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
