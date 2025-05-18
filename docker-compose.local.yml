@@ -1,0 +1,16 @@
+services:
+  postgres:
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+
+  # main-app
+  main-app:
+    ports:
+      - "3000:3000" 
+    volumes:
+      - .:/app  
+
+volumes:
+  pgdata_local:
