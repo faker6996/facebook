@@ -1,4 +1,4 @@
-import { userRepository } from "../repositories/user-repo";
+import { userRepository } from "../repositories/user_repo";
 
 export const createUserUseCase = {
   async execute(data: { name: string }) {
