@@ -1,11 +1,11 @@
-import { userRepository } from "../repositories/user_repo";
+import { userRepo } from "../repositories/user_repo";
 
-export const createUserUseCase = {
+export const userApp = {
   async execute(data: { name: string }) {
     if (!data.name || data.name.length < 2) {
       throw new Error('Tên không hợp lệ');
     }
 
-    return await userRepository.create(data);
+    return await userRepo.create(data);
   }
 };
