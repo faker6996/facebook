@@ -1,5 +1,7 @@
 "use client";
 
-export default function HomePage() {
-  return <h1>Chào mừng đến với đăng nhập 🏡</h1>;
+import LoginContainer from "@/components/login/LoginContainer";
+
+export default function LoginPage() {
+  return <LoginContainer></LoginContainer>;
 }
