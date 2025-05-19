@@ -7,5 +7,10 @@ export const userApp = {
     }
 
     return await userRepo.create(data);
+  },
+
+  // ✅ Hàm get: lấy tất cả hoặc theo id
+  async getAllOrGetById(id?: number) {
+    return await userRepo.getAllOrGetById(id);
   }
 };

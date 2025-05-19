@@ -16,7 +16,7 @@ export async function middleware(req: NextRequest) {
     withCors,
     withRateLimit,
     withLogger,
-    withAuth,
+    // withAuth,
   ]);
 
   if (req.nextUrl.pathname.startsWith('/admin')) {
