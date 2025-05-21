@@ -11,5 +11,8 @@ export const userApp = {
 
   async getAll() {
     return await userRepo.getAll();
-  }
+  },
+  // ✅ Hàm get: lấy tất cả hoặc theo id
+  async getAllOrGetById(id?: number) {
+    return await userRepo.getAllOrGetById(id);}
 };
