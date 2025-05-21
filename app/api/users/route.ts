@@ -12,12 +12,17 @@ export async function POST(req: NextRequest) {
 }
 
 
+// ✅ Thêm hàm GET
 export async function GET(req: NextRequest) {
+  
   try {
-    debugger 
-    const users = await userApp.getAll(); // giả định bạn có method này
-    return NextResponse.json(users, { status: 200 });
+    const { searchParams } = new URL(req.url);
+    const idParam = searchParams.get('id');
+    const id = idParam ? parseInt(idParam, 10) : undefined;
+
+    const result = await userApp.getAllOrGetById(id);
+    return NextResponse.json(result, { status: 200 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
