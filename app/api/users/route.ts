@@ -10,3 +10,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
+
+
+export async function GET(req: NextRequest) {
+  try {
+    debugger 
+    const users = await userApp.getAll(); // giả định bạn có method này
+    return NextResponse.json(users, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
