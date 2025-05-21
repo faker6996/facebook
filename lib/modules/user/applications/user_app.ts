@@ -7,5 +7,9 @@ export const userApp = {
     }
 
     return await userRepo.create(data);
+  },
+
+  async getAll() {
+    return await userRepo.getAll();
   }
 };
