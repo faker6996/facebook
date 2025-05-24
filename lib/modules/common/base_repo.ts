@@ -233,7 +233,6 @@ export class BaseRepo {
       allowedOrderFields?: string[];
     }
   ): Promise<T | null> {
-    debugger;
     const allowed = options?.allowedOrderFields ?? ["id", "created_at"];
     const orderBy = options?.orderBy ?? [];
     const orderMap = options?.orderDirections ?? {};

@@ -7,7 +7,6 @@ export const ssoFacebookApp = {
     return await ssoFacebookRepo.getAll();
   },
   async handleAfterSso(userInfo: UserInfoSso): Promise<User> {
-    debugger;
     // check exits user
     const user = await baseRepo.getByField<User>(UserModel.table, UserModel.columns.email, userInfo.email);
 
