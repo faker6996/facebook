@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { callApi } from '@/lib/utils/api-client';
 import { User } from '@/lib/models/user';
+import { HTTP_METHOD_ENUM } from '@/lib/constants/enum';
+import { API_ROUTES } from '@/lib/constants/api-routes';
 
 
 export default function HomeContainer() {
@@ -10,19 +12,18 @@ export default function HomeContainer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        debugger
-        const res = await callApi<User[]>('/api/users', 'GET');
-        setUsers(res);
-      } catch (err) {
-        console.error('Lỗi lấy danh sách user', err);
-      } finally {
-        setLoading(false);
-      }
+    debugger
+    const fetchUserProfile = async () => {
+      const res = await callApi<User>(
+        API_ROUTES.AUTH.ME,
+        HTTP_METHOD_ENUM.GET
+      );
+    
+      return res;
     };
-
-    fetchUsers();
+    
+    const user = fetchUserProfile();
+    //setUsers([...user])
   }, []);
 
   return (

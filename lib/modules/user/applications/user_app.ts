@@ -1,18 +1,29 @@
-import { userRepo } from "../repositories/user_repo";
+import { GoogleUserInfo } from "@/lib/models/google_user_info";
+import { UserRepo } from "../repositories/user_repo";
+import { User } from "@/lib/models/user";
 
-export const userApp = {
-  async execute(data: { name: string }) {
-    if (!data.name || data.name.length < 2) {
-      throw new Error('Tên không hợp lệ');
-    }
 
-    return await userRepo.create(data);
-  },
+const userRepo = new UserRepo();
 
+export const userService = {
   async getAll() {
     return await userRepo.getAll();
   },
-  // ✅ Hàm get: lấy tất cả hoặc theo id
+
   async getAllOrGetById(id?: number) {
-    return await userRepo.getAllOrGetById(id);}
+    return await userRepo.getAllOrGetById(id);
+  },
+
+  async findOrCreateUser(user: GoogleUserInfo) {
+    const existingUser = await userRepo.getUserByEmail(user.email);
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const userData = userRepo.mapGoogleUserToUser(user); // Nếu bạn khai báo static: UserDAO.mapGoogleUserToUser(user)
+    const newUser = await userRepo.create(userData);
+    return newUser;
+  },
+   
+  
 };
