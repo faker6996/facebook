@@ -8,7 +8,6 @@ export const userRepo = {
   },
 
   async getAll(): Promise<User[]> {
-    debugger;
     const res = await query("SELECT * FROM users ORDER BY created_at DESC");
     return res.rows as User[];
   },
