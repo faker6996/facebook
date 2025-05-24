@@ -11,10 +11,9 @@ import {
 import { withRateLimit } from './lib/middlewares/rate-limit';
 
 export async function middleware(req: NextRequest) {
-  debugger
   let res = await middlewarePipeline(req, [
     withCors,
-    withRateLimit,
+    // withRateLimit,
     withLogger,
     withAuth,
   ]);
