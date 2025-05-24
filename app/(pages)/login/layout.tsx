@@ -1,5 +1,5 @@
-import LogginLayout from "@/app/layouts/LogginLayout";
+import LoginLayout from "@/app/layouts/LoginLayout";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <LogginLayout>{children}</LogginLayout>;
+  return <LoginLayout>{children}</LoginLayout>;
 }
