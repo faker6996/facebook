@@ -1,13 +1,11 @@
-export interface Message {
+export class Message {
   id?: number;
   conversation_id?: string;
   sender_id?: string;
   content?: string;
   message_type?: "text" | "image" | "file";
   created_at?: string;
-}
 
-export class MessageModel {
   static table = "messages";
   static columns = {
     id: "id",
@@ -17,4 +15,13 @@ export class MessageModel {
     message_type: "message_type",
     created_at: "created_at",
   };
+
+  constructor(data: Partial<Message> = {}) {
+    this.id = data.id;
+    this.conversation_id = data.conversation_id;
+    this.sender_id = data.sender_id;
+    this.content = data.content;
+    this.message_type = data.message_type;
+    this.created_at = data.created_at;
+  }
 }
