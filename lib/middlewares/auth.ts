@@ -7,7 +7,6 @@ export async function withAuth(req: NextRequest, res: NextResponse): Promise<Nex
 
   const isPublic = PUBLIC_ROUTES.some((path) => req.nextUrl.pathname.startsWith(path));
   const token = req.cookies.get('access_token')?.value;
-  console.log("Cookie from client:", req.cookies.get('access_token')?.value);
 
 
   if (!token && !isPublic) {
