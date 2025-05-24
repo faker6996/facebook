@@ -1,12 +1,10 @@
-export interface Attachment {
+export class Attachment {
   id?: number;
   message_id?: string;
   file_url?: string;
   file_type?: string;
   file_size?: number;
-}
 
-export class AttachmentModel {
   static table = "attachments";
   static columns = {
     id: "id",
@@ -15,4 +13,12 @@ export class AttachmentModel {
     file_type: "file_type",
     file_size: "file_size",
   };
+
+  constructor(data: Partial<Attachment> = {}) {
+    this.id = data.id;
+    this.message_id = data.message_id;
+    this.file_url = data.file_url;
+    this.file_type = data.file_type;
+    this.file_size = data.file_size;
+  }
 }

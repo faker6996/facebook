@@ -1,12 +1,10 @@
-export interface MessageStatus {
+export class MessageStatus {
   id?: number;
   message_id?: string;
   user_id?: string;
   status?: "sent" | "delivered" | "seen";
   updated_at?: string;
-}
 
-export class MessageStatusModel {
   static table = "message_statuses";
   static columns = {
     id: "id",
@@ -15,4 +13,12 @@ export class MessageStatusModel {
     status: "status",
     updated_at: "updated_at",
   };
+
+  constructor(data: Partial<MessageStatus> = {}) {
+    this.id = data.id;
+    this.message_id = data.message_id;
+    this.user_id = data.user_id;
+    this.status = data.status;
+    this.updated_at = data.updated_at;
+  }
 }
