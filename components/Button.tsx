@@ -1,6 +1,6 @@
 import React from "react";
-import classNames from "classnames";
-import { VARIANT_STYLES, SIZE_STYLES } from "@/lib/utils/buttonStyles";
+import { VARIANT_STYLES, SIZE_STYLES } from "@/lib/constants/constants_ui.ts/buttonStyles";
+import { cn } from "@/lib/utils/cn";
 
 // Khai báo kiểu cho props
 interface CustomButtonProps {
@@ -41,7 +41,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
-      className={classNames(
+      className={cn(
         baseStyles,
         variantStyle,
         sizeStyle,
