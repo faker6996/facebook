@@ -6,6 +6,9 @@ import { User } from "@/lib/models/user";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import Input from "../ui/Input";
+import Alert from "../ui/Alert";
+import Avatar from "../ui/Avatar";
+import Breadcrumb from "../ui/Breadcrumb";
 
 export default function HomeContainer() {
   const [users, setUsers] = useState<User[]>([]);
@@ -40,6 +43,22 @@ export default function HomeContainer() {
               Gửi
             </button>
           </form>
+
+          <Alert variant="success" title="Đăng nhập thất bại" description="Sai tên đăng nhập hoặc mật khẩu." />
+
+          <Avatar src="https://i.pravatar.cc/150" fallback="AB" size="md" />
+
+          <Avatar fallback="TVB" size="lg" className="bg-blue-200 text-blue-800" />
+
+          <Breadcrumb
+            items={[
+              { label: "Trang chủ", href: "/" },
+              { label: "Tài khoản", href: "/account" },
+              { label: "Thông tin cá nhân" }, // không có href = đang ở đây
+            ]}
+          />
+
+          <p className="text-muted-foreground hover:text-foreground">Test màu text-muted</p>
         </div>
       ) : (
         <ul className="list-disc ml-5 space-y-1">
