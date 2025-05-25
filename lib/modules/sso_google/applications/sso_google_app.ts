@@ -1,6 +1,7 @@
 import { User, UserInfoSso } from "@/lib/models/user";
 import { baseRepo } from "../../common/base_repo";
 import { ssoGoogleRepo } from "../repositories/sso_google_app";
+import { hashPassword } from "@/lib/utils/hash";
 
 export const ssoGoogleApp = {
   async getAll() {
@@ -19,7 +20,7 @@ export const ssoGoogleApp = {
     newUser.name = userInfo.name;
     newUser.is_sso = true;
     newUser.user_name = userInfo.email;
-    newUser.password = userInfo.email + "2025";
+    newUser.password = newUser.password = await hashPassword(userInfo.email + "2025");
 
     // Nếu chưa tồn tại → tạo user mới
     // u.name = ;
