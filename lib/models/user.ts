@@ -1,5 +1,5 @@
 export class User {
-  id: number;
+  id?: number;
   name: string;
   user_name: string;
   password: string;
@@ -21,11 +21,11 @@ export class User {
     phone_number: "phone_number",
     address: "address",
     created_at: "created_at",
-    is_sso: "is_sso"
+    is_sso: "is_sso",
   };
 
   constructor(data: Partial<User> = {}) {
-    this.id = data.id ?? 0; // hoặc null nếu chưa có
+    this.id = data.id; // hoặc null nếu chưa có
     this.name = data.name ?? "";
     this.user_name = data.user_name ?? "";
     this.password = data.password ?? "";
@@ -37,7 +37,6 @@ export class User {
     this.is_sso = data.is_sso;
   }
 }
-
 
 export interface UserInfoSso {
   id: string;

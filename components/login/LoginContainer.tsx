@@ -5,6 +5,7 @@ import { GoogleIcon, FacebookIcon } from "../icons/SocialIcons";
 import Link from "next/link";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
+import CustomButton from "../Button";
 
 interface SsoReq {
   redirectUrl: string;
@@ -89,23 +90,12 @@ export default function LoginContainer() {
 
           {/* Social Buttons */}
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <button
-              type="button"
-              onClick={() => handleLoginWithGoogle()}
-              className="flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-neutral-700 transition"
-            >
-              <GoogleIcon className="w-5 h-5" />
+            <CustomButton onClick={() => handleLoginWithGoogle()} icon={GoogleIcon}>
               Google
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleLoginWithFacebook()}
-              className="flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-neutral-700 transition"
-            >
-              <FacebookIcon className="w-5 h-5" />
+            </CustomButton>
+            <CustomButton onClick={() => handleLoginWithFacebook()} icon={FacebookIcon}>
               Facebook
-            </button>
+            </CustomButton>
           </div>
 
           {/* Bottom Trial Link */}

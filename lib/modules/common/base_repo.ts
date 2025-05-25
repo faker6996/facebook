@@ -16,7 +16,8 @@ export class BaseRepo {
   // 4. Nếu không có field nào hợp lệ → throw lỗi
 
   async insert<T>(data: Partial<T>, returning: string = "*"): Promise<T> {
-    // Lấy tên bảng từ static property trong class
+    // Lấy tên bảng từ static property trong class'
+    debugger;
     const table = (data.constructor as any).table;
     if (!table) throw new Error("Missing static 'table' on model class.");
 
