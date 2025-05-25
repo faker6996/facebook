@@ -1,8 +1,8 @@
 export class User {
   id?: number;
-  name: string;
-  user_name: string;
-  password: string;
+  name?: string;
+  user_name?: string;
+  password?: string;
   email?: string;
   avatar_url?: string;
   phone_number?: string;
@@ -25,10 +25,10 @@ export class User {
   };
 
   constructor(data: Partial<User> = {}) {
-    this.id = data.id; // hoặc null nếu chưa có
-    this.name = data.name ?? "";
-    this.user_name = data.user_name ?? "";
-    this.password = data.password ?? "";
+    this.id = data.id;
+    this.name = data.name;
+    this.user_name = data.user_name;
+    this.password = data.password;
     this.email = data.email;
     this.avatar_url = data.avatar_url;
     this.phone_number = data.phone_number;
