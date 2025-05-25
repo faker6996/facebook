@@ -5,6 +5,7 @@ import { callApi } from "@/lib/utils/api-client";
 import { User } from "@/lib/models/user";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { API_ROUTES } from "@/lib/constants/api-routes";
+import Input from "../ui/Input";
 
 export default function HomeContainer() {
   const [users, setUsers] = useState<User[]>([]);
@@ -21,12 +22,25 @@ export default function HomeContainer() {
     //setUsers([...user])
   }, []);
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert("Đã gửi!");
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Chào mừng đến với Home 🏡</h1>
 
       {loading ? (
-        <p>Đang tải dữ liệu...</p>
+        <div>
+          <p>Đang tải dữ liệu...</p>
+          <form onSubmit={handleSubmit} className="max-w-sm mx-auto space-y-4 mt-10">
+            <Input name="username" label="Tên người dùng" placeholder="Nhập tên..." required />
+            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+              Gửi
+            </button>
+          </form>
+        </div>
       ) : (
         <ul className="list-disc ml-5 space-y-1">
           {users.map((user) => (
