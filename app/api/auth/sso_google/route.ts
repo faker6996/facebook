@@ -57,7 +57,6 @@ export async function GET(req: Request) {
         Authorization: `Bearer ${tokenData.access_token}`,
       },
     });
-
     // 4. Kiểm tra/tạo user trong DB
     const user = await ssoGoogleApp.handleAfterSso(userInfo);
     // Create JWT
