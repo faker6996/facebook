@@ -1,5 +1,5 @@
 import React from "react";
-import { VARIANT_STYLES, SIZE_STYLES } from "@/lib/constants/constants_ui.ts/buttonStyles";
+import { VARIANT_STYLES_BTN, SIZE_STYLES_BTN } from "@/lib/constants/constants-ui/button";
 import { cn } from "@/lib/utils/cn";
 
 // Khai báo kiểu cho props
@@ -9,8 +9,8 @@ interface ButtonProps {
   type?: "button" | "submit" | "reset";
   icon?: React.ComponentType<{ className?: string }>;
   iconRight?: React.ComponentType<{ className?: string }>;
-  variant?: keyof typeof VARIANT_STYLES;
-  size?: keyof typeof SIZE_STYLES;
+  variant?: keyof typeof VARIANT_STYLES_BTN;
+  size?: keyof typeof SIZE_STYLES_BTN;
   className?: string;
   disabled?: boolean;
   loading?: boolean;
@@ -34,8 +34,8 @@ const Button: React.FC<ButtonProps> = ({
   const baseStyles =
     "inline-flex items-center justify-center gap-2 rounded-md font-medium transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500";
 
-  const variantStyle = VARIANT_STYLES[variant] || VARIANT_STYLES.default;
-  const sizeStyle = SIZE_STYLES[size] || SIZE_STYLES.md;
+  const variantStyle = VARIANT_STYLES_BTN[variant] || VARIANT_STYLES_BTN.default;
+  const sizeStyle = SIZE_STYLES_BTN[size] || SIZE_STYLES_BTN.md;
 
   return (
     <button
