@@ -6,6 +6,7 @@ import { User } from "@/lib/models/user";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import Input from "../ui/Input";
+import Alert from "../ui/Alert";
 
 export default function HomeContainer() {
   const [users, setUsers] = useState<User[]>([]);
@@ -40,6 +41,8 @@ export default function HomeContainer() {
               Gửi
             </button>
           </form>
+
+          <Alert variant="success" title="Đăng nhập thất bại" description="Sai tên đăng nhập hoặc mật khẩu." />
         </div>
       ) : (
         <ul className="list-disc ml-5 space-y-1">
