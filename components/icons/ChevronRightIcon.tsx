@@ -3,7 +3,7 @@ import React from "react";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {}
 
-const ChevronRight = (props: IconProps) => (
+const ChevronRightIcon = (props: IconProps) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -18,4 +18,4 @@ const ChevronRight = (props: IconProps) => (
   </svg>
 );
 
-export default ChevronRight;
+export default ChevronRightIcon;
