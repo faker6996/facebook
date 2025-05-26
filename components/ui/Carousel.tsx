@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft } from "../icons/ArrowLeft";
-import { ArrowRight } from "../icons/ArrowRight";
+import { ArrowLeftIcon } from "../icons/ArrowLeft";
+import { ArrowRightIcon } from "../icons/ArrowRight";
 import Button from "./Button";
 
 interface CarouselProps {
@@ -33,7 +33,7 @@ export function Carousel({ children }: CarouselProps) {
         onClick={scrollPrev}
         variant="outline"
         size="icon"
-        icon={ArrowLeft}
+        icon={ArrowLeftIcon}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-full"
       />
 
@@ -41,7 +41,7 @@ export function Carousel({ children }: CarouselProps) {
         onClick={scrollNext}
         variant="outline"
         size="icon"
-        icon={ArrowRight}
+        icon={ArrowRightIcon}
         className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-full"
       />
     </div>

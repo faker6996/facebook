@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
-import { Check } from "../icons/CheckIcon";
+import { CheckIcon } from "../icons/CheckIcon";
 
 interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: React.ReactNode;
@@ -33,7 +33,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             isChecked ? "bg-primary border-primary" : "bg-background border-input"
           )}
         >
-          {isChecked && <Check className="w-4 h-4 text-white" />}
+          {isChecked && <CheckIcon className="w-4 h-4 text-white" />}
         </div>
         {label && <span className={cn("text-sm text-muted-foreground", labelClassName)}>{label}</span>}
       </label>

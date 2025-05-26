@@ -13,8 +13,11 @@ import Card from "./ui/Card";
 import { Carousel } from "./ui/Carousel";
 import Button from "./ui/Button";
 import { Checkbox } from "./ui/CheckBox";
+import { Combobox } from "./ui/Combobox";
 
 export default function UserGuild() {
+  const [selected, setSelected] = useState<string | undefined>("SvelteKit");
+  const frameworks = ["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro"];
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     alert("Đã gửi!");
@@ -67,7 +70,7 @@ export default function UserGuild() {
         </Carousel>
 
         <Checkbox label="Accept terms and conditions" defaultChecked />
-        <div className="peer"> tss</div>
+        <Combobox options={frameworks} value={selected} onChange={setSelected} placeholder="Search framework..." />
       </div>
     </div>
   );

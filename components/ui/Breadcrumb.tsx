@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 import Link from "next/link";
-import ChevronRight from "../icons/BreadcrumIcon";
+import ChevronRightIcon from "../icons/ChevronRightIcon";
 
 interface BreadcrumbItem {
   label: string;
@@ -31,7 +31,7 @@ export default function Breadcrumb({ items, className }: BreadcrumbProps) {
 
               {!isLast && (
                 <span className="px-1 text-muted-foreground" role="presentation">
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRightIcon className="h-4 w-4" />
                 </span>
               )}
             </li>
