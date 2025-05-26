@@ -18,9 +18,11 @@ import { MultiCombobox } from "./ui/MultiCombobox";
 import { Popover } from "./ui/Popover";
 import { DatePicker } from "./ui/DatePicker";
 import { Pagination } from "./ui/Pagination";
+import Switch from "./ui/Switch";
 
 export default function UserGuild() {
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selected_a, setSelected_a] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | undefined>("SvelteKit");
@@ -97,6 +99,7 @@ export default function UserGuild() {
         <DatePicker value={selectedDate} onChange={(date) => setSelectedDate(date)} placeholder="Pick a date" />
 
         <Pagination page={currentPage} totalPages={10} onChange={(p) => setCurrentPage(p)} size="sm" variant="ghost" />
+        <Switch checked={enabled} onCheckedChange={setEnabled} label="Airplane Mode" />
       </div>
     </div>
   );
