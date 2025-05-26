@@ -19,6 +19,8 @@ import { Popover } from "./ui/Popover";
 import { DatePicker } from "./ui/DatePicker";
 import { Pagination } from "./ui/Pagination";
 import Switch from "./ui/Switch";
+import { Tabs } from "./ui/Tab";
+import { Tooltip } from "./ui/Tooltip";
 
 export default function UserGuild() {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -100,6 +102,38 @@ export default function UserGuild() {
 
         <Pagination page={currentPage} totalPages={10} onChange={(p) => setCurrentPage(p)} size="sm" variant="ghost" />
         <Switch checked={enabled} onCheckedChange={setEnabled} label="Airplane Mode" />
+
+        <Tabs
+          defaultValue="account"
+          tabs={[
+            {
+              label: "Account",
+              value: "account",
+              content: (
+                <div>
+                  <h3 className="text-lg font-semibold">Account</h3>
+                  <p className="text-muted-foreground text-sm mb-4">Make changes to your account here.</p>
+                  {/* ...form fields */}
+                </div>
+              ),
+            },
+            {
+              label: "Password",
+              value: "password",
+              content: (
+                <div>
+                  <h3 className="text-lg font-semibold">Password</h3>
+                  <p className="text-muted-foreground text-sm mb-4">Change your password here.</p>
+                  {/* ...form fields */}
+                </div>
+              ),
+            },
+          ]}
+        />
+
+        <Tooltip content="This is a tooltip">
+          <button className="px-3 py-1 bg-muted rounded">Hover me</button>
+        </Tooltip>
       </div>
     </div>
   );
