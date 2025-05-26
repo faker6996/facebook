@@ -11,13 +11,12 @@ const config: Config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        "muted-foreground": "red",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondaryå))",
+          DEFAULT: "hsl(var(--secondary))", // fix typo: "secondaryå" => "secondary"
           foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
@@ -26,7 +25,7 @@ const config: Config = {
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          foreground: "hsl(var(--muted-foreground))", // ✅ fix lại đây
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
@@ -41,8 +40,15 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      fontFamily: {
+        sans: ["var(--font-sans)", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
+      },
+
       borderRadius: {
         lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
     },
   },
