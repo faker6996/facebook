@@ -12,6 +12,7 @@ import Breadcrumb from "./ui/Breadcrumb";
 import Card from "./ui/Card";
 import { Carousel } from "./ui/Carousel";
 import Button from "./ui/Button";
+import { Checkbox } from "./ui/CheckBox";
 
 export default function UserGuild() {
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,6 +65,9 @@ export default function UserGuild() {
             />
           ))}
         </Carousel>
+
+        <Checkbox label="Accept terms and conditions" defaultChecked />
+        <div className="peer"> tss</div>
       </div>
     </div>
   );
