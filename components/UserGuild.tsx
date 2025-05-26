@@ -14,8 +14,15 @@ import { Carousel } from "./ui/Carousel";
 import Button from "./ui/Button";
 import { Checkbox } from "./ui/CheckBox";
 import { Combobox } from "./ui/Combobox";
+import { MultiCombobox } from "./ui/MultiCombobox";
+import { Popover } from "./ui/Popover";
+import { DatePicker } from "./ui/DatePicker";
+import { Pagination } from "./ui/Pagination";
 
 export default function UserGuild() {
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selected_a, setSelected_a] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | undefined>("SvelteKit");
   const frameworks = ["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro"];
   const handleSubmit = (e: React.FormEvent) => {
@@ -71,6 +78,25 @@ export default function UserGuild() {
 
         <Checkbox label="Accept terms and conditions" defaultChecked />
         <Combobox options={frameworks} value={selected} onChange={setSelected} placeholder="Search framework..." />
+
+        <MultiCombobox
+          options={frameworks}
+          value={selected_a}
+          onChange={setSelected_a}
+          placeholder="Select frameworks"
+          maxSelected={3}
+          disabledOptions={["Angular"]}
+          showTags={true}
+          showClear={true}
+        />
+
+        <Popover trigger={<Button>Open</Button>}>
+          <div className="p-4 text-sm">This is popover content</div>
+        </Popover>
+
+        <DatePicker value={selectedDate} onChange={(date) => setSelectedDate(date)} placeholder="Pick a date" />
+
+        <Pagination page={currentPage} totalPages={10} onChange={(p) => setCurrentPage(p)} size="sm" variant="ghost" />
       </div>
     </div>
   );
