@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { callApi } from "@/lib/utils/api-client";
-import { User } from "@/lib/models/user";
-import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { API_ROUTES } from "@/lib/constants/api-routes";
-import Input from "../ui/Input";
-import Alert from "../ui/Alert";
-import Avatar from "../ui/Avatar";
-import Breadcrumb from "../ui/Breadcrumb";
+import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
+import { User } from "@/lib/models/user";
+import { callApi } from "@/lib/utils/api-client";
+import { useEffect, useState } from "react";
+import UserGuild from "../UserGuild";
 
 export default function HomeContainer() {
   const [users, setUsers] = useState<User[]>([]);
@@ -35,31 +32,7 @@ export default function HomeContainer() {
       <h1 className="text-xl font-bold mb-4">Chào mừng đến với Home 🏡</h1>
 
       {loading ? (
-        <div>
-          <p>Đang tải dữ liệu...</p>
-          <form onSubmit={handleSubmit} className="max-w-sm mx-auto space-y-4 mt-10">
-            <Input name="username" label="Tên người dùng" placeholder="Nhập tên..." required />
-            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-              Gửi
-            </button>
-          </form>
-
-          <Alert variant="success" title="Đăng nhập thất bại" description="Sai tên đăng nhập hoặc mật khẩu." />
-
-          <Avatar src="https://i.pravatar.cc/150" fallback="AB" size="md" />
-
-          <Avatar fallback="TVB" size="lg" className="bg-blue-200 text-blue-800" />
-
-          <Breadcrumb
-            items={[
-              { label: "Trang chủ", href: "/" },
-              { label: "Tài khoản", href: "/account" },
-              { label: "Thông tin cá nhân" }, // không có href = đang ở đây
-            ]}
-          />
-
-          <p className="text-muted-foreground hover:text-foreground">Test màu text-muted</p>
-        </div>
+        <UserGuild></UserGuild>
       ) : (
         <ul className="list-disc ml-5 space-y-1">
           {users.map((user) => (
