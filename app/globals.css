@@ -26,25 +26,25 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 24%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 210 40% 98%;
-    --card: 224 71% 4%;
-    --card-foreground: 210 40% 98%;
-    --border: 216 34% 22%;
-    --input: 216 34% 38%;
-    --primary: 210 100% 66%;
-    --primary-foreground: 222.2 47.4% 1.2%;
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-    --ring: 216 34% 42%;
+    --background: 222.2 84% 4.9%; /* #09090b */
+    --foreground: 210 40% 98%; /* #f9f9fa */
+    --muted: 217.2 32.6% 24%; /* #27272a */
+    --muted-foreground: 215 20.2% 65.1%; /* #a1a1aa */
+    --popover: 224 71% 4%; /* #09090b (hơi khác tí) */
+    --popover-foreground: 210 40% 98%; /* #f9f9fa */
+    --card: 224 71% 4%; /* #09090b */
+    --card-foreground: 210 40% 98%; /* #f9f9fa */
+    --border: 216 34% 22%; /* #27272a */
+    --input: 216 34% 38%; /* #52525b */
+    --primary: 210 100% 66%; /* #3b82f6 */
+    --primary-foreground: 222.2 47.4% 1.2%; /* #0a0a0a */
+    --secondary: 222.2 47.4% 11.2%; /* #1a1a1a */
+    --secondary-foreground: 210 40% 98%; /* #f9f9fa */
+    --accent: 216 34% 17%; /* #23272f */
+    --accent-foreground: 210 40% 98%; /* #f9f9fa */
+    --destructive: 0 62.8% 30.6%; /* #b91c1c */
+    --destructive-foreground: 0 85.7% 97.3%; /* #fff0f0 */
+    --ring: 216 34% 42%; /* #6366f1 */
   }
 }
 
