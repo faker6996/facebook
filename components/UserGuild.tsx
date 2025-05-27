@@ -21,8 +21,10 @@ import { Pagination } from "./ui/Pagination";
 import Switch from "./ui/Switch";
 import { Tabs } from "./ui/Tab";
 import { Tooltip } from "./ui/Tooltip";
+import { Sheet } from "./ui/Sheet";
 
 export default function UserGuild() {
+  const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [enabled, setEnabled] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -134,6 +136,22 @@ export default function UserGuild() {
         <Tooltip content="This is a tooltip">
           <button className="px-3 py-1 bg-muted rounded">Hover me</button>
         </Tooltip>
+
+        <Button
+        className="px-4 py-2 rounded bg-blue-600 text-white"
+        onClick={() => setOpen(true)}
+      >
+        Open Sheet
+      </Button>
+      <Sheet
+        open={open}
+        onOpenChange={setOpen}
+        side="right" // "left", "top", "bottom"
+        title="Sheet Demo"
+        description="Trượt mượt mà giống Shadcn UI"
+      >
+        <p>Nội dung bất kỳ tại đây.</p>
+      </Sheet>
       </div>
     </div>
   );
