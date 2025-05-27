@@ -12,6 +12,7 @@ interface ButtonProps {
   variant?: keyof typeof VARIANT_STYLES_BTN;
   size?: keyof typeof SIZE_STYLES_BTN;
   className?: string;
+  iConClassName?: string;
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
@@ -27,6 +28,7 @@ const Button: React.FC<ButtonProps> = ({
   variant = "default",
   size = "md",
   className = "",
+  iConClassName = "",
   disabled = false,
   loading = false,
   fullWidth = false,
@@ -57,7 +59,7 @@ const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
       ) : (
-        Icon && <Icon className="w-5 h-5" />
+        Icon && <Icon className={iConClassName ? iConClassName : "w-6 h-6"} />
       )}
       {!loading && children}
       {!loading && IconRight && <IconRight className="w-5 h-5" />}
