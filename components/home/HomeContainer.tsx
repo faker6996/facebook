@@ -6,6 +6,7 @@ import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { useEffect, useState } from "react";
 import UserGuild from "../UserGuild";
+import Header from "../Layout/Header";
 
 export default function HomeContainer() {
   const [users, setUsers] = useState<User[]>([]);
@@ -28,20 +29,23 @@ export default function HomeContainer() {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Chào mừng đến với Home 🏡</h1>
+    <>
+      <Header />
+      <div className="p-4">
+        <h1 className="text-xl font-bold mb-4">Chào mừng đến với Home 🏡</h1>
 
-      {loading ? (
-        <UserGuild></UserGuild>
-      ) : (
-        <ul className="list-disc ml-5 space-y-1">
-          {users.map((user) => (
-            <li key={user.id}>
-              {user.name} {user.email && `- ${user.email}`}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+        {loading ? (
+          <UserGuild></UserGuild>
+        ) : (
+          <ul className="list-disc ml-5 space-y-1">
+            {users.map((user) => (
+              <li key={user.id}>
+                {user.name} {user.email && `- ${user.email}`}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }

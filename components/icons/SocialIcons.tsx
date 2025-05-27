@@ -18,8 +18,13 @@ export const GoogleIcon: React.FC<IconProps> = (props) => (
 );
 
 export const FacebookIcon: React.FC<IconProps> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24" height="24" {...props}>
-    <path fill="#1877F2" d="M24 1C11.85 1 1.5 11.35 1.5 23.5S11.85 46 24 46s22.5-10.35 22.5-22.5S36.15 1 24 1z" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 48 48"
+    fill="none"
+    {...props} // nhận className, style, onClick... từ ngoài
+  >
+    <circle cx="24" cy="24" r="23.5" fill="#1877F2" />
     <path
       fill="#FFF"
       d="M26.67 35.56v-9.67h3.23l.49-3.78h-3.72v-2.42c0-1.1.31-1.85 1.91-1.85h2.04V14.1c-.35-.05-1.54-.15-2.93-.15-2.9 0-4.89 1.77-4.89 5.02v2.8H19v3.78h3.8v9.67h3.87z"
