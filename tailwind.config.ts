@@ -50,6 +50,9 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionTimingFunction: {
+        'soft': 'cubic-bezier(0.25, 1, 0.5, 1)', // giống smooth slide của iOS
+      },
     },
   },
   plugins: [],
