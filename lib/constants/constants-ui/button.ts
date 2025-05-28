@@ -5,7 +5,6 @@ export const VARIANT_STYLES_BTN = {
   success: "bg-green-600 text-white border border-green-600 hover:bg-green-700",
   danger: "bg-red-600 text-white border border-red-600 hover:bg-red-700",
   ghost: "bg-transparent text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-700 border border-transparent",
-  circle: "rounded-full flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white",
 };
 
 export const SIZE_STYLES_BTN = {
@@ -13,5 +12,5 @@ export const SIZE_STYLES_BTN = {
   md: "px-4 py-2 text-sm",
   lg: "px-5 py-3 text-base",
   smx: "px-3.5 py-1.5 text-[13px]",
-  icon: "w-9 h-9 p-0", // 👈 Nút tròn
+  icon: "w-10 h-10 p-0 rounded-full", // 👈 Nút tròn
 };
