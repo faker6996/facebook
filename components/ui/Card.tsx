@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils/cn";
 interface CardProps {
   title?: string;
   description?: string;
-  content?: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  children?: React.ReactNode;
 }
 
-const Card = ({ title, description, content, footer, className }: CardProps) => {
+const Card = ({ title, description, children, footer, className }: CardProps) => {
   return (
     <div className={cn("rounded-xl border bg-card text-card-foreground shadow-sm", className)}>
       {(title || description) && (
@@ -19,7 +19,7 @@ const Card = ({ title, description, content, footer, className }: CardProps) => 
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
       )}
-      {content && <div className="p-6 pt-0">{content}</div>}
+      {children && <div className="p-6 pt-0">{children}</div>}
       {footer && <div className="flex items-center p-6 pt-0">{footer}</div>}
     </div>
   );

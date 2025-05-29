@@ -1,10 +1,14 @@
-// components/SidebarRight.tsx
 "use client";
 import React from "react";
+import { cn } from "@/lib/utils/cn"; // nếu bạn dùng clsx/tailwind-merge
 
-export default function SidebarRight() {
+interface SidebarRightProps {
+  className?: string;
+}
+
+export default function SidebarRight({ className }: SidebarRightProps) {
   return (
-    <aside className="hidden xl:block w-[320px] shrink-0 overflow-y-auto border-l bg-neutral-900 text-white">
+    <aside className={cn("hidden xl:block w-[320px] shrink-0 overflow-y-auto border-l bg-neutral-900 text-white", className)}>
       <div className="p-4 space-y-3">
         <div className="font-bold text-xl">Được tài trợ</div>
         <div className="bg-neutral-800 p-2 rounded">🎯 Ads 1</div>
