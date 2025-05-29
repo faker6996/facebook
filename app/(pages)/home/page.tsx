@@ -6,5 +6,9 @@ const locale = "vi";
 
 export default async function HomePage() {
   const menus: Menu[] = await getMenuList(locale);
-  return <HomeContainer menus={menus}></HomeContainer>;
+  return (
+    <>
+      <HomeContainer menus={menus}></HomeContainer>
+    </>
+  );
 }
