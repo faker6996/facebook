@@ -9,7 +9,7 @@ interface LeftSidebarProp {
   menus?: Menu[];
 }
 
-export default async function LeftSidebar({ menus }: LeftSidebarProp) {
+export default function LeftSidebar({ menus }: LeftSidebarProp) {
   return (
     <aside className="w-64 bg-gray-800 text-white">
       <nav>
