@@ -1,11 +1,10 @@
-"use client"; // Bắt buộc khi dùng `useEffect`
-
 import HomeContainer from "@/components/home/HomeContainer";
+import { Menu } from "@/lib/models/menu";
+import { getMenuList } from "@/lib/modules/system/menu/repositories/menu_repo";
 
-export default function HomePage() {
+const locale = "vi";
 
-  return (
-    <HomeContainer>
-    </HomeContainer>
-  );
+export default async function HomePage() {
+  const menus: Menu[] = await getMenuList(locale);
+  return <HomeContainer menus={menus}></HomeContainer>;
 }

@@ -12,5 +12,5 @@ export const SIZE_STYLES_BTN = {
   md: "px-4 py-2 text-sm",
   lg: "px-5 py-3 text-base",
   smx: "px-3.5 py-1.5 text-[13px]",
-  icon: "w-9 h-9 p-0", // 👈 Nút tròn
+  icon: "w-10 h-10 p-0 rounded-full", // 👈 Nút tròn
 };

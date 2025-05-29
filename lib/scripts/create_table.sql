@@ -87,3 +87,20 @@ CREATE TABLE pinned_messages (
     pinned_by INTEGER,
     pinned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE menu (
+    id SERIAL PRIMARY KEY,
+    icon VARCHAR(100),         -- Tên icon (Ví dụ: "friends", "video", "marketplace")
+    slug VARCHAR(100),         -- Route hoặc slug dùng để điều hướng (VD: /friends, /groups)
+    order_index INTEGER,       -- Thứ tự hiển thị
+    is_active BOOLEAN DEFAULT true, -- Có hiển thị không
+    parent_id INTEGER  -- Hỗ trợ menu lồng nhau nếu cần
+);
+
+
+CREATE TABLE menu_translations (
+  id SERIAL PRIMARY KEY,
+  menu_id INTEGER,
+  locale VARCHAR(10), -- 'vi', 'en'
+  name VARCHAR(100)
+);
