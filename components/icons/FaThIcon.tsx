@@ -1,6 +1,18 @@
 const FaThIcon = ({ className = "", ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className={className} {...props}>
-    <path d="M0 32C0 14.3 14.3 0 32 0h96c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32H32C14.3 160 0 145.7 0 128V32zm192 0c0-17.7 14.3-32 32-32h96c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32h-96c-17.7 0-32-14.3-32-32V32zm160 160c-17.7 0-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32v-96c0-17.7-14.3-32-32-32h-96zM32 192c-17.7 0-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32v-96c0-17.7-14.3-32-32-32H32zm0 160c-17.7 0-32 14.3-32 32v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32v-96c0-17.7-14.3-32-32-32H32zm160 0c0-17.7 14.3-32 32-32h96c17.7 0 32 14.3 32 32v96c0 17.7-14.3 32-32 32h-96c-17.7 0-32-14.3-32-32v-96z" />
+  <svg viewBox="0 0 192 192" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
+    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+    <g id="SVGRepo_iconCarrier">
+      {" "}
+      <g transform="matrix(1.00006 0 0 1.00005 -.005 -.005)">
+        {" "}
+        <circle cx="149.333" cy="42.666" r="20.663"></circle> <circle cx="149.333" cy="96" r="20.663"></circle>{" "}
+        <circle cx="149.333" cy="149.334" r="20.663"></circle> <circle cx="96" cy="42.666" r="20.663"></circle>{" "}
+        <circle cx="96" cy="96" r="20.663"></circle> <circle cx="96" cy="149.334" r="20.663"></circle>{" "}
+        <circle cx="42.666" cy="42.666" r="20.663"></circle> <circle cx="42.666" cy="96" r="20.663"></circle>{" "}
+        <circle cx="42.666" cy="149.334" r="20.663"></circle>{" "}
+      </g>{" "}
+    </g>
   </svg>
 );
 export default FaThIcon;

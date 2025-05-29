@@ -23,8 +23,8 @@ export default function Header() {
 
       {/* Center: Navigation Icons */}
       <div className="flex gap-6 text-2xl">
-        <Button icon={HomeIcon} variant="ghost"></Button>
-        <Button icon={TvIcon} variant="ghost"></Button>
+        <Button icon={HomeIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
+        <Button icon={TvIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
         <Button icon={StoreIcon} variant="ghost"></Button>
         <Button icon={UsersIcon} variant="ghost"></Button>
         <Button icon={GamepadIcon} variant="ghost"></Button>
@@ -32,11 +32,10 @@ export default function Header() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
-        <Button icon={FaThIcon} variant="circle"></Button>
-        <Button icon={BsMessengerIcon} variant="circle"></Button>
-        <Button icon={FaBellIcon} variant="circle"></Button>
-
-        <img src="/avatar.jpg" alt="avatar" className="w-8 h-8 rounded-full cursor-pointer" />
+        <Button icon={FaThIcon} size="icon" className="bg-gray-300"></Button>
+        <Button icon={BsMessengerIcon} size="icon" className="bg-gray-300"></Button>
+        <Button icon={FaBellIcon} size="icon" className="bg-gray-300"></Button>
+        <Button size="icon"></Button>
       </div>
     </header>
   );
