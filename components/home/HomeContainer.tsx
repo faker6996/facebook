@@ -7,11 +7,11 @@ import { callApi } from "@/lib/utils/api-client";
 import { User } from "@/lib/models/user";
 import { Menu } from "@/lib/models/menu";
 
-import Header from "../layout/Header";
-import LeftSidebar from "../layout/SidebarLeft";
-import SidebarRight from "../layout/SidebarRight";
-import Card from "../ui/Card";
-import Container from "../Container";
+import Card from "@/components/ui/Card";
+import Container from "@/components/Container";
+import Header from "@/components/layout/Header";
+import LeftSidebar from "@/components/layout/SidebarLeft";
+import SidebarRight from "@/components/layout/SidebarRight";
 
 interface HomeContainerProps {
   menus: Menu[];
