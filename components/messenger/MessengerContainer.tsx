@@ -29,7 +29,7 @@ export default function MessengerContainer() {
   };
 
   return (
-    <div className="flex flex-col h-[90vh] w-full max-w-md mx-auto border rounded-xl bg-white dark:bg-zinc-900 shadow-md overflow-hidden">
+    <div className="fixed bottom-4 right-4 z-40 flex flex-col w-full max-w-md border rounded-xl bg-white dark:bg-zinc-900 shadow-lg overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b">
         <Avatar src="/avatar.png" size="sm" />
         <div>
@@ -38,7 +38,7 @@ export default function MessengerContainer() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 px-4 py-3 space-y-2 overflow-y-auto">
+      <ScrollArea className="flex-1 px-4 py-3 space-y-2 overflow-y-auto max-h-[400px]">
         {messages.map((msg) => (
           <div
             key={msg.id}
