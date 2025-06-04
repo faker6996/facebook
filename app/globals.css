@@ -26,13 +26,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 222.2 84% 4.9%; /* #09090b */
+    --background: 0deg 1.8% 11.2%; /* #09090b */
     --foreground: 210 40% 98%; /* #f9f9fa */
     --muted: 217.2 32.6% 24%; /* #27272a */
     --muted-foreground: 215 20.2% 65.1%; /* #a1a1aa */
     --popover: 224 71% 4%; /* #09090b (hơi khác tí) */
     --popover-foreground: 210 40% 98%; /* #f9f9fa */
-    --card: 224 71% 4%; /* #09090b */
+    --card: 195.3 5.3% 14.9%;
     --card-foreground: 210 40% 98%; /* #f9f9fa */
     --border: 216 34% 22%; /* #27272a */
     --input: 216 34% 38%; /* #52525b */

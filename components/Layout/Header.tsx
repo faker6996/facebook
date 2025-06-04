@@ -12,7 +12,7 @@ import Input from "../ui/Input";
 
 export default function Header() {
   return (
-    <header className="w-full flex items-center justify-between px-4 py-2 bg-background text-white shadow-md">
+    <header className="fixed top-0 z-50 w-full h-16 flex items-center justify-between px-4 py-2 bg-card text-card-foreground shadow-md">
       {/* Left: Logo + Search */}
       <div className="flex items-center gap-2">
         <FacebookIcon className="w-10 h-10" />
