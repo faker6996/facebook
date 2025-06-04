@@ -62,23 +62,18 @@ export default function UserGuild() {
           ]}
         />
 
-        <Card
-          title="Thông báo"
-          description="Đây là mô tả phụ"
-          content={<p>Nội dung chính bên trong card</p>}
-          footer={<Button className="ml-auto text-sm text-blue-500 hover:underline">Đóng</Button>}
-        />
+        <Card title="Tiêu đề" description="Mô tả ngắn">
+          <p>Đây là nội dung chính của card, giờ bạn sử dụng children thoải mái.</p>
+          <Button>Click me</Button>
+        </Card>
 
         <br></br>
 
         <Carousel>
           {[1, 2, 3, 4].map((i) => (
-            <Card
-              key={i}
-              title={`Slide ${i}`}
-              description="This is a custom card component"
-              content={<div className="h-40 flex items-center justify-center text-2xl font-bold">Content {i}</div>}
-            />
+            <Card key={i} title={`Slide ${i}`} description="This is a custom card component">
+              <div className="h-40 flex items-center justify-center text-2xl font-bold">Content {i}</div>
+            </Card>
           ))}
         </Carousel>
 
@@ -137,21 +132,18 @@ export default function UserGuild() {
           <button className="px-3 py-1 bg-muted rounded">Hover me</button>
         </Tooltip>
 
-        <Button
-        className="px-4 py-2 rounded bg-blue-600 text-white"
-        onClick={() => setOpen(true)}
-      >
-        Open Sheet
-      </Button>
-      <Sheet
-        open={open}
-        onOpenChange={setOpen}
-        side="right" // "left", "top", "bottom"
-        title="Sheet Demo"
-        description="Trượt mượt mà giống Shadcn UI"
-      >
-        <p>Nội dung bất kỳ tại đây.</p>
-      </Sheet>
+        <Button className="px-4 py-2 rounded bg-blue-600 text-white" onClick={() => setOpen(true)}>
+          Open Sheet
+        </Button>
+        <Sheet
+          open={open}
+          onOpenChange={setOpen}
+          side="right" // "left", "top", "bottom"
+          title="Sheet Demo"
+          description="Trượt mượt mà giống Shadcn UI"
+        >
+          <p>Nội dung bất kỳ tại đây.</p>
+        </Sheet>
       </div>
     </div>
   );
