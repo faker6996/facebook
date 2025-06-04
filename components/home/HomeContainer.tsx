@@ -12,6 +12,7 @@ import Container from "@/components/Container";
 import Header from "@/components/layout/Header";
 import LeftSidebar from "@/components/layout/SidebarLeft";
 import SidebarRight from "@/components/layout/SidebarRight";
+import MessengerContainer from "@/components/messenger/MessengerContainer";
 
 interface HomeContainerProps {
   menus: Menu[];
@@ -32,12 +33,12 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
   return (
     <>
       <Header />
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex min-h-screen w-full pt-16">
         {/* Sidebar trái */}
         <LeftSidebar menus={menus} className="shrink-0 border-r border-border" />
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto bg-neutral-950 text-white">
+        <main className="flex-1 overflow-y-auto bg-background text-card-foreground">
           <Container className="py-6">
             <div className="space-y-4">
               <Card>📷 Story</Card>
@@ -45,11 +46,12 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
               <Card>📝 Bài viết 2</Card>
               <Card>📝 Bài viết 3</Card>
             </div>
+            {/* <MessengerContainer></MessengerContainer> */}
           </Container>
         </main>
 
         {/* Sidebar phải */}
-        <aside className="w-[340px] shrink-0 border-l border-border bg-neutral-900">
+        <aside className="w-[340px] shrink-0 border-l border-border bg-background">
           <SidebarRight />
         </aside>
       </div>
