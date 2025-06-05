@@ -5,8 +5,10 @@ export const API_ROUTES = {
     ME: "/api/auth/me",
     SSO_FACEBOOK: "/api/auth/sso_facebook",
     SSO_GOOGLE: "/api/auth/sso_google",
-    SSO_GOOGLE_TOKEN: "https://oauth2.googleapis.com/token",
-    SSO_GOOGLE_INFO: "https://www.googleapis.com/oauth2/v2/userinfo",
+    SSO_GOOGLE_GET_TOKEN: "https://oauth2.googleapis.com/token",
+    SSO_GOOGLE_GET_INFO: "https://www.googleapis.com/oauth2/v2/userinfo",
+    SSO_FACEBOOK_GET_TOKEN: "https://graph.facebook.com/v12.0/oauth/access_token",
+    SSO_FACEBOOK_GET_INFO: "https://graph.facebook.com/me",
   },
   USER: {
     LIST: "/api/users",
