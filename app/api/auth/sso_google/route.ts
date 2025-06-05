@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
-import { GoogleOAuthTokenResponse } from "@/lib/models/google_auth_token";
-import { GoogleUserInfo } from "@/lib/models/google_user_info";
+import { SsoAuthToken } from "@/lib/models/sso_auth_token";
+import { UserInfoSso } from "@/lib/models/user";
 import { ssoGoogleApp } from "@/lib/modules/sso_google/applications/sso_google_app";
 import { callApi } from "@/lib/utils/api-client";
 import { signJwt } from "@/lib/utils/jwt";
@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-const AUTH_URL = process.env.AUTH_URL!;
+const AUTH_URL = process.env.FRONTEND_URL!;
 const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000/home";
 
 // STEP 1: Redirect user to Google login page
@@ -35,8 +35,8 @@ export async function GET(req: Request) {
     }
 
     // 2. Đổi mã code lấy access_token
-    const tokenData = await callApi<GoogleOAuthTokenResponse>(
-      API_ROUTES.AUTH.SSO_GOOGLE_TOKEN,
+    const tokenData = await callApi<SsoAuthToken>(
+      API_ROUTES.AUTH.SSO_GOOGLE_GET_TOKEN,
       HTTP_METHOD_ENUM.POST,
       new URLSearchParams({
         code,
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
       }
     );
     // 3. Lấy thông tin user từ access_token
-    const userInfo = await callApi<GoogleUserInfo>(API_ROUTES.AUTH.SSO_GOOGLE_INFO, HTTP_METHOD_ENUM.GET, undefined, {
+    const userInfo = await callApi<UserInfoSso>(API_ROUTES.AUTH.SSO_GOOGLE_GET_INFO, HTTP_METHOD_ENUM.GET, undefined, {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
       },
@@ -82,12 +82,10 @@ export async function GET(req: Request) {
       })
     );
 
-    console.log("Đăng nhập Google thành công:", user.email);
     return response;
 
     // 7. Redirect về trang chủ
   } catch (error: any) {
-    console.error("Lỗi trong quá trình đăng nhập Google:", error.message || error);
     return new Response("Lỗi trong quá trình đăng nhập Google", { status: 500 });
   }
 }

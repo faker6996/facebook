@@ -2,6 +2,7 @@
   "name": "attendance-system-fe-main",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--inspect next dev",
     "dev_v2": "next dev --turbopack",
