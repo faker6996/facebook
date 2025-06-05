@@ -32,41 +32,43 @@ export default function LoginContainer() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo + Heading */}
         <div className="text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">N</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sign in to your account</h2>
+          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-lg">
+            N
+          </div>
+          <h2 className="text-2xl font-bold text-foreground">Sign in to your account</h2>
         </div>
 
         {/* Form */}
-        <div className="rounded-lg bg-white dark:bg-neutral-900 px-6 py-8 shadow sm:px-10">
+        <div className="rounded-lg bg-card text-card-foreground px-6 py-8 shadow sm:px-10">
           <form className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+              <label className="block text-sm font-medium text-muted-foreground">Email address</label>
               <input
                 type="email"
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+              <label className="block text-sm font-medium text-muted-foreground">Password</label>
               <input
                 type="password"
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
               />
             </div>
 
             <div className="flex items-center justify-between">
-              <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+              <label className="flex items-center text-sm text-muted-foreground">
+                <input type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
                 <span className="ml-2">Remember me</span>
               </label>
-              <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500 font-medium">
+              <Link href="/forgot-password" className="text-sm text-primary hover:underline font-medium">
                 Forgot password?
               </Link>
             </div>
@@ -74,7 +76,7 @@ export default function LoginContainer() {
             <Button
               type="submit"
               variant="primary"
-              className="w-full rounded-md bg-indigo-600 py-2 px-4 text-white hover:bg-indigo-700 font-medium shadow-sm transition"
+              className="w-full rounded-md bg-primary text-primary-foreground hover:brightness-110 font-medium shadow-sm transition"
             >
               Sign in
             </Button>
@@ -82,27 +84,25 @@ export default function LoginContainer() {
 
           {/* Divider */}
           <div className="mt-6 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-gray-700" />
-
-            <div className="px-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">Or continue with</div>
-
-            <div className="w-full border-t border-gray-300 dark:border-gray-700" />
+            <div className="w-full border-t border-border" />
+            <div className="px-4 text-sm text-muted-foreground whitespace-nowrap">Or continue with</div>
+            <div className="w-full border-t border-border" />
           </div>
 
           {/* Social Buttons */}
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <Button onClick={() => handleLoginWithGoogle()} icon={GoogleIcon}>
+            <Button onClick={handleLoginWithGoogle} icon={GoogleIcon}>
               Google
             </Button>
-            <Button onClick={() => handleLoginWithFacebook()} icon={FacebookIcon}>
+            <Button onClick={handleLoginWithFacebook} icon={FacebookIcon}>
               Facebook
             </Button>
           </div>
 
           {/* Bottom Trial Link */}
-          <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-300">
+          <p className="mt-4 text-center text-sm text-muted-foreground">
             Not a member?{" "}
-            <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link href="/signup" className="font-medium text-primary hover:underline">
               Start a 14 day free trial
             </Link>
           </p>
