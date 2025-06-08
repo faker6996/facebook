@@ -65,6 +65,7 @@ export async function GET(req: Request) {
         sub: userInfo.id, // dùng user ID
         email: user.email,
         name: user.name,
+        id: user.id!,
       },
       "2h"
     );

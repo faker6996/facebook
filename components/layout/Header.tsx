@@ -1,3 +1,4 @@
+import { useState } from "react";
 import BsMessengerIcon from "../icons/BsMessengerIcon";
 import FaBellIcon from "../icons/FaBellIcon";
 import FaThIcon from "../icons/FaThIcon";
@@ -9,8 +10,15 @@ import TvIcon from "../icons/TvIcon";
 import UsersIcon from "../icons/UsersIcon";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+import MessengerDropdown from "@/components/messenger/MessengerDropdown";
 
 export default function Header() {
+  const [showMessenger, setShowMessenger] = useState(false);
+
+  const toggleMessenger = () => {
+    setShowMessenger((prev) => !prev);
+  };
+
   return (
     <header className="fixed top-0 z-50 w-full h-16 flex items-center justify-between px-4 py-2 bg-card text-card-foreground shadow-md">
       {/* Left: Logo + Search */}
@@ -33,7 +41,10 @@ export default function Header() {
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
         <Button icon={FaThIcon} size="icon" className="bg-gray-300"></Button>
-        <Button icon={BsMessengerIcon} size="icon" className="bg-gray-300"></Button>
+        <div className="relative">
+          <Button icon={BsMessengerIcon} size="icon" className="bg-gray-300" onClick={toggleMessenger} />
+          {showMessenger && <MessengerDropdown />}
+        </div>
         <Button icon={FaBellIcon} size="icon" className="bg-gray-300"></Button>
         <Button size="icon"></Button>
       </div>

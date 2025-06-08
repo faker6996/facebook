@@ -4,7 +4,6 @@ import { DatabaseError } from "@/lib/error/database-error";
 
 export async function safeQuery(sql: string, params: any[] = []) {
   try {
-    debugger
     return await query(sql, params);
   } catch (err) {
     throw new DatabaseError("Database error", err);
