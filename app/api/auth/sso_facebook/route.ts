@@ -1,5 +1,5 @@
 import { API_ROUTES } from "@/lib/constants/api-routes";
-import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
+import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { SsoAuthToken } from "@/lib/models/sso_auth_token";
 import { UserInfoSso } from "@/lib/models/user";
 import { ssoFacebookApp } from "@/lib/modules/sso_facebook/applications/sso_facebook_app";
@@ -11,35 +11,44 @@ import { NextRequest, NextResponse } from "next/server";
 const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID!;
 const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI!;
-const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000/home";
+const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000";
 
-// STEP 1: Redirect user to FACEBOOK login page
-export async function POST() {
+// --- STEP 1: Redirect to Facebook Login ---
+export async function POST(req: NextRequest) {
+  const { locale } = await req.json();
+
   const scope = "email,public_profile";
-  const authURL = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${FACEBOOK_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`;
+  const authURL =
+    `https://www.facebook.com/v12.0/dialog/oauth` +
+    `?client_id=${FACEBOOK_CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&response_type=code` +
+    `&scope=${scope}` +
+    `&state=${locale}`;
+
   return NextResponse.json({ redirectUrl: authURL });
 }
 
-// STEP 2: Handle FACEBOOK redirect with code and fetch access_token + user info
+// --- STEP 2: Handle Facebook Redirect + Get AccessToken ---
 export async function GET(req: NextRequest) {
-  debugger;
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
+  const locale = searchParams.get("state") || LOCALE.VI;
 
   if (!code) {
     return NextResponse.json({ error: "Missing FACEBOOK code" }, { status: 400 });
   }
 
   try {
-    // Get access_token from Facebook
+    // Exchange code for access_token
     const tokenData = await callApi<SsoAuthToken>(API_ROUTES.AUTH.SSO_FACEBOOK_GET_TOKEN, HTTP_METHOD_ENUM.GET, {
       client_id: FACEBOOK_CLIENT_ID,
       client_secret: FACEBOOK_CLIENT_SECRET,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: REDIRECT_URI, // must match exactly
       code,
     });
 
-    // Get user info from Facebook
+    // Fetch user info from Facebook
     const userInfo = await callApi<UserInfoSso>(API_ROUTES.AUTH.SSO_FACEBOOK_GET_INFO, HTTP_METHOD_ENUM.GET, {
       access_token: tokenData.access_token,
       fields: "id,name,email",
@@ -47,18 +56,18 @@ export async function GET(req: NextRequest) {
 
     const user = await ssoFacebookApp.handleAfterSso(userInfo);
 
-    // Create JWT
+    // Generate JWT
     const token = signJwt(
       {
-        sub: userInfo.id, // dùng user ID
+        sub: userInfo.id,
         email: user.email,
         name: user.name,
       },
       "2h"
     );
 
-    // Redirect with cookie
-    const response = NextResponse.redirect(FRONTEND_REDIRECT);
+    // Redirect to locale home page
+    const response = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
     response.headers.set(
       "Set-Cookie",
       serialize("access_token", token, {
@@ -71,7 +80,8 @@ export async function GET(req: NextRequest) {
     );
 
     return response;
-  } catch (err: any) {
-    return NextResponse.json({ error: "FACEBOOK login failed" }, { status: 500 });
+  } catch (err) {
+    console.error("[Facebook SSO Error]", err);
+    return NextResponse.json({ error: "Facebook login failed" }, { status: 500 });
   }
 }
