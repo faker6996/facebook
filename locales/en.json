@@ -1,0 +1,8 @@
+{
+    "ErrorPage": {
+      "title": "An error occurred!",
+      "message": "Something went wrong",
+      "retry": "Try again"
+    }
+  }
+  

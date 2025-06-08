@@ -6,28 +6,34 @@ import Link from "next/link";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import Button from "../ui/Button";
+import { usePathname } from "next/navigation";
+import Alert from "@/components/ui/Alert";
 
 interface SsoReq {
   redirectUrl: string;
 }
 
 export default function LoginContainer() {
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "vi"; // Lấy locale từ URL
+
   const handleLoginWithFacebook = async () => {
     try {
-      const res = await callApi<SsoReq>(API_ROUTES.AUTH.SSO_FACEBOOK, HTTP_METHOD_ENUM.POST);
+      const res = await callApi<SsoReq>(API_ROUTES.AUTH.SSO_FACEBOOK, HTTP_METHOD_ENUM.POST, { locale });
       window.location.href = res.redirectUrl;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Facebook SSO error:", err);
-      alert("Không thể đăng nhập bằng Facebook. Vui lòng thử lại.");
+      throw new Error(`Facebook SSO failed: ${err?.message || "Unknown error"}`);
     }
   };
+
   const handleLoginWithGoogle = async () => {
     try {
-      const res = await callApi<SsoReq>(API_ROUTES.AUTH.SSO_GOOGLE, HTTP_METHOD_ENUM.POST);
+      const res = await callApi<SsoReq>(API_ROUTES.AUTH.SSO_GOOGLE, HTTP_METHOD_ENUM.POST, { locale });
       window.location.href = res.redirectUrl;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Google SSO error:", err);
-      alert("Không thể đăng nhập bằng Goolge. Vui lòng thử lại.");
+      throw new Error(`Facebook SSO failed: ${err?.message || "Unknown error"}`);
     }
   };
 
