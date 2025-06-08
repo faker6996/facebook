@@ -13,3 +13,8 @@ export enum Z_INDEX_LEVEL {
   DIALOG = 10000, // modal, popup
   LOADING = 100000, // global loading, overlay
 }
+
+export enum LOCALE {
+  VI = "vi",
+  EN = "en",
+}

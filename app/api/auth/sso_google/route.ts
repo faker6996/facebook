@@ -1,24 +1,26 @@
 import { API_ROUTES } from "@/lib/constants/api-routes";
-import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
+import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { SsoAuthToken } from "@/lib/models/sso_auth_token";
 import { UserInfoSso } from "@/lib/models/user";
 import { ssoGoogleApp } from "@/lib/modules/sso_google/applications/sso_google_app";
 import { callApi } from "@/lib/utils/api-client";
 import { signJwt } from "@/lib/utils/jwt";
 import { serialize } from "cookie";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const AUTH_URL = process.env.FRONTEND_URL!;
-const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000/home";
+const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000/vi";
 
 // STEP 1: Redirect user to Google login page
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const { locale } = await req.json();
+
   const redirect_uri = encodeURIComponent(`${AUTH_URL}${API_ROUTES.AUTH.SSO_GOOGLE}`);
   const client_id = GOOGLE_CLIENT_ID!;
   const scope = encodeURIComponent("email profile");
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=${scope}`;
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=${scope}&state=${locale}`;
   return NextResponse.json({ redirectUrl: url });
 }
 
@@ -28,6 +30,7 @@ export async function GET(req: Request) {
     // 1. Lấy mã code từ query params
     const { searchParams } = new URL(req.url);
     const code = searchParams.get("code");
+    const locale = searchParams.get("state") || LOCALE.VI;
 
     if (!code) {
       console.error("❌ Không có mã code từ Google");
@@ -71,7 +74,7 @@ export async function GET(req: Request) {
     );
 
     // Redirect with cookie
-    const response = NextResponse.redirect(FRONTEND_REDIRECT);
+    const response = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
     response.headers.set(
       "Set-Cookie",
       serialize("access_token", token, {
