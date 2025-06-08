@@ -1,5 +1,6 @@
 // lib/db-utils/universal-repo.ts
-import { query } from "@/lib/db";
+
+import { safeQuery } from "@/lib/modules/common/safe_query";
 
 export class BaseRepo {
   // #region modify methods
@@ -44,7 +45,7 @@ export class BaseRepo {
       RETURNING ${returning};
     `;
 
-    const result = await query(sql, values);
+    const result = await safeQuery(sql, values);
     return result.rows[0];
   }
 
@@ -100,13 +101,13 @@ export class BaseRepo {
     `;
 
     // 🚀 Transaction bắt đầu
-    await query("BEGIN");
+    await safeQuery("BEGIN");
     try {
-      const result = await query(sql, allValues);
-      await query("COMMIT");
+      const result = await safeQuery(sql, allValues);
+      await safeQuery("COMMIT");
       return result.rows;
     } catch (err) {
-      await query("ROLLBACK");
+      await safeQuery("ROLLBACK");
       throw err;
     }
   }
@@ -150,7 +151,7 @@ export class BaseRepo {
       RETURNING ${returning};
     `;
 
-    const result = await query(sql, values);
+    const result = await safeQuery(sql, values);
     return result.rows[0] || null;
   }
 
@@ -200,13 +201,13 @@ export class BaseRepo {
     });
 
     const sql = `SELECT * FROM ${table} ORDER BY ${orderClauses.join(", ")}`;
-    const result = await query(sql);
+    const result = await safeQuery(sql);
     return result.rows;
   }
 
   async getById<T>(table: string, id: number): Promise<T | null> {
     const sql = `SELECT * FROM ${table} WHERE id = $1`;
-    const result = await query(sql, [id]);
+    const result = await safeQuery(sql, [id]);
     return result.rows[0] || null;
   }
 
@@ -252,7 +253,7 @@ export class BaseRepo {
     }
 
     const sql = `SELECT * FROM ${table} WHERE ${field} = $1${orderClause}`;
-    const result = await query(sql, [value]);
+    const result = await safeQuery(sql, [value]);
 
     return result.rows.length === 0 ? null : result.rows[0];
   }
@@ -315,7 +316,7 @@ export class BaseRepo {
     }
 
     const sql = `SELECT * FROM ${table} ${whereSQL}${orderClause}`;
-    const result = await query(sql, values);
+    const result = await safeQuery(sql, values);
     return result.rows;
   }
 }

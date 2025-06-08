@@ -1,41 +1,44 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { middlewarePipeline } from './lib/middlewares/pipeline';
-import { withRoleGuard } from './lib/middlewares/role-guard';
-import {
-  withCors,
-  withLogger,
-  withAuth,
-} from './lib/middlewares';
-import { withRateLimit } from './lib/middlewares/rate-limit';
+import { NextRequest } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+
+import { middlewarePipeline } from "./lib/middlewares/pipeline";
+import { withRoleGuard } from "./lib/middlewares/role-guard";
+import { withCors, withLogger, withAuth } from "./lib/middlewares";
+import { withRateLimit } from "./lib/middlewares/rate-limit";
+import { routing } from "@/i18n/routing";
+
+const intlMiddleware = createIntlMiddleware(routing);
 
 export async function middleware(req: NextRequest) {
   try {
-    // Chạy các middleware theo pipeline
+    const intlRes = intlMiddleware(req);
+    if (intlRes?.redirected) return intlRes;
+
     let res = await middlewarePipeline(req, [
       withCors,
-      // withRateLimit,   // bật khi cần
+      // withRateLimit,
       withLogger,
       withAuth,
     ]);
 
-    // Nếu truy cập /admin thì thêm role-guard
-    if (req.nextUrl.pathname.startsWith('/admin')) {
-      res = withRoleGuard(req, res, ['admin']);
+    intlRes?.headers.forEach((value, key) => {
+      res.headers.set(key, value);
+    });
+
+    if (req.nextUrl.pathname.startsWith("/admin")) {
+      res = withRoleGuard(req, res, ["admin"]);
     }
 
     return res;
   } catch (err: any) {
-    // Log chi tiết để dev debug
-    console.error('[Middleware Error]', err);
-
-    // Trả về JSON thông báo lỗi chung
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    console.error("[Middleware Error]", err);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
 export const config = {
-  matcher: ['/((?!_next|favicon.ico).*)'],
+  matcher: ["/((?!api|trpc|_next|_vercel|.*\\..*).*)"],
 };

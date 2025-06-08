@@ -1,0 +1,8 @@
+{
+    "ErrorPage": {
+      "title": "Đã có lỗi xảy ra!",
+      "message": "Đã xảy ra lỗi hệ thống",
+      "retry": "Thử lại"
+    }
+  }
+  
