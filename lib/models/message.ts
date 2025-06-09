@@ -1,7 +1,7 @@
 export class Message {
   id?: number;
   conversation_id?: string;
-  sender_id?: string;
+  sender_id?: number;
   content?: string;
   message_type?: "text" | "image" | "file";
   created_at?: string;

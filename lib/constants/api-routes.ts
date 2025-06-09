@@ -18,4 +18,9 @@ export const API_ROUTES = {
     LIST: "/api/projects",
     DETAIL: (id: string) => `/api/projects/${id}`,
   },
+  MESSENGER: {
+    RECENT: (id: number) => `/api/messenger/conversations?userId=${id}`,
+    MESSAGES: (conversationId: number) => `/api/messenger/messages?conversationId=${conversationId}`,
+    SEND_MESSAGE: `/api/messenger/messages`,
+  },
 };
