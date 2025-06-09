@@ -21,6 +21,8 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
+    env_file:
+      - .env.local
 
 volumes:
   pgdata_local:
