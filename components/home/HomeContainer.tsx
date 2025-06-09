@@ -46,7 +46,7 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
               <Card>📝 Bài viết 2</Card>
               <Card>📝 Bài viết 3</Card>
             </div>
-            <MessengerContainer></MessengerContainer>
+            {/* <MessengerContainer></MessengerContainer> */}
           </Container>
         </main>
 

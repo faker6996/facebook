@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
         sub: userInfo.id,
         email: user.email,
         name: user.name,
+        id: user.id!,
       },
       "2h"
     );

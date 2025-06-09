@@ -8,7 +8,7 @@ export const ssoGoogleApp = {
     return await ssoGoogleRepo.getAll();
   },
   async handleAfterSso(userInfo: UserInfoSso): Promise<User> {
-    // check exits user
+    // check exits
     const user = await baseRepo.getByField<User>(User.table, User.columns.email, userInfo.email);
 
     if (user) {
