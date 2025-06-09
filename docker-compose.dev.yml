@@ -1,9 +1,31 @@
+version: "3.8"
+
 services:
   postgres:
+    image: postgres:15-alpine
     ports:
       - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - pgdata_local:/var/lib/postgresql/data
+      - pgdata_dev:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run dev # dev mode (hot-reload)
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app # mount toàn bộ source để phát triển
+      - /app/node_modules # giữ node_modules từ image (không mount đè)
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+      # các biến dev khác
 
 volumes:
-  pgdata_local:
+  pgdata_dev:
