@@ -8,6 +8,7 @@ import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import Button from "../ui/Button";
 import { usePathname } from "next/navigation";
 import Alert from "@/components/ui/Alert";
+import Input from "@/components/ui/Input";
 
 interface SsoReq {
   redirectUrl: string;
@@ -36,6 +37,19 @@ export default function LoginContainer() {
       throw new Error(`Facebook SSO failed: ${err?.message || "Unknown error"}`);
     }
   };
+  const handleEmailPasswordLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    debugger;
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const res = await callApi<{ token: string }>(API_ROUTES.AUTH.LOGIN, HTTP_METHOD_ENUM.POST, { email, password, locale });
+    } catch (err: any) {
+      alert(err?.message || "Login failed");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -50,10 +64,11 @@ export default function LoginContainer() {
 
         {/* Form */}
         <div className="rounded-lg bg-card text-card-foreground px-6 py-8 shadow sm:px-10">
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleEmailPasswordLogin}>
             <div>
               <label className="block text-sm font-medium text-muted-foreground">Email address</label>
-              <input
+              <Input
+                name="email"
                 type="email"
                 required
                 className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
@@ -62,8 +77,9 @@ export default function LoginContainer() {
 
             <div>
               <label className="block text-sm font-medium text-muted-foreground">Password</label>
-              <input
+              <Input
                 type="password"
+                name="password"
                 required
                 className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
               />
