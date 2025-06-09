@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - pgdata_prod:/var/lib/postgresql/data
+      - /home/infvn/pgdata:/var/lib/postgresql/data
 
   web:
     build:
