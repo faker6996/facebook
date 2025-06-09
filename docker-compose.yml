@@ -2,7 +2,8 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres
+    image: postgres:17
+
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -18,4 +19,4 @@ services:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - postgres
-    command: npm run dev
+    command: npm run dev_v2
