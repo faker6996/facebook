@@ -27,4 +27,5 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       # các biến dev khác
     env_file:
+      - .env
       - .env.dev
