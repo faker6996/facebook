@@ -26,6 +26,5 @@ services:
       NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
       # các biến dev khác
-
-volumes:
-  pgdata_dev:
+    env_file:
+      - .env.dev
