@@ -1,16 +1,29 @@
+version: "3.8"
+
 services:
   postgres:
+    image: postgres:17
     ports:
       - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pgdata_local:/var/lib/postgresql/data
 
-  # main-app
-  main-app:
+  web: # <-- đổi từ main-app sang web
     ports:
-      - "3000:3000" 
+      - "3000:3000"
     volumes:
-      - .:/app  
+      - .:/app # mount toàn code vào container
+      - /app/node_modules # giữ thư mục node_modules của image (không mount đè)
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: ${DATABASE_URL}
+    env_file:
+      - .env
+      - .env.local
 
 volumes:
   pgdata_local:
