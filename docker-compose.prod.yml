@@ -14,7 +14,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile # hoặc Dockerfile.prod nếu tách file
     image: your-registry/facebook-app:latest
     restart: unless-stopped
     ports:
@@ -22,7 +22,9 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
-      # các biến khác mà bạn load qua .env
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      # các biến khác nếu dùng next-auth, i18n, v.v...
     depends_on:
       - postgres
 
