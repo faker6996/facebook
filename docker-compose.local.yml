@@ -22,6 +22,7 @@ services:
       NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
     env_file:
+      - .env
       - .env.local
 
 volumes:
