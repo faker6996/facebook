@@ -11,7 +11,11 @@
     "lint": "next lint",
     "docker:local-up": "docker-compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env.local up -d",
     "docker:down": "docker-compose down",
-    "docker:restart": "npm run docker:down && npm run docker:up"
+    "docker:restart": "npm run docker:down && npm run docker:up",
+    "docker:dev-up": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up -d",
+    "docker:dev-down": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml down",
+    "docker:prod-up": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env up -d",
+    "docker:prod-down": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml down"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.7.0",
@@ -39,6 +43,7 @@
     "@types/pg": "^8.15.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "typescript": "^5"
   }
 }

@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID!;
 const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET!;
-const REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI!;
+const REDIRECT_URI = process.env.FRONTEND_URL! + API_ROUTES.AUTH.SSO_FACEBOOK;
 const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000";
 
 // --- STEP 1: Redirect to Facebook Login ---
