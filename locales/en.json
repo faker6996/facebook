@@ -1,8 +1,20 @@
 {
-    "ErrorPage": {
-      "title": "An error occurred!",
-      "message": "Something went wrong",
-      "retry": "Try again"
+  "ErrorPage": {
+    "title": "An error occurred!",
+    "message": "Something went wrong",
+    "retry": "Try again"
+  },
+  "LoginPage": {
+    "heading": "Sign in to your account",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "signInButton": "Sign in",
+    "dividerText": "Or continue with",
+    "social": {
+      "google": "Google",
+      "facebook": "Facebook"
     }
   }
-  
+}
