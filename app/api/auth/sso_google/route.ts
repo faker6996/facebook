@@ -72,7 +72,7 @@ export async function GET(req: Request) {
       },
       "2h"
     );
-
+    debugger;
     // Redirect with cookie
     const response = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
     response.headers.set(

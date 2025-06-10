@@ -39,7 +39,6 @@ export default function LoginContainer() {
   };
   const handleEmailPasswordLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    debugger;
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
