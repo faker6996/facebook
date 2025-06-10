@@ -1,8 +1,20 @@
 {
-    "ErrorPage": {
-      "title": "Đã có lỗi xảy ra!",
-      "message": "Đã xảy ra lỗi hệ thống",
-      "retry": "Thử lại"
+  "ErrorPage": {
+    "title": "Đã có lỗi xảy ra!",
+    "message": "Đã xảy ra lỗi hệ thống",
+    "retry": "Thử lại"
+  },
+  "LoginPage": {
+    "heading": "Đăng nhập vào tài khoản của bạn",
+    "emailLabel": "Địa chỉ Email",
+    "passwordLabel": "Mật khẩu",
+    "rememberMe": "Ghi nhớ đăng nhập",
+    "forgotPassword": "Quên mật khẩu?",
+    "signInButton": "Đăng nhập",
+    "dividerText": "Hoặc tiếp tục với",
+    "social": {
+      "google": "Google",
+      "facebook": "Facebook"
     }
   }
-  
+}

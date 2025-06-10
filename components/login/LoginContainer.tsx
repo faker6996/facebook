@@ -1,13 +1,13 @@
 "use client";
 
-import { callApi } from "@/lib/utils/api-client";
-import { GoogleIcon, FacebookIcon } from "../icons/SocialIcons";
-import Link from "next/link";
 import { API_ROUTES } from "@/lib/constants/api-routes";
-import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
-import Button from "../ui/Button";
+import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
+import { callApi } from "@/lib/utils/api-client";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Alert from "@/components/ui/Alert";
+import { FacebookIcon, GoogleIcon } from "../icons/SocialIcons";
+import Button from "../ui/Button";
+import { useTranslations } from "next-intl";
 
 interface SsoReq {
   redirectUrl: string;
@@ -15,7 +15,8 @@ interface SsoReq {
 
 export default function LoginContainer() {
   const pathname = usePathname();
-  const locale = pathname.split("/")[1] || "vi"; // Lấy locale từ URL
+  const locale = pathname.split("/")[1] || LOCALE.VI; // Lấy locale từ URL
+  const t = useTranslations("LoginPage");
 
   const handleLoginWithFacebook = async () => {
     try {
@@ -45,14 +46,14 @@ export default function LoginContainer() {
           <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-lg">
             N
           </div>
-          <h2 className="text-2xl font-bold text-foreground">Sign in to your account</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t("heading")}</h2>
         </div>
 
         {/* Form */}
         <div className="rounded-lg bg-card text-card-foreground px-6 py-8 shadow sm:px-10">
           <form className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground">Email address</label>
+              <label className="block text-sm font-medium text-muted-foreground">{t("emailLabel")}</label>
               <input
                 type="email"
                 required
@@ -61,7 +62,7 @@ export default function LoginContainer() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground">Password</label>
+              <label className="block text-sm font-medium text-muted-foreground">{t("passwordLabel")}</label>
               <input
                 type="password"
                 required
@@ -72,10 +73,10 @@ export default function LoginContainer() {
             <div className="flex items-center justify-between">
               <label className="flex items-center text-sm text-muted-foreground">
                 <input type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
-                <span className="ml-2">Remember me</span>
+                <span className="ml-2">{t("rememberMe")}</span>
               </label>
               <Link href="/forgot-password" className="text-sm text-primary hover:underline font-medium">
-                Forgot password?
+                {t("forgotPassword")}
               </Link>
             </div>
 
@@ -84,34 +85,26 @@ export default function LoginContainer() {
               variant="primary"
               className="w-full rounded-md bg-primary text-primary-foreground hover:brightness-110 font-medium shadow-sm transition"
             >
-              Sign in
+              {t("signInButton")}
             </Button>
           </form>
 
           {/* Divider */}
           <div className="mt-6 flex items-center">
             <div className="w-full border-t border-border" />
-            <div className="px-4 text-sm text-muted-foreground whitespace-nowrap">Or continue with</div>
+            <div className="px-4 text-sm text-muted-foreground whitespace-nowrap">{t("dividerText")}</div>
             <div className="w-full border-t border-border" />
           </div>
 
           {/* Social Buttons */}
           <div className="mt-6 grid grid-cols-2 gap-4">
             <Button onClick={handleLoginWithGoogle} icon={GoogleIcon}>
-              Google
+              {t("social.google")}
             </Button>
             <Button onClick={handleLoginWithFacebook} icon={FacebookIcon}>
-              Facebook
+              {t("social.facebook")}
             </Button>
           </div>
-
-          {/* Bottom Trial Link */}
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Not a member?{" "}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
-              Start a 14 day free trial
-            </Link>
-          </p>
         </div>
       </div>
     </div>
