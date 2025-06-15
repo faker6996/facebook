@@ -31,7 +31,6 @@ export async function callApi<T>(
     // Backend chuẩn hóa { success, message, data }
     const { success, message, data: payload } = res.data;
 
-    debugger;
     if (!success) alert(message);
 
     return payload as T;

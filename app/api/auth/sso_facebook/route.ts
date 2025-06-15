@@ -44,8 +44,6 @@ export const POST = withApiHandler(postHandler);
 /* STEP-2: Facebook gọi lại (redirect_uri)                             */
 /* ------------------------------------------------------------------ */
 async function getHandler(req: NextRequest) {
-  debugger;
-
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const locale = searchParams.get("state") || LOCALE.VI;
