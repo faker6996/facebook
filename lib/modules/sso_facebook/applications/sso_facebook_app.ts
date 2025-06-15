@@ -4,15 +4,17 @@ import { ssoFacebookRepo } from "../repositories/sso_facebook_repo";
 import { hashPassword } from "@/lib/utils/hash";
 
 export const ssoFacebookApp = {
-  async getAll() {
-    return await ssoFacebookRepo.getAll();
-  },
   async handleAfterSso(userInfo: UserInfoSso): Promise<User> {
     // check exits user
-    const user = await baseRepo.getByField<User>(User.table, User.columns.email, userInfo.email);
+    const user = await baseRepo.getByField<User>(User, User.columns.email, userInfo.email);
 
     if (user) {
-      return user;
+      user.is_sso = true; // Đánh dấu là user SSO
+      user.avatar_url = userInfo.picture?.data.url || user.avatar_url;
+      user.name = userInfo.name || user.name; // Cập nhật tên nếu có
+
+      const updateUser = await baseRepo.update(user);
+      return updateUser as User; // Trả về user đã cập nhật
     }
 
     const newUser = new User();
@@ -20,6 +22,7 @@ export const ssoFacebookApp = {
     newUser.name = userInfo.name;
     newUser.is_sso = true;
     newUser.user_name = userInfo.email;
+    newUser.avatar_url = userInfo.picture.data.url || "";
     newUser.password = await hashPassword(userInfo.email + "2025");
 
     // Nếu chưa tồn tại → tạo user mới

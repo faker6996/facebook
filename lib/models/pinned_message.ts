@@ -11,10 +11,11 @@ export class PinnedMessage {
     conversation_id: "conversation_id",
     message_id: "message_id",
     pinned_by: "pinned_by",
-    pinned_at: "pinned_at"
-  };
+    pinned_at: "pinned_at",
+  } as const;
 
   constructor(data: Partial<PinnedMessage> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.conversation_id = data.conversation_id;
     this.message_id = data.message_id;

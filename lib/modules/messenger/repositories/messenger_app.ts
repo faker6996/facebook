@@ -7,7 +7,7 @@ import { Message } from "@/lib/models/message";
 
 export const messengerRepo = {
   async getAll(): Promise<User[]> {
-    return baseRepo.getAll<User>(User.table);
+    return baseRepo.getAll<User>(User);
   },
   async getRecentConversations(userId: number): Promise<MessengerPreview[]> {
     const sql = `

@@ -22,9 +22,10 @@ export class User {
     address: "address",
     created_at: "created_at",
     is_sso: "is_sso",
-  };
+  } as const;
 
   constructor(data: Partial<User> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.name = data.name;
     this.user_name = data.user_name;
@@ -45,6 +46,15 @@ export interface UserInfoSso {
   verified_email: boolean;
   given_name: string;
   family_name: string;
-  picture: string;
+  picture: picture;
   locale: string;
+}
+export interface picture {
+  data: pictureData;
+}
+export interface pictureData {
+  is_silhouette: boolean;
+  height: number;
+  width: number;
+  url: string;
 }

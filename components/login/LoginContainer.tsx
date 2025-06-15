@@ -1,16 +1,14 @@
 "use client";
 
+import { FacebookIcon, GoogleIcon } from "@/components/icons/SocialIcons";
+import Input from "@/components/ui/Input";
+import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { callApi } from "@/lib/utils/api-client";
-import Link from "next/link";
-import { API_ROUTES } from "@/lib/constants/api-routes";
-import Button from "../ui/Button";
-import { usePathname, useRouter } from "next/navigation";
-import Alert from "@/components/ui/Alert";
-import Input from "@/components/ui/Input";
-import router from "next/router";
 import { useTranslations } from "next-intl";
-import { FacebookIcon, GoogleIcon } from "@/components/icons/SocialIcons";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import Button from "../ui/Button";
 
 interface SsoReq {
   redirectUrl: string;
@@ -66,7 +64,7 @@ export default function LoginContainer() {
         {/* Logo + Heading */}
         <div className="text-center">
           <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-lg">
-            N
+            A
           </div>
           <h2 className="text-2xl font-bold text-foreground">{t("heading")}</h2>
         </div>
@@ -74,25 +72,21 @@ export default function LoginContainer() {
         {/* Form */}
         <div className="rounded-lg bg-card text-card-foreground px-6 py-8 shadow sm:px-10">
           <form className="space-y-6" onSubmit={handleEmailPasswordLogin}>
-            <div>
-              <Input
-                label={t("emailLabel")}
-                name="email"
-                type="email"
-                required
-                className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              />
-            </div>
+            <Input
+              label={t("emailLabel")}
+              name="email"
+              type="email"
+              required
+              className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            />
 
-            <div>
-              <Input
-                label={t("passwordLabel")}
-                type="password"
-                name="password"
-                required
-                className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              />
-            </div>
+            <Input
+              label={t("passwordLabel")}
+              type="password"
+              name="password"
+              required
+              className="mt-1 block w-full rounded-md border border-border bg-input text-foreground px-3 py-2 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            />
 
             <div className="flex items-center justify-between">
               <label className="flex items-center text-sm text-muted-foreground">

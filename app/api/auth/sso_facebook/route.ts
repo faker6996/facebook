@@ -69,7 +69,7 @@ async function getHandler(req: NextRequest) {
   /* 2️⃣  Lấy user info */
   const infoParams = new URLSearchParams({
     access_token: tokenData.access_token,
-    fields: "id,name,email",
+    fields: "id,name,email,picture.width(256).height(256)",
   });
 
   const infoRes = await fetch(`${API_ROUTES.AUTH.SSO_FACEBOOK_GET_INFO}?${infoParams.toString()}`, { method: HTTP_METHOD_ENUM.GET });

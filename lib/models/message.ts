@@ -14,9 +14,10 @@ export class Message {
     content: "content",
     message_type: "message_type",
     created_at: "created_at",
-  };
+  } as const;
 
   constructor(data: Partial<Message> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.conversation_id = data.conversation_id;
     this.sender_id = data.sender_id;
