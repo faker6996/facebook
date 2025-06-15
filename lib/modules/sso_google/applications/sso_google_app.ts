@@ -4,12 +4,9 @@ import { ssoGoogleRepo } from "../repositories/sso_google_app";
 import { hashPassword } from "@/lib/utils/hash";
 
 export const ssoGoogleApp = {
-  async getAll() {
-    return await ssoGoogleRepo.getAll();
-  },
   async handleAfterSso(userInfo: UserInfoSso): Promise<User> {
     // check exits
-    const user = await baseRepo.getByField<User>(User.table, User.columns.email, userInfo.email);
+    const user = await baseRepo.getByField<User>(User, User.columns.email, userInfo.email);
 
     if (user) {
       return user;

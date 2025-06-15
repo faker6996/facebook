@@ -11,6 +11,7 @@ import UsersIcon from "../icons/UsersIcon";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import MessengerDropdown from "@/components/messenger/MessengerDropdown";
+import Avatar from "@/components/ui/Avatar";
 
 export default function Header() {
   const [showMessenger, setShowMessenger] = useState(false);
@@ -46,7 +47,7 @@ export default function Header() {
           {showMessenger && <MessengerDropdown />}
         </div>
         <Button icon={FaBellIcon} size="icon" className="bg-gray-300"></Button>
-        <Button size="icon"></Button>
+        <Avatar src="" size="sm"></Avatar>
       </div>
     </header>
   );

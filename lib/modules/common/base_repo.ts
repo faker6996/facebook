@@ -179,45 +179,48 @@ export class BaseRepo {
   // 4. Nếu orderBy không hợp lệ → sẽ throw lỗi để chống SQL injection.
 
   async getAll<T>(
-    table: string,
+    modelClass: { new (data?: Partial<T>): T; table: string },
     options?: {
-      orderBy?: string[];
+      orderBy?: (keyof T & string)[];
       orderDirections?: Record<string, "ASC" | "DESC">;
-      allowedOrderFields?: string[];
+      allowedOrderFields?: (keyof T & string)[];
     }
   ): Promise<T[]> {
-    const allowed = options?.allowedOrderFields ?? ["id", "created_at"];
-    const orderBy = options?.orderBy ?? ["id"];
-    const orderMap = options?.orderDirections ?? {};
+    /* 1️⃣  Xử lý ORDER BY */
+    const allowed = options?.allowedOrderFields ?? (["id", "created_at"] as (keyof T & string)[]);
+    const orderBy = options?.orderBy ?? (["id"] as (keyof T & string)[]);
+    const orderDir = options?.orderDirections ?? {};
 
-    // Validate & xây dựng chuỗi ORDER BY
-    const orderClauses = orderBy.map((field) => {
-      if (!allowed.includes(field)) {
-        throw new Error(`Invalid orderBy field: "${field}"`);
-      }
+    const orderSQL = orderBy
+      .map((col) => {
+        if (!allowed.includes(col)) throw new Error(`Invalid orderBy field: "${String(col)}"`);
+        const dir = orderDir[col] ?? "DESC";
+        return `${col} ${dir}`;
+      })
+      .join(", ");
 
-      const direction = orderMap[field] ?? "DESC";
-      return `${field} ${direction}`;
-    });
+    /* 2️⃣  Query */
+    const sql = `SELECT * FROM ${modelClass.table} ORDER BY ${orderSQL}`;
+    const { rows } = await safeQuery(sql);
 
-    const sql = `SELECT * FROM ${table} ORDER BY ${orderClauses.join(", ")}`;
-    const result = await safeQuery(sql);
-    return result.rows;
+    /* 3️⃣  Map → instance */
+    return rows.map((r) => new modelClass(r));
   }
 
-  async getById<T>(table: string, id: number): Promise<T | null> {
-    const sql = `SELECT * FROM ${table} WHERE id = $1`;
-    const result = await safeQuery(sql, [id]);
-    return result.rows[0] || null;
+  async getById<T>(modelClass: { new (data?: Partial<T>): T; table: string }, id: number): Promise<T | null> {
+    const sql = `SELECT * FROM ${modelClass.table} WHERE id = $1`;
+    const { rows } = await safeQuery(sql, [id]);
+
+    return rows[0] ? new modelClass(rows[0]) : null;
   }
 
   // **Cách dùng**
   //
   // 1. Truy vấn theo bất kỳ field:
-  //    const user = await repo.getByField<User>("users", "email", "abc@gmail.com");
+  //    const user = await repo.getByField<User>(User, "email", "abc@gmail.com");
   //
   // 2. Có thể sắp xếp kết quả nếu có nhiều bản ghi (ví dụ: getByField trả về nhiều rows):
-  //    const messages = await repo.getByField<Message>("messages", "conversation_id", "conv_123", {
+  //    const messages = await repo.getByField<Message>(Messages, "conversation_id", "conv_123", {
   //      orderBy: ["created_at", "id"],
   //      orderDirections: { created_at: "DESC", id: "ASC" },
   //      allowedOrderFields: ["created_at", "id"]
@@ -225,37 +228,47 @@ export class BaseRepo {
   //
   // 3. Nếu không tìm thấy bản ghi → trả về null hoặc [] tùy use case xử lý.
 
+  // lib/base-repo.ts ----------------------------------------------------------
+
+  /**
+   * ModelClass:
+   *   - có static table: string
+   *   - constructor(data?: Partial<T>)
+   */
   async getByField<T>(
-    table: string,
-    field: string,
+    modelClass: { new (data?: Partial<T>): T; table: string },
+    field: keyof T & string,
     value: any,
     options?: {
-      orderBy?: string[];
+      /** Các cột muốn ORDER BY (mặc định []) */
+      orderBy?: (keyof T & string)[];
+      /** Hướng sắp xếp từng cột (ASC | DESC) */
       orderDirections?: Record<string, "ASC" | "DESC">;
-      allowedOrderFields?: string[];
+      /** Danh sách cột được phép dùng ORDER BY (mặc định id, created_at) */
+      allowedOrderFields?: (keyof T & string)[];
     }
   ): Promise<T | null> {
-    const allowed = options?.allowedOrderFields ?? ["id", "created_at"];
+    // 1️⃣  Xử lý tuỳ chọn sắp xếp
+    const allowed = options?.allowedOrderFields ?? (["id", "created_at"] as (keyof T & string)[]);
     const orderBy = options?.orderBy ?? [];
-    const orderMap = options?.orderDirections ?? {};
+    const orderDir = options?.orderDirections ?? {};
 
-    // Validate & tạo ORDER BY nếu có
     let orderClause = "";
-    if (orderBy.length > 0) {
-      const orderClauses = orderBy.map((field) => {
-        if (!allowed.includes(field)) {
-          throw new Error(`Invalid orderBy field: "${field}"`);
-        }
-        const direction = orderMap[field] ?? "DESC";
-        return `${field} ${direction}`;
+    if (orderBy.length) {
+      const clauses = orderBy.map((col) => {
+        if (!allowed.includes(col)) throw new Error(`Invalid orderBy field: "${String(col)}"`);
+        const dir = orderDir[col] ?? "DESC";
+        return `${col} ${dir}`;
       });
-      orderClause = ` ORDER BY ${orderClauses.join(", ")}`;
+      orderClause = ` ORDER BY ${clauses.join(", ")}`;
     }
 
-    const sql = `SELECT * FROM ${table} WHERE ${field} = $1${orderClause}`;
-    const result = await safeQuery(sql, [value]);
+    // 2️⃣  Chuẩn bị & chạy truy vấn
+    const sql = `SELECT * FROM ${modelClass.table} WHERE ${field} = $1${orderClause}`;
+    const { rows } = await safeQuery(sql, [value]);
 
-    return result.rows.length === 0 ? null : result.rows[0];
+    // 3️⃣  Trả về instance hoặc null
+    return rows[0] ? new modelClass(rows[0]) : null;
   }
 
   // **Cách dùng**
@@ -278,46 +291,48 @@ export class BaseRepo {
   // 3. Nếu không có bản ghi → trả về mảng rỗng []
 
   async findManyByFields<T>(
-    table: string,
-    conditions: Record<string, any>,
+    modelClass: { new (data?: Partial<T>): T; table: string },
+    conditions: Partial<Record<keyof T & string, any>>,
     options?: {
-      orderBy?: string[];
+      orderBy?: (keyof T & string)[];
       orderDirections?: Record<string, "ASC" | "DESC">;
-      allowedOrderFields?: string[];
+      allowedOrderFields?: (keyof T & string)[];
     }
   ): Promise<T[]> {
-    const allowed = options?.allowedOrderFields ?? ["id", "created_at"];
-    const orderBy = options?.orderBy ?? [];
-    const orderMap = options?.orderDirections ?? {};
-
-    // Xây dựng WHERE clause
-    const whereClauses: string[] = [];
+    /** 1️⃣  WHERE */
+    const whereParts: string[] = [];
     const values: any[] = [];
-    let index = 1;
+    let idx = 1;
 
-    for (const [key, value] of Object.entries(conditions)) {
-      whereClauses.push(`${key} = $${index++}`);
-      values.push(value);
+    for (const [key, val] of Object.entries(conditions)) {
+      whereParts.push(`${key} = $${idx++}`);
+      values.push(val);
     }
+    const whereSQL = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
 
-    const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+    /** 2️⃣  ORDER BY */
+    const allowed = options?.allowedOrderFields ?? (["id", "created_at"] as (keyof T & string)[]);
+    const orderBy = options?.orderBy ?? [];
+    const orderDir = options?.orderDirections ?? {};
 
-    // Xây dựng ORDER BY
-    let orderClause = "";
-    if (orderBy.length > 0) {
-      const orderClauses = orderBy.map((field) => {
-        if (!allowed.includes(field)) {
-          throw new Error(`Invalid orderBy field: "${field}"`);
+    let orderSQL = "";
+    if (orderBy.length) {
+      const clauses = orderBy.map((col) => {
+        if (!allowed.includes(col)) {
+          throw new Error(`Invalid orderBy field: "${String(col)}"`);
         }
-        const direction = orderMap[field] ?? "DESC";
-        return `${field} ${direction}`;
+        const dir = orderDir[col] ?? "DESC";
+        return `${col} ${dir}`;
       });
-      orderClause = ` ORDER BY ${orderClauses.join(", ")}`;
+      orderSQL = ` ORDER BY ${clauses.join(", ")}`;
     }
 
-    const sql = `SELECT * FROM ${table} ${whereSQL}${orderClause}`;
-    const result = await safeQuery(sql, values);
-    return result.rows;
+    /** 3️⃣  Query */
+    const sql = `SELECT * FROM ${modelClass.table} ${whereSQL}${orderSQL}`;
+    const { rows } = await safeQuery(sql, values);
+
+    /** 4️⃣  Map → instance */
+    return rows.map((r) => new modelClass(r));
   }
 }
 
