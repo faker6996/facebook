@@ -12,9 +12,10 @@ export class Attachment {
     file_url: "file_url",
     file_type: "file_type",
     file_size: "file_size",
-  };
+  } as const;
 
   constructor(data: Partial<Attachment> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.message_id = data.message_id;
     this.file_url = data.file_url;

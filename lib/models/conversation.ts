@@ -12,9 +12,10 @@ export class Conversation {
     name: "name",
     created_by: "created_by",
     created_at: "created_at",
-  };
+  } as const;
 
   constructor(data: Partial<Conversation> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.is_group = data.is_group;
     this.name = data.name;

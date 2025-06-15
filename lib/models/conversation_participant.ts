@@ -13,9 +13,10 @@ export class ConversationParticipant {
     user_id: "user_id",
     joined_at: "joined_at",
     last_seen_at: "last_seen_at",
-  };
+  } as const;
 
   constructor(data: Partial<ConversationParticipant> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.conversation_id = data.conversation_id;
     this.user_id = data.user_id;

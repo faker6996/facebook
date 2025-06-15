@@ -17,9 +17,10 @@ export class Menu {
     order_index: "order_index",
     is_active: "is_active",
     parent_id: "parent_id",
-  };
+  } as const;
 
   constructor(data: Partial<Menu> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.icon = data.icon;
     this.slug = data.slug;

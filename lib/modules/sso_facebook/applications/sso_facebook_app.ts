@@ -8,7 +8,6 @@ export const ssoFacebookApp = {
     // check exits user
     const user = await baseRepo.getByField<User>(User, User.columns.email, userInfo.email);
 
-    debugger;
     if (user) {
       user.is_sso = true; // Đánh dấu là user SSO
       user.avatar_url = userInfo.picture?.data.url || user.avatar_url;

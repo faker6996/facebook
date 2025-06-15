@@ -10,9 +10,10 @@ export class MessageEditHistory {
     message_id: "message_id",
     old_content: "old_content",
     edited_at: "edited_at",
-  };
+  } as const;
 
   constructor(data: Partial<MessageEditHistory> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.message_id = data.message_id;
     this.old_content = data.old_content;

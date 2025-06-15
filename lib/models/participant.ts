@@ -11,10 +11,11 @@ export class Participant {
     user_id: "user_id",
     conversation_id: "conversation_id",
     joined_at: "joined_at",
-    role: "role"
-  };
+    role: "role",
+  } as const;
 
   constructor(data: Partial<Participant> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.user_id = data.user_id;
     this.conversation_id = data.conversation_id;

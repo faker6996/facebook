@@ -12,9 +12,10 @@ export class MessageStatus {
     user_id: "user_id",
     status: "status",
     updated_at: "updated_at",
-  };
+  } as const;
 
   constructor(data: Partial<MessageStatus> = {}) {
+    Object.assign(this, data);
     this.id = data.id;
     this.message_id = data.message_id;
     this.user_id = data.user_id;
