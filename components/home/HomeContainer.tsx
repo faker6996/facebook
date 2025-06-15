@@ -13,6 +13,7 @@ import Header from "@/components/layout/Header";
 import LeftSidebar from "@/components/layout/SidebarLeft";
 import SidebarRight from "@/components/layout/SidebarRight";
 import MessengerContainer from "@/components/messenger/MessengerContainer";
+import UserGuild from "@/components/UserGuild";
 
 interface HomeContainerProps {
   menus: Menu[];
@@ -47,6 +48,8 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
               <Card>📝 Bài viết 3</Card>
             </div>
             {/* <MessengerContainer></MessengerContainer> */}
+
+            <UserGuild></UserGuild>
           </Container>
         </main>
 

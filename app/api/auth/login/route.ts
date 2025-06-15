@@ -1,41 +1,37 @@
-import { userApp } from "@/lib/modules/user/applications/user_app";
-import { comparePassword, hashPassword } from "@/lib/utils/hash";
-import { signJwt } from "@/lib/utils/jwt";
+// app/api/auth/login/route.ts
+import { NextRequest } from "next/server";
 import { serialize } from "cookie";
-import { NextResponse } from "next/server";
-const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000/vi";
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { email, password, locale } = body;
+import { userApp } from "@/lib/modules/user/applications/user_app";
+import { signJwt } from "@/lib/utils/jwt";
+import { createResponse } from "@/lib/utils/response";
 
-    const user = await userApp.verifyUser(email, password);
-    const token = signJwt(
-      {
-        sub: user.id?.toString(),
-        email: user.email,
-        name: user.name,
-        id: user.id!,
-      },
-      "2h"
-    );
-    // Redirect to locale home page
-    const response = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
-    response.headers.set(
-      "Set-Cookie",
-      serialize("access_token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        sameSite: "lax",
-        maxAge: 60 * 60,
-      })
-    );
+import { withApiHandler } from "@/lib/utils/withApiHandler";
+import { ApiError } from "@/lib/utils/error";
 
-    return response;
-  } catch (error: any) {
-    console.error("Login error:", error);
-    return Response.json({ message: "Lỗi hệ thống, vui lòng thử lại sau." }, { status: 500 });
-  }
+async function handler(req: NextRequest) {
+  const { email, password } = await req.json();
+
+  const user = await userApp.verifyUser(email, password);
+  if (!user) throw new ApiError("Sai tài khoản hoặc mật khẩu", 401);
+
+  const token = signJwt({ sub: user.id!.toString(), email: user.email, name: user.name, id: user.id! }, "2h");
+
+  /* ✅ KHÔNG đưa token vào JSON */
+  const res = createResponse(null, "Đăng nhập thành công");
+
+  res.headers.set(
+    "Set-Cookie",
+    serialize("access_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60,
+    })
+  );
+
+  return res; // { success:true, data:null }
 }
+
+export const POST = withApiHandler(handler);

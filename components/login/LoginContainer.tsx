@@ -6,22 +6,24 @@ import Link from "next/link";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import Button from "../ui/Button";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Alert from "@/components/ui/Alert";
 import Input from "@/components/ui/Input";
+import router from "next/router";
 
 interface SsoReq {
   redirectUrl: string;
 }
 
 export default function LoginContainer() {
+  const router = useRouter(); // 👈 tạo instance
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "vi"; // Lấy locale từ URL
 
   const handleLoginWithFacebook = async () => {
     try {
       const res = await callApi<SsoReq>(API_ROUTES.AUTH.SSO_FACEBOOK, HTTP_METHOD_ENUM.POST, { locale });
-      window.location.href = res.redirectUrl;
+      window.location.href = res?.redirectUrl!;
     } catch (err: any) {
       console.error("Facebook SSO error:", err);
       throw new Error(`Facebook SSO failed: ${err?.message || "Unknown error"}`);
@@ -31,22 +33,29 @@ export default function LoginContainer() {
   const handleLoginWithGoogle = async () => {
     try {
       const res = await callApi<SsoReq>(API_ROUTES.AUTH.SSO_GOOGLE, HTTP_METHOD_ENUM.POST, { locale });
-      window.location.href = res.redirectUrl;
+      window.location.href = res?.redirectUrl!;
     } catch (err: any) {
       console.error("Google SSO error:", err);
       throw new Error(`Facebook SSO failed: ${err?.message || "Unknown error"}`);
     }
   };
   const handleEmailPasswordLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    debugger;
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+
+    const form = new FormData(e.currentTarget);
+    const email = form.get("email") as string;
+    const password = form.get("password") as string;
 
     try {
-      const res = await callApi<{ token: string }>(API_ROUTES.AUTH.LOGIN, HTTP_METHOD_ENUM.POST, { email, password, locale });
-    } catch (err: any) {
-      alert(err?.message || "Login failed");
+      /* Không mong đợi data → callApi<void> */
+      await callApi<void>(API_ROUTES.AUTH.LOGIN, HTTP_METHOD_ENUM.POST, { email, password });
+
+      // Cookie đã được set => chuyển trang
+      router.push("/vi"); // hoặc /vi, /dashboard … tùy bạn
+    } catch (err) {
+      // window.alert đã hiển thị (callApi), ghi log nếu muốn
+      console.error(err);
     }
   };
 

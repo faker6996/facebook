@@ -2,6 +2,7 @@ import { baseRepo } from "@/lib/modules/common/base_repo";
 import { userRepo } from "../repositories/user_repo";
 import { User } from "@/lib/models/user";
 import { comparePassword } from "@/lib/utils/hash";
+import { ApiError } from "@/lib/utils/error";
 
 export const userApp = {
   async execute(data: { name: string }) {
@@ -26,14 +27,10 @@ export const userApp = {
 
   async verifyUser(email: string, password: string): Promise<User> {
     const user = await this.getUserGetByEmail(email);
-    if (!user) {
-      throw new Error("Sai tài khoản hoặc mật khẩu");
-    }
+    if (!user) throw new ApiError("Sai tài khoản hoặc mật khẩu", 401);
 
-    const isPasswordCorrect = await comparePassword(password, user.password ?? "");
-    if (!isPasswordCorrect) {
-      throw new Error("Sai tài khoản hoặc mật khẩu");
-    }
+    const ok = await comparePassword(password, user.password ?? "");
+    if (!ok) throw new ApiError("Sai tài khoản hoặc mật khẩu", 401);
 
     return user;
   },
