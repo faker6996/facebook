@@ -16,5 +16,10 @@
       "google": "Google",
       "facebook": "Facebook"
     }
+  },
+  "ValidationInput": {
+    "required": "Trường này là bắt buộc",
+    "email": "Email không hợp lệ",
+    "pattern": "Giá trị không khớp định dạng"
   }
 }

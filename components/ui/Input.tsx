@@ -1,6 +1,7 @@
 // components/ui/Input.tsx
 import { InputHTMLAttributes, forwardRef, useState } from "react";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -11,6 +12,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, description, className, required, ...props }, ref) => {
   const [localError, setLocalError] = useState<string | undefined>(error);
 
+  const tv = useTranslations("ValidationInput");
   return (
     <div className="w-full space-y-1">
       {label && (
@@ -25,9 +27,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, descript
         required={required}
         onInvalid={(e) => {
           e.preventDefault();
-          if (required && !e.currentTarget.value) {
-            setLocalError("Trường này là bắt buộc");
-          }
+          const { validity } = e.currentTarget;
+          if (validity.valueMissing) setLocalError(tv("required"));
+          else if (validity.typeMismatch) setLocalError(tv("email"));
+          else if (validity.patternMismatch) setLocalError(tv("pattern"));
         }}
         onInput={() => setLocalError(undefined)}
         className={cn(

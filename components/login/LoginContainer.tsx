@@ -107,7 +107,7 @@ export default function LoginContainer() {
             <Button
               type="submit"
               variant="primary"
-              className="w-full rounded-md bg-primary text-primary-foreground hover:brightness-110 font-medium shadow-sm transition"
+              className="w-full rounded-md bg-primary text-primary-foreground hover:brightness-110 font-medium shadow-sm transition !cursor-pointer"
             >
               {t("signInButton")}
             </Button>
