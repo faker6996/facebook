@@ -75,8 +75,8 @@ export default function LoginContainer() {
         <div className="rounded-lg bg-card text-card-foreground px-6 py-8 shadow sm:px-10">
           <form className="space-y-6" onSubmit={handleEmailPasswordLogin}>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground">Email address</label>
               <Input
+                label={t("emailLabel")}
                 name="email"
                 type="email"
                 required
@@ -85,8 +85,8 @@ export default function LoginContainer() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground">Password</label>
               <Input
+                label={t("passwordLabel")}
                 type="password"
                 name="password"
                 required
@@ -107,7 +107,7 @@ export default function LoginContainer() {
             <Button
               type="submit"
               variant="primary"
-              className="w-full rounded-md bg-primary text-primary-foreground hover:brightness-110 font-medium shadow-sm transition !cursor-pointer"
+              className="w-full rounded-md bg-primary text-primary-foreground hover:brightness-110 font-medium shadow-sm transition"
             >
               {t("signInButton")}
             </Button>

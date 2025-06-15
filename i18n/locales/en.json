@@ -18,8 +18,15 @@
     },
     "ValidationInput": {
       "required": "This field is required",
-      "email": "Invalid email address",
-      "pattern": "Value does not match pattern"
+      "typeMismatch": "Invalid format",
+      "pattern": "Value does not match pattern",
+      "tooShort": "Value is too short",
+      "tooLong": "Value is too long",
+      "rangeUnderflow": "Number is too small",
+      "rangeOverflow": "Number is too large",
+      "stepMismatch": "Invalid step value",
+      "badInput": "Enter a number",
+      "invalid": "Invalid value"
     }
   }
 }
