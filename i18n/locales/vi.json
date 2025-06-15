@@ -16,5 +16,17 @@
       "google": "Google",
       "facebook": "Facebook"
     }
+  },
+  "ValidationInput": {
+    "required": "Trường này là bắt buộc",
+    "typeMismatch": "Định dạng không hợp lệ",
+    "pattern": "Giá trị không khớp định dạng",
+    "tooShort": "Giá trị quá ngắn",
+    "tooLong": "Giá trị quá dài",
+    "rangeUnderflow": "Số quá nhỏ",
+    "rangeOverflow": "Số quá lớn",
+    "stepMismatch": "Sai bước nhảy",
+    "badInput": "Vui lòng nhập số",
+    "invalid": "Giá trị không hợp lệ"
   }
 }
