@@ -24,7 +24,7 @@ export default function MessengerDropdown() {
         setCurrentUser(user);
 
         const res = await callApi<MessengerPreview[]>(API_ROUTES.MESSENGER.RECENT(user.id), HTTP_METHOD_ENUM.GET);
-        debugger;
+
         setConversations(res);
       } catch (err) {
         console.error("Lỗi khi load conversations:", err);
