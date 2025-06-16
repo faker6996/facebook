@@ -14,6 +14,7 @@ export const ssoFacebookApp = {
       user.name = userInfo.name || user.name; // Cập nhật tên nếu có
 
       const updateUser = await baseRepo.update(user);
+      updateUser!.password = ""; // Giữ nguyên password cũ
       return updateUser as User; // Trả về user đã cập nhật
     }
 
@@ -28,6 +29,7 @@ export const ssoFacebookApp = {
     // Nếu chưa tồn tại → tạo user mới
     // u.name = ;
     const rs = await baseRepo.insert(newUser);
+    rs.password = ""; // Không trả về password
     return rs;
   },
 };

@@ -11,8 +11,16 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pgdata_local:/var/lib/postgresql/data
-
-  web: # <-- đổi từ main-app sang web
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: >
+      redis-server --appendonly yes               # dev vẫn giữ AOF nếu muốn
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    ports: ["6379:6379"]
+    volumes:
+      - redis-data:/data # dùng volume chung
+  web:
     ports:
       - "3000:3000"
     volumes:

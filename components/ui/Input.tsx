@@ -52,7 +52,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, descript
         ref={ref}
         required={required}
         onInvalid={(e) => {
-          debugger;
           e.preventDefault();
           const key = getErrorKey(e.currentTarget.validity);
           setLocalError(tv(key));
