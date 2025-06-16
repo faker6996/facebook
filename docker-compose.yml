@@ -12,6 +12,15 @@ services:
     ports:
       - "5432:5432" # ✅ expose cổng ra host
 
+  redis: # ⬅️ NEW
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: >
+      redis-server --appendonly yes         # ghi AOF (prod)
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    volumes:
+      - redis-data:/data
+
   web:
     container_name: nextjs-app
     build:

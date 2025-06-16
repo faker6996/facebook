@@ -13,6 +13,7 @@ import { createResponse } from "@/lib/utils/response";
 
 import { withApiHandler } from "@/lib/utils/withApiHandler";
 import { ApiError } from "@/lib/utils/error";
+import { cacheUser } from "@/lib/cache/user";
 
 const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID!;
 const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET!;
@@ -82,6 +83,9 @@ async function getHandler(req: NextRequest) {
 
   /* 3. Xử lý sau SSO (tạo/đồng bộ user) */
   const user = await ssoFacebookApp.handleAfterSso(userInfo);
+
+  // ✅ Ghi vào Redis
+  await cacheUser(user);
 
   /* 4. Tạo JWT & redirect */
   const token = signJwt(
