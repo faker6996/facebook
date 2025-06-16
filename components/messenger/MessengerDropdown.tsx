@@ -22,7 +22,6 @@ export default function MessengerDropdown() {
         const user = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
         if (!user?.id) return;
 
-        debugger;
         setCurrentUser(user);
 
         const res = await callApi<MessengerPreview[]>(API_ROUTES.MESSENGER.RECENT(user.id), HTTP_METHOD_ENUM.GET);
