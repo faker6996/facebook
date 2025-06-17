@@ -18,8 +18,6 @@ services:
     command: >
       redis-server --appendonly yes         # ghi AOF (prod)
       ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
-    volumes:
-      - redis-data:/data
 
   web:
     container_name: nextjs-app
