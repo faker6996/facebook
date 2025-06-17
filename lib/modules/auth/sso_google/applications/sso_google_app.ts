@@ -1,5 +1,5 @@
 import { User, UserInfoSso } from "@/lib/models/user";
-import { baseRepo } from "../../common/base_repo";
+import { baseRepo } from "@/lib/modules/common/base_repo";
 import { ssoGoogleRepo } from "../repositories/sso_google_app";
 import { hashPassword } from "@/lib/utils/hash";
 

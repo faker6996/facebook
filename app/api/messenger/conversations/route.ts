@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // ✅ GET /api/messenger/recent?userId=1
 async function getHandler(req: NextRequest) {
+  debugger;
   const { searchParams } = new URL(req.url);
   const userId = Number(searchParams.get("userId"));
 
