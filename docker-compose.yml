@@ -30,4 +30,5 @@ services:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - postgres
+      - redis
     command: npm run dev_v2
