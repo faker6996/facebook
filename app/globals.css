@@ -2,48 +2,66 @@
 @config "../tailwind.config.ts";
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 47.4% 11.2%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 47.4% 11.2%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --primary: 240 100% 66%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 210 30% 95%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --accent: 210 40% 90%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 100% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --ring: 240 4.8% 95.9%;
+  --background: 0 0% 100%; /* #ffffff */
+  --foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+
+  --muted: 210 40% 96.1%; /* #f1f5f9 */
+  --muted-foreground: 215.4 16.3% 46.9%; /* #64748b */
+
+  --popover: 0 0% 100%; /* #ffffff */
+  --popover-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+
+  --card: 0 0% 100%; /* #ffffff */
+  --card-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+
+  --border: 214.3 31.8% 91.4%; /* #e2e8f0 */
+  --input: 214.3 31.8% 91.4%; /* #e2e8f0 */
+
+  --primary: 240 100% 66%; /* #4f46e5 */
+  --primary-foreground: 0 0% 100%; /* #ffffff */
+
+  --secondary: 210 30% 95%; /* #f8fafc */
+  --secondary-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+
+  --accent: 210 40% 90%; /* #e2e8f0 */
+  --accent-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+
+  --destructive: 0 100% 50%; /* #ff0000 */
+  --destructive-foreground: 0 0% 100%; /* #ffffff */
+
+  --ring: 240 4.8% 95.9%; /* #f0f1f9 */
   --radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 0deg 1.8% 11.2%; /* #09090b */
+    --background: 0deg 1.8% 11.2%; /* #1c1c1d */
     --foreground: 210 40% 98%; /* #f9f9fa */
-    --muted: 217.2 32.6% 24%; /* #27272a */
+
+    --muted: 217.2 32.6% 24%; /* #3b3b44 */
     --muted-foreground: 215 20.2% 65.1%; /* #a1a1aa */
-    --popover: 224 71% 4%; /* #09090b (hơi khác tí) */
+
+    --popover: 224 71% 4%; /* #0a0a0a */
     --popover-foreground: 210 40% 98%; /* #f9f9fa */
-    --card: 195.3 5.3% 14.9%;
+
+    --card: 195.3 5.3% 14.9%; /* #26292b */
     --card-foreground: 210 40% 98%; /* #f9f9fa */
-    --border: 216 34% 22%; /* #27272a */
+
+    --border: 216 34% 22%; /* #37373f */
     --input: 216 34% 38%; /* #52525b */
+
     --primary: 210 100% 66%; /* #3b82f6 */
-    --primary-foreground: 222.2 47.4% 1.2%; /* #0a0a0a */
+    --primary-foreground: 222.2 47.4% 1.2%; /* #050505 */
+
     --secondary: 222.2 47.4% 11.2%; /* #1a1a1a */
     --secondary-foreground: 210 40% 98%; /* #f9f9fa */
-    --accent: 216 34% 17%; /* #23272f */
+
+    --accent: 216 34% 17%; /* #2c2f36 */
     --accent-foreground: 210 40% 98%; /* #f9f9fa */
-    --destructive: 0 62.8% 30.6%; /* #b91c1c */
-    --destructive-foreground: 0 85.7% 97.3%; /* #fff0f0 */
+
+    --destructive: 0 62.8% 30.6%; /* #991b1b */
+    --destructive-foreground: 0 85.7% 97.3%; /* #ffecec */
+
     --ring: 216 34% 42%; /* #6366f1 */
   }
 }

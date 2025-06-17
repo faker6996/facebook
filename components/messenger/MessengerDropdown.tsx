@@ -41,28 +41,25 @@ export default function MessengerDropdown() {
 
   return (
     <>
-      <div className="absolute right-0 top-14 w-96 bg-white shadow-lg rounded-md p-4 z-50">
-        <h3 className="text-lg font-bold mb-2">Tin nhắn gần đây</h3>
+      <div className="absolute right-0 top-14 w-96 bg-card shadow-lg rounded-md p-4 z-50">
+        <h3 className="text-lg font-bold mb-2 text-foreground">Tin nhắn gần đây</h3>
 
         {loading ? (
-          <div className="text-gray-500">Đang tải...</div>
+          <div className="text-muted-foreground">Đang tải...</div>
         ) : conversations.length === 0 ? (
-          <div className="text-gray-500">Không có cuộc trò chuyện nào</div>
+          <div className="text-muted-foreground">Không có cuộc trò chuyện nào</div>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y divide-border">
             {conversations.map((item) => {
-              const isUnread =
-                !item.last_seen_at || // chưa từng xem
-                !item.last_message_at || // chưa từng có tin nhắn (coi như chưa xem)
-                new Date(item.last_message_at) > new Date(item.last_seen_at);
+              const isUnread = !item.last_seen_at || !item.last_message_at || new Date(item.last_message_at) > new Date(item.last_seen_at);
 
               return (
                 <li
                   key={item.conversation_id}
                   onClick={() => setSelectedConversation(item)}
-                  className="flex items-center gap-3 py-2 hover:bg-gray-100 cursor-pointer px-2 rounded"
+                  className="flex items-center gap-3 py-2 hover:bg-muted cursor-pointer px-2 rounded transition duration-150"
                 >
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
                     <Image
                       src={item.avatar_url || "/avatar.png"}
                       alt={item.other_user_name ?? "Avatar"}
@@ -73,12 +70,14 @@ export default function MessengerDropdown() {
                   </div>
 
                   <div className="flex-1">
-                    <div className={`font-semibold ${isUnread ? "text-black" : "text-gray-800"}`}>{item.other_user_name}</div>
-                    <div className={`text-sm truncate ${isUnread ? "text-black font-medium" : "text-gray-500"}`}>{item.last_message}</div>
-                    <div className="text-xs text-gray-400">{formatTime(item.last_message_at)}</div>
+                    <div className={`font-semibold ${isUnread ? "text-foreground" : "text-muted-foreground"}`}>{item.other_user_name}</div>
+                    <div className={`text-sm truncate ${isUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                      {item.last_message}
+                    </div>
+                    <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
                   </div>
 
-                  {isUnread && <div className="w-2 h-2 bg-blue-500 rounded-full self-center"></div>}
+                  {isUnread && <div className="w-2 h-2 bg-primary rounded-full self-center"></div>}
                 </li>
               );
             })}
