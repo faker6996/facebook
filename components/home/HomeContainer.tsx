@@ -14,6 +14,7 @@ import LeftSidebar from "@/components/layout/SidebarLeft";
 import SidebarRight from "@/components/layout/SidebarRight";
 import MessengerContainer from "@/components/messenger/MessengerContainer";
 import UserGuild from "@/components/UserGuild";
+import { saveToLocalStorage } from "@/lib/utils/local-storage";
 
 interface HomeContainerProps {
   menus: Menu[];
@@ -26,6 +27,7 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       const res = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
+      saveToLocalStorage("user", res);
       return res;
     };
     fetchUserProfile();

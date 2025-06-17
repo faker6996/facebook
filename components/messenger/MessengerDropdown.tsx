@@ -9,6 +9,7 @@ import { User } from "@/lib/models/user";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import MessengerContainer from "@/components/messenger/MessengerContainer";
+import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 
 export default function MessengerDropdown() {
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
@@ -19,7 +20,8 @@ export default function MessengerDropdown() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const user = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
+        debugger;
+        const user = loadFromLocalStorage("user", User);
         if (!user?.id) return;
 
         setCurrentUser(user);
