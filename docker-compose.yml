@@ -16,7 +16,7 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     command: >
-      redis-server --appendonly yes         # ghi AOF (prod)
+      redis-server --appendonly yes
       ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
 
   web:
