@@ -41,6 +41,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/cookie": "^0.6.0",
+    "@types/ioredis": "^4.28.10",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/pg": "^8.15.4",

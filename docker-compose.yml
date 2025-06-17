@@ -16,10 +16,8 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     command: >
-      redis-server --appendonly yes         # ghi AOF (prod)
+      redis-server --appendonly yes
       ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
-    volumes:
-      - redis-data:/data
 
   web:
     container_name: nextjs-app
@@ -30,4 +28,5 @@ services:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - postgres
+      - redis
     command: npm run dev_v2

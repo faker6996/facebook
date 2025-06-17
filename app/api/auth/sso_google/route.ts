@@ -2,7 +2,7 @@ import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { SsoAuthToken } from "@/lib/models/sso_auth_token";
 import { UserInfoSso } from "@/lib/models/user";
-import { ssoGoogleApp } from "@/lib/modules/sso_google/applications/sso_google_app";
+import { ssoGoogleApp } from "@/lib/modules/auth/sso_google/applications/sso_google_app";
 import { callApi } from "@/lib/utils/api-client";
 import { signJwt } from "@/lib/utils/jwt";
 import { serialize } from "cookie";
