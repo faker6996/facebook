@@ -6,6 +6,7 @@ interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   alt?: string;
   fallback?: string;
   size?: "sm" | "md" | "lg";
+  onClick?: () => void; // 👈 thêm onClick rõ ràng
 }
 
 const sizeClasses: Record<NonNullable<AvatarProps["size"]>, string> = {
@@ -14,16 +15,17 @@ const sizeClasses: Record<NonNullable<AvatarProps["size"]>, string> = {
   lg: "h-14 w-14 text-lg",
 };
 
-export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", className, ...props }: AvatarProps) => {
+export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", className, onClick, ...props }: AvatarProps) => {
   const [loaded, setLoaded] = React.useState<boolean>(false);
 
   return (
     <div
       className={cn(
-        "relative inline-flex items-center justify-center overflow-hidden rounded-full bg-muted text-foreground select-none",
+        "relative inline-flex items-center justify-center overflow-hidden rounded-full bg-muted text-foreground select-none cursor-pointer",
         sizeClasses[size],
         className
       )}
+      onClick={onClick} // 👈 dùng tại đây
       {...props}
     >
       {src && (
