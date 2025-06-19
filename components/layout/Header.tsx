@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BsMessengerIcon from "../icons/BsMessengerIcon";
 import FaBellIcon from "../icons/FaBellIcon";
 import FaThIcon from "../icons/FaThIcon";
@@ -12,12 +12,23 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 import MessengerDropdown from "@/components/messenger/MessengerDropdown";
 import Avatar from "@/components/ui/Avatar";
+import { User } from "@/lib/models/user";
+import { loadFromLocalStorage } from "@/lib/utils/local-storage";
+import AvatarMenuItemContainer from "@/components/AvatarMenuItem/AvatarMenuItemContainer";
 
 export default function Header() {
   const [showMessenger, setShowMessenger] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [user, setUser] = useState(new User());
+  useEffect(() => {
+    setUser(loadFromLocalStorage("user", User));
+  }, []);
 
   const toggleMessenger = () => {
     setShowMessenger((prev) => !prev);
+  };
+  const handleClickAvatar = () => {
+    setShowAvatarMenu((prev) => !prev);
   };
 
   return (
@@ -41,13 +52,17 @@ export default function Header() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
-        <Button icon={FaThIcon} size="icon" className="bg-gray-300"></Button>
+        <Button icon={FaThIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
         <div className="relative">
-          <Button icon={BsMessengerIcon} size="icon" className="bg-gray-300" onClick={toggleMessenger} />
+          <Button icon={BsMessengerIcon} size="icon" className="bg-muted hover:bg-accent" onClick={toggleMessenger} />
           {showMessenger && <MessengerDropdown />}
         </div>
-        <Button icon={FaBellIcon} size="icon" className="bg-gray-300"></Button>
-        <Avatar src="" size="sm"></Avatar>
+        <Button icon={FaBellIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
+
+        <div className="relative">
+          <Avatar onClick={() => handleClickAvatar()} className="cursor-pointer" src={user.avatar_url} size="md"></Avatar>
+          {showAvatarMenu && <AvatarMenuItemContainer />}
+        </div>
       </div>
     </header>
   );
