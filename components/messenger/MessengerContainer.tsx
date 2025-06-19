@@ -1,6 +1,7 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import { Avatar } from "@/components/ui/Avatar";
-import { cn } from "@/lib/utils/cn";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { ScrollArea } from "@/components/ui/ScrollArea";
@@ -10,6 +11,8 @@ import { callApi } from "@/lib/utils/api-client";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { formatTime } from "@/lib/utils/formatTime";
+import { useSocket } from "@/lib/hooks/useSocket";
+import { cn } from "@/lib/utils/cn";
 
 interface MessengerContainerProps {
   conversation: MessengerPreview;
@@ -22,11 +25,20 @@ export default function MessengerContainer({ conversation, currentUserId, onClos
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  const conversationId = conversation.conversation_id;
+
+  // ✅ Lắng nghe tin nhắn mới từ socket
+  useSocket(conversationId!, (msg: Message) => {
+    setMessages((prev) => [...prev, msg]);
+  });
+
+  // ✅ Tải danh sách tin nhắn ban đầu
   useEffect(() => {
+    if (!conversationId) return;
+
     const fetchMessages = async () => {
-      if (!conversation?.conversation_id) return;
       try {
-        const data = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversation.conversation_id), HTTP_METHOD_ENUM.GET);
+        const data = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversationId), HTTP_METHOD_ENUM.GET);
         setMessages(data);
       } catch (err) {
         console.error("Lỗi khi tải tin nhắn:", err);
@@ -34,23 +46,26 @@ export default function MessengerContainer({ conversation, currentUserId, onClos
     };
 
     fetchMessages();
-  }, [conversation.conversation_id]);
+  }, [conversationId]);
 
+  // ✅ Scroll xuống cuối khi có tin nhắn mới
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // ✅ Gửi tin nhắn
   const sendMessage = async () => {
     if (!input.trim()) return;
+
     try {
-      const newMsg = await callApi<Message>(API_ROUTES.MESSENGER.SEND_MESSAGE, HTTP_METHOD_ENUM.POST, {
-        conversationId: conversation.conversation_id,
+      await callApi<Message>(API_ROUTES.MESSENGER.SEND_MESSAGE, HTTP_METHOD_ENUM.POST, {
+        conversationId,
+        userId: currentUserId,
         content: input,
       });
-      setMessages((prev) => [...prev, newMsg]);
-      setInput("");
+      setInput(""); // chỉ clear, không cần push message → socket sẽ emit về
     } catch (err) {
-      console.error("Gửi tin nhắn thất bại:", err);
+      console.error("Gửi thất bại:", err);
     }
   };
 

@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "dev:server": "node --loader ts-node/esm server.ts",
     "docker:local-up": "docker-compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env.local up -d",
     "docker:down": "docker-compose down",
     "docker:restart": "npm run docker:down && npm run docker:up",
@@ -43,11 +44,12 @@
     "@types/cookie": "^0.6.0",
     "@types/ioredis": "^4.28.10",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^20",
+    "@types/node": "^20.19.1",
     "@types/pg": "^8.15.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cross-env": "^7.0.3",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }

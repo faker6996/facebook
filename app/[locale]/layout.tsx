@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
+import ClientSocketInit from "@/components/socket/ClientSocketInit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,10 @@ export default async function RootLayout({ children, params }: { children: React
   }
   return (
     <html lang={locale}>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{<NextIntlClientProvider>{children}</NextIntlClientProvider>}</body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* <ClientSocketInit /> */}
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+      </body>
     </html>
   );
 }
