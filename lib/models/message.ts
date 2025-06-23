@@ -1,3 +1,5 @@
+import { MESSAGE_TYPE } from "@/lib/constants/enum";
+
 export class Message {
   id?: number;
   conversation_id?: string;
@@ -25,4 +27,11 @@ export class Message {
     this.message_type = data.message_type;
     this.created_at = data.created_at;
   }
+}
+
+export interface SendMessageRequest {
+  senderId: number; // user A
+  content: string; // nội dung
+  messageType: MESSAGE_TYPE; // xem enum trên
+  targetId?: number; // userId / groupId (PRIVATE / GROUP)
 }

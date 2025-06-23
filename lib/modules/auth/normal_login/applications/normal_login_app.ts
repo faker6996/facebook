@@ -4,7 +4,7 @@ import { hashPassword } from "@/lib/utils/hash";
 import { baseRepo } from "@/lib/modules/common/base_repo";
 
 export const normalLoginApp = {
-  async handleAfterLogin(userInfo: User): Promise<User> {
+  async handleAfterLogin(userInfo: User): Promise<User | null> {
     // check exits user
     const user = await baseRepo.getByField<User>(User, User.columns.email, userInfo.email);
 
@@ -17,19 +17,6 @@ export const normalLoginApp = {
       updateUser!.password = "";
       return updateUser as User; // Trả về user đã cập nhật
     }
-
-    const newUser = new User();
-    newUser.email = userInfo.email;
-    newUser.name = userInfo.name;
-    newUser.is_sso = false;
-    newUser.user_name = userInfo.email;
-
-    newUser.password = await hashPassword(userInfo.email + "2025");
-
-    // Nếu chưa tồn tại → tạo user mới
-    // u.name = ;
-    const rs = await baseRepo.insert(newUser);
-    rs.password = ""; // Không trả về password
-    return rs;
+    return null;
   },
 };

@@ -23,4 +23,7 @@ export const API_ROUTES = {
     MESSAGES: (conversationId: number) => `/api/messenger/messages?conversationId=${conversationId}`,
     SEND_MESSAGE: `/api/messenger/messages`,
   },
+  CHAT_SERVER: {
+    SENT_MESSAGE: `${process.env.CHAT_SERVER_URL}/api/messages`,
+  },
 };
