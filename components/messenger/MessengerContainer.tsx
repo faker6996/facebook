@@ -13,14 +13,16 @@ import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
 import type { Message, SendMessageRequest } from "@/lib/models/message";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
+import { User } from "@/lib/models/user";
+import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 
 interface Props {
   conversation: MessengerPreview;
-  currentUserId: number;
   onClose: () => void;
 }
 
-export default function MessengerContainer({ conversation, currentUserId, onClose }: Props) {
+export default function MessengerContainer({ conversation, onClose }: Props) {
+  const [sender, setSender] = useState<User>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -31,6 +33,8 @@ export default function MessengerContainer({ conversation, currentUserId, onClos
   useEffect(() => {
     if (!conversation?.conversation_id) return;
 
+    const sender = loadFromLocalStorage("user", User);
+    setSender(sender ?? {});
     let abort = false;
 
     (async () => {
@@ -88,15 +92,15 @@ export default function MessengerContainer({ conversation, currentUserId, onClos
     if (!input.trim()) return;
 
     const body: SendMessageRequest = {
-      senderId: currentUserId,
+      senderId: sender.id!,
       content: input.trim(),
       messageType: MESSAGE_TYPE.PRIVATE,
-      targetId: conversation.conversation_id,
+      targetId: conversation.target_id,
     };
 
     try {
       // Gọi ChatServer – API chỉ trả status, không cần push thủ công
-      await callApi(API_ROUTES.CHAT_SERVER.SENT_MESSAGE, HTTP_METHOD_ENUM.POST, body);
+      await callApi(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}${API_ROUTES.MESSENGER.SEND_MESSAGE}`, HTTP_METHOD_ENUM.POST, body);
       setInput("");
     } catch (err) {
       console.error("Gửi tin nhắn thất bại:", err);
@@ -129,7 +133,7 @@ export default function MessengerContainer({ conversation, currentUserId, onClos
             key={msg.id}
             className={cn(
               "max-w-[80%] break-words rounded-lg px-4 py-2 text-sm shadow",
-              msg.sender_id === currentUserId ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-muted text-foreground"
+              msg.sender_id === sender.id ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-muted text-foreground"
             )}
           >
             <p>{msg.content}</p>

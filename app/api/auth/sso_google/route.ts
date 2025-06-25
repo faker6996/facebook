@@ -65,7 +65,7 @@ export async function GET(req: Request) {
     // Create JWT
     const token = signJwt(
       {
-        sub: userInfo.id, // dùng user ID
+        sub: user.id!.toString(),
         email: user.email,
         name: user.name,
         id: user.id!,
