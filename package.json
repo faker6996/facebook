@@ -18,6 +18,7 @@
     "docker:prod-down": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml down"
   },
   "dependencies": {
+    "@microsoft/signalr": "^8.0.7",
     "@reduxjs/toolkit": "^2.7.0",
     "@tailwindcss/postcss": "^4.1.7",
     "axios": "^1.9.0",

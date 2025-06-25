@@ -27,6 +27,7 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       const res = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
+      debugger;
       saveToLocalStorage("user", res);
       return res;
     };

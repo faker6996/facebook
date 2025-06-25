@@ -9,6 +9,8 @@ export class User {
   address?: string;
   created_at?: string;
   is_sso?: boolean;
+  is_active?: boolean;
+  sub?: string;
 
   static table = "users";
   static columns = {
@@ -22,6 +24,8 @@ export class User {
     address: "address",
     created_at: "created_at",
     is_sso: "is_sso",
+    is_active: "is_active",
+    sub: "sub",
   } as const;
 
   constructor(data: Partial<User> = {}) {
@@ -36,11 +40,13 @@ export class User {
     this.address = data.address;
     this.created_at = data.created_at;
     this.is_sso = data.is_sso;
+    this.is_active = data.is_active;
+    this.sub = data.sub;
   }
 }
 
 export interface UserInfoSso {
-  id: string;
+  sub: string;
   name: string;
   email: string;
   verified_email: boolean;

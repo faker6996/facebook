@@ -10,6 +10,7 @@ import { withApiHandler } from "@/lib/utils/withApiHandler";
 import { ApiError } from "@/lib/utils/error";
 import { saveToLocalStorage } from "@/lib/utils/local-storage";
 import { normalLoginApp } from "@/lib/modules/auth/normal_login/applications/normal_login_app";
+import { cacheUser } from "@/lib/cache/user";
 
 async function handler(req: NextRequest) {
   const { email, password } = await req.json();
@@ -20,7 +21,7 @@ async function handler(req: NextRequest) {
   if (!user) throw new ApiError("Sai tài khoản hoặc mật khẩu", 401);
 
   const token = signJwt({ sub: user.id!.toString(), email: user.email, name: user.name, id: user.id! }, "2h");
-
+  await cacheUser(user);
   /* ✅ KHÔNG đưa token vào JSON */
   const res = createResponse(null, "Đăng nhập thành công");
 

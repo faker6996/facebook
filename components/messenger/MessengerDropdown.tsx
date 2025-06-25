@@ -15,7 +15,7 @@ export default function MessengerDropdown() {
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<MessengerPreview | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,10 +24,11 @@ export default function MessengerDropdown() {
         const user = loadFromLocalStorage("user", User);
         if (!user?.id) return;
 
-        setCurrentUser(user);
+        setUser(user);
 
         const res = await callApi<MessengerPreview[]>(API_ROUTES.MESSENGER.RECENT(user.id), HTTP_METHOD_ENUM.GET);
 
+        debugger;
         setConversations(res);
       } catch (err) {
         console.error("Lỗi khi load conversations:", err);
@@ -86,9 +87,7 @@ export default function MessengerDropdown() {
       </div>
 
       {/* 💬 Hiển thị khung chat khi chọn 1 conversation */}
-      {selectedConversation && currentUser && (
-        <MessengerContainer conversation={selectedConversation} currentUserId={currentUser.id!} onClose={() => setSelectedConversation(null)} />
-      )}
+      {selectedConversation && user && <MessengerContainer conversation={selectedConversation} onClose={() => setSelectedConversation(null)} />}
     </>
   );
 }

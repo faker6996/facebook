@@ -24,6 +24,18 @@ services:
     volumes:
       - /home/infvn/docker-data/redis:/data
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - /home/infvn/docker-data/rabbitmq:/var/lib/rabbitmq
+
   web:
     build:
       context: .
@@ -40,3 +52,4 @@ services:
     depends_on:
       - postgres
       - redis
+      - rabbitmq

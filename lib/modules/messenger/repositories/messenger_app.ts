@@ -18,11 +18,16 @@ export const messengerRepo = {
         u.avatar_url,
         m.content AS last_message,
         m.created_at AS last_message_at,
-        cp1.last_seen_at AS last_seen_at
+        cp1.last_seen_at AS last_seen_at,
+        cp2.user_id AS target_id
       FROM conversations c
-      JOIN conversation_participants cp1 ON cp1.conversation_id = c.id
-      JOIN conversation_participants cp2 ON cp2.conversation_id = c.id AND cp2.user_id != cp1.user_id
-      JOIN users u ON u.id = cp2.user_id
+      JOIN conversation_participants cp1
+          ON cp1.conversation_id = c.id
+          AND cp1.user_id = $1                 -- <-- khóa chặt cp1 là “mình”
+      JOIN conversation_participants cp2
+          ON cp2.conversation_id = c.id
+          AND cp2.user_id <> cp1.user_id       -- người còn lại
+      JOIN users u       ON u.id = cp2.user_id
       LEFT JOIN LATERAL (
         SELECT *
         FROM messages m
@@ -30,7 +35,6 @@ export const messengerRepo = {
         ORDER BY m.created_at DESC
         LIMIT 1
       ) m ON true
-      WHERE u.id = $1
       ORDER BY m.created_at DESC NULLS LAST
     `;
 

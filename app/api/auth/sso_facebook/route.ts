@@ -92,7 +92,7 @@ async function getHandler(req: NextRequest) {
   /* 4. Tạo JWT & redirect */
   const token = signJwt(
     {
-      sub: userInfo.id,
+      sub: user.id!.toString(),
       email: user.email,
       name: user.name,
       id: user.id!,

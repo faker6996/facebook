@@ -18,3 +18,9 @@ export enum LOCALE {
   VI = "vi",
   EN = "en",
 }
+
+export enum MESSAGE_TYPE {
+  PUBLIC = 0,
+  PRIVATE = 1,
+  GROUP = 2,
+}

@@ -11,6 +11,8 @@ CREATE TABLE users (
     email VARCHAR(150) NOT NULL,
     phone_number VARCHAR(20),
     address TEXT,
+    sub varchar(64),
+    is_active BOOLEAN DEFAULT true,
     created_by INTEGER,
     is_sso BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
