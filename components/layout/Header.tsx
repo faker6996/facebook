@@ -21,7 +21,6 @@ export default function Header() {
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [user, setUser] = useState(new User());
   useEffect(() => {
-    debugger;
     setUser(loadFromLocalStorage("user", User));
   }, []);
 

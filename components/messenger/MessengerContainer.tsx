@@ -36,6 +36,8 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     const sender = loadFromLocalStorage("user", User);
     setSender(sender ?? {});
     let abort = false;
+    console.log("sender:", sender);
+    console.log("conversation:", conversation);
 
     (async () => {
       try {
@@ -55,7 +57,6 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
   /* 2. Kết nối SignalR chỉ 1 lần                                       */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    debugger;
     const conn = new signalR.HubConnectionBuilder()
       .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, {
         withCredentials: true,
@@ -64,10 +65,9 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
       .build();
 
     conn.on("ReceiveMessage", (m: SendMessageRequest) => {
-      if (
-        m.targetId === conversation.conversation_id || // bạn là người nhận
-        m.senderId === conversation.conversation_id // bạn là người gửi
-      ) {
+      console.log("Nhận tinới:", m);
+      if (m.targetId === sender.id || m.senderId === conversation.other_user_id) {
+        console.log("Nhận tin nhắn mới:", m);
         setMessages((list) => [...list, m]);
       }
     });
