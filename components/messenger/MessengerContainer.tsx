@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import * as signalR from "@microsoft/signalr"; // 🔧 import dạng namespace
+import * as signalR from "@microsoft/signalr";
 import { Avatar } from "@/components/ui/Avatar";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import Button from "@/components/ui/Button";
@@ -11,10 +11,12 @@ import { formatTime } from "@/lib/utils/formatTime";
 import { callApi } from "@/lib/utils/api-client";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
-import type { Message, SendMessageRequest } from "@/lib/models/message";
+import { Message, MessageStatus, SendMessageRequest } from "@/lib/models/message";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
 import { User } from "@/lib/models/user";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
+import { MessageStatusIcon } from "@/components/icons/MessageStatusIcon";
+// ✨ 1. Import component icon bạn đã tạo
 
 interface Props {
   conversation: MessengerPreview;
@@ -32,52 +34,67 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
   /* ------------------------------------------------------------------ */
   useEffect(() => {
     if (!conversation?.conversation_id) return;
-
     const sender = loadFromLocalStorage("user", User);
     setSender(sender ?? {});
-    let abort = false;
-    console.log("sender:", sender);
-    console.log("conversation:", conversation);
-
+    let isMounted = true;
     (async () => {
       try {
-        const data = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversation.conversation_id ?? 0), HTTP_METHOD_ENUM.GET);
-        if (!abort) setMessages(data);
+        const response = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversation.conversation_id ?? 0), HTTP_METHOD_ENUM.GET);
+        // Chuyển đổi data thô thành instance của class Message
+        const messageInstances = response?.map((msgData) => new Message(msgData));
+        if (isMounted) setMessages(messageInstances);
       } catch (err) {
         console.error("Lỗi tải tin nhắn:", err);
       }
     })();
-
     return () => {
-      abort = true;
+      isMounted = false;
     };
   }, [conversation?.conversation_id]);
 
   /* ------------------------------------------------------------------ */
-  /* 2. Kết nối SignalR chỉ 1 lần                                       */
+  /* 2. Kết nối và xử lý SignalR                                       */
   /* ------------------------------------------------------------------ */
+
   useEffect(() => {
+    if (!sender?.id || !conversation?.other_user_id) return;
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, {
-        withCredentials: true,
-      })
+      .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, { withCredentials: true })
       .withAutomaticReconnect()
       .build();
 
-    conn.on("ReceiveMessage", (m: SendMessageRequest) => {
-      console.log("Nhận tinới:", m);
-      if (m.targetId === sender.id || m.senderId === conversation.other_user_id) {
-        console.log("Nhận tin nhắn mới:", m);
-        setMessages((list) => [...list, m]);
+    conn.on("ReceiveMessage", (newMessageData: any) => {
+      // Dùng any để nhận mọi cấu trúc
+      console.log("Đã nhận tin nhắn từ SignalR:", newMessageData);
+
+      // ✨ Chuẩn hóa dữ liệu từ SignalR về dạng snake_case mà code đang dùng
+      const normalizedMessage = new Message({
+        id: newMessageData.id,
+        content: newMessageData.content,
+        created_at: newMessageData.created_at || newMessageData.timestamp,
+        message_type: newMessageData.message_type || newMessageData.messageType,
+        sender_id: newMessageData.sender_id || newMessageData.senderId,
+        target_id: newMessageData.target_id || newMessageData.targetId,
+        status: "sent",
+      });
+
+      const isMessageForCurrentConversation =
+        (normalizedMessage.sender_id === conversation.other_user_id && normalizedMessage.target_id === sender.id) ||
+        (normalizedMessage.sender_id === sender.id && normalizedMessage.target_id === conversation.other_user_id);
+
+      if (isMessageForCurrentConversation) {
+        console.log("Tin nhắn thuộc cuộc hội thoại này, cập nhật UI...");
+        setMessages((prevMessages) => [...prevMessages, normalizedMessage]);
+      } else {
+        console.log("Tin nhắn từ cuộc hội thoại khác, bỏ qua.");
       }
     });
-    conn.start().catch(console.error);
 
+    conn.start().catch((err) => console.error("Kết nối SignalR thất bại: ", err));
     return () => {
       conn.stop();
     };
-  }, []);
-
+  }, [sender.id, conversation.other_user_id]);
   /* ------------------------------------------------------------------ */
   /* 3. Auto-scroll                                                     */
   /* ------------------------------------------------------------------ */
@@ -86,29 +103,70 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
   }, [messages]);
 
   /* ------------------------------------------------------------------ */
-  /* 4. Gửi tin nhắn                                                    */
+  /* 4. Gửi và Thử lại tin nhắn                                          */
   /* ------------------------------------------------------------------ */
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
+  const performSendMessage = async (content: string, tempId: string) => {
     const body: SendMessageRequest = {
-      senderId: sender.id!,
-      content: input.trim(),
-      messageType: MESSAGE_TYPE.PRIVATE,
-      targetId: conversation.target_id,
+      sender_id: sender.id!,
+      content: content,
+      message_type: MESSAGE_TYPE.PRIVATE,
+      target_id: conversation.other_user_id,
     };
 
     try {
-      // Gọi ChatServer – API chỉ trả status, không cần push thủ công
-      await callApi(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}${API_ROUTES.MESSENGER.SEND_MESSAGE}`, HTTP_METHOD_ENUM.POST, body);
-      setInput("");
+      const response = await callApi<{ data: Message }>(
+        `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}${API_ROUTES.MESSENGER.SEND_MESSAGE}`,
+        HTTP_METHOD_ENUM.POST,
+        body
+      );
+      const savedMessage = new Message(response.data);
+      setMessages((prev) => prev.map((msg) => (msg.id === tempId ? savedMessage : msg)));
     } catch (err) {
       console.error("Gửi tin nhắn thất bại:", err);
+      setMessages((prev) => prev.map((msg) => (msg.id === tempId ? new Message({ ...msg, status: "failed" }) : msg)));
     }
   };
 
+  const sendMessage = () => {
+    debugger;
+    if (!input.trim() || !sender.id) return;
+    const temporaryId = `temp_${Date.now()}`;
+    const content = input.trim();
+    const optimisticMessage = new Message({
+      id: temporaryId,
+      sender_id: sender.id,
+      target_id: conversation.other_user_id,
+      content: content,
+      message_type: "text",
+      created_at: new Date().toISOString(),
+      status: "sending",
+    });
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setInput("");
+    performSendMessage(content, temporaryId);
+  };
+
+  // ✨ 2. Thêm hàm xử lý gửi lại tin nhắn
+  const handleRetrySend = (failedMessage: Message) => {
+    if (!failedMessage.content) return;
+
+    // Xóa tin nhắn lỗi khỏi danh sách
+    setMessages((prev) => prev.filter((m) => m.id !== failedMessage.id));
+
+    // Thực hiện gửi lại
+    const temporaryId = `temp_${Date.now()}`;
+    const optimisticMessage = new Message({
+      ...failedMessage,
+      id: temporaryId,
+      status: "sending",
+      created_at: new Date().toISOString(),
+    });
+    setMessages((prev) => [...prev, optimisticMessage]);
+    performSendMessage(failedMessage.content, temporaryId);
+  };
+
   /* ------------------------------------------------------------------ */
-  /* 5. UI                                                              */
+  /* 5. UI - Giao diện đã được làm đẹp                                   */
   /* ------------------------------------------------------------------ */
   return (
     <div className="fixed bottom-4 right-4 z-40 flex w-full max-w-md flex-col overflow-hidden rounded-xl border bg-card shadow-lg">
@@ -122,24 +180,60 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
           </div>
         </div>
         <Button size="icon" variant="ghost" onClick={onClose}>
-          ✖
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
         </Button>
       </div>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 space-y-2 overflow-y-auto px-4 py-3 max-h-[400px]">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={cn(
-              "max-w-[80%] break-words rounded-lg px-4 py-2 text-sm shadow",
-              msg.sender_id === sender.id ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-muted text-foreground"
-            )}
-          >
-            <p>{msg.content}</p>
-            <p className="text-[10px] text-right text-muted-foreground">{formatTime(msg.created_at)}</p>
-          </div>
-        ))}
+      {/* ✨ 3. Khu vực hiển thị tin nhắn đã được thay thế hoàn toàn */}
+      <ScrollArea className="flex-1 space-y-2 overflow-y-auto p-4 max-h-[400px]">
+        {messages.map((msg) => {
+          const isSender = msg.sender_id === sender.id;
+          return (
+            <div
+              key={msg.id}
+              className={cn(
+                "max-w-[80%] w-fit break-words rounded-xl px-3 py-2 text-sm shadow-md flex flex-col",
+                isSender ? "ml-auto bg-blue-600 text-white" : "mr-auto bg-gray-200 text-gray-800",
+                msg.status === "failed" && "bg-red-200 text-red-800 opacity-90"
+              )}
+            >
+              <p className="text-pretty">{msg.content}</p>
+              <div className="flex items-center self-end mt-1.5 gap-2">
+                {msg.status === "failed" ? (
+                  <>
+                    <span className="text-xs font-semibold">Gửi lỗi</span>
+                    <button onClick={() => handleRetrySend(msg)} className="text-xs font-bold hover:underline">
+                      Thử lại
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className={cn("text-[11px]", isSender ? "text-white/70" : "text-gray-500")}>{formatTime(msg.created_at)}</p>
+                    {isSender && (
+                      <MessageStatusIcon
+                        status={msg.status}
+                        className={cn("size-4", isSender ? "text-white/80" : "text-gray-500", msg.status === "read" && "!text-cyan-300")}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
         <div ref={bottomRef} />
       </ScrollArea>
 
