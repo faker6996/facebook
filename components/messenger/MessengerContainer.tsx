@@ -16,6 +16,7 @@ import type { MessengerPreview } from "@/lib/models/messenger_review";
 import { User } from "@/lib/models/user";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 import { MessageStatusIcon } from "@/components/icons/MessageStatusIcon";
+import MessageList from "@/components/messenger/MessageList";
 // ✨ 1. Import component icon bạn đã tạo
 
 interface Props {
@@ -66,25 +67,15 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     conn.on("ReceiveMessage", (newMessageData: any) => {
       // Dùng any để nhận mọi cấu trúc
       console.log("Đã nhận tin nhắn từ SignalR:", newMessageData);
-
-      // ✨ Chuẩn hóa dữ liệu từ SignalR về dạng snake_case mà code đang dùng
-      const normalizedMessage = new Message({
-        id: newMessageData.id,
-        content: newMessageData.content,
-        created_at: newMessageData.created_at || newMessageData.timestamp,
-        message_type: newMessageData.message_type || newMessageData.messageType,
-        sender_id: newMessageData.sender_id || newMessageData.senderId,
-        target_id: newMessageData.target_id || newMessageData.targetId,
-        status: "sent",
-      });
+      debugger;
 
       const isMessageForCurrentConversation =
-        (normalizedMessage.sender_id === conversation.other_user_id && normalizedMessage.target_id === sender.id) ||
-        (normalizedMessage.sender_id === sender.id && normalizedMessage.target_id === conversation.other_user_id);
+        (newMessageData.sender_id === conversation.other_user_id && newMessageData.target_id === sender.id) ||
+        (newMessageData.sender_id === sender.id && newMessageData.target_id === conversation.other_user_id);
 
       if (isMessageForCurrentConversation) {
         console.log("Tin nhắn thuộc cuộc hội thoại này, cập nhật UI...");
-        setMessages((prevMessages) => [...prevMessages, normalizedMessage]);
+        setMessages((prevMessages) => [...prevMessages, newMessageData]);
       } else {
         console.log("Tin nhắn từ cuộc hội thoại khác, bỏ qua.");
       }
@@ -199,41 +190,7 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
 
       {/* ✨ 3. Khu vực hiển thị tin nhắn đã được thay thế hoàn toàn */}
       <ScrollArea className="flex-1 space-y-2 overflow-y-auto p-4 max-h-[400px]">
-        {messages.map((msg) => {
-          const isSender = msg.sender_id === sender.id;
-          return (
-            <div
-              key={msg.id}
-              className={cn(
-                "max-w-[80%] w-fit break-words rounded-xl px-3 py-2 text-sm shadow-md flex flex-col",
-                isSender ? "ml-auto bg-blue-600 text-white" : "mr-auto bg-gray-200 text-gray-800",
-                msg.status === "failed" && "bg-red-200 text-red-800 opacity-90"
-              )}
-            >
-              <p className="text-pretty">{msg.content}</p>
-              <div className="flex items-center self-end mt-1.5 gap-2">
-                {msg.status === "failed" ? (
-                  <>
-                    <span className="text-xs font-semibold">Gửi lỗi</span>
-                    <button onClick={() => handleRetrySend(msg)} className="text-xs font-bold hover:underline">
-                      Thử lại
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p className={cn("text-[11px]", isSender ? "text-white/70" : "text-gray-500")}>{formatTime(msg.created_at)}</p>
-                    {isSender && (
-                      <MessageStatusIcon
-                        status={msg.status}
-                        className={cn("size-4", isSender ? "text-white/80" : "text-gray-500", msg.status === "read" && "!text-cyan-300")}
-                      />
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        <MessageList messages={messages} senderId={sender.id} onRetrySend={handleRetrySend} />
         <div ref={bottomRef} />
       </ScrollArea>
 
