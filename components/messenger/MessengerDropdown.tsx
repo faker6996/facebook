@@ -20,7 +20,6 @@ export default function MessengerDropdown() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        debugger;
         const user = loadFromLocalStorage("user", User);
         if (!user?.id) return;
 
@@ -28,7 +27,6 @@ export default function MessengerDropdown() {
 
         const res = await callApi<MessengerPreview[]>(API_ROUTES.MESSENGER.RECENT(user.id), HTTP_METHOD_ENUM.GET);
 
-        debugger;
         setConversations(res);
       } catch (err) {
         console.error("Lỗi khi load conversations:", err);
