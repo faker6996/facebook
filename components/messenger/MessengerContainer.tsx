@@ -63,7 +63,6 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     conn.on("ReceiveMessage", (newMessageData: any) => {
       // Dùng any để nhận mọi cấu trúc
       console.log("Đã nhận tin nhắn từ SignalR:", newMessageData);
-      debugger;
 
       const isMessageForCurrentConversation =
         (newMessageData.sender_id === conversation.other_user_id && newMessageData.target_id === sender.id) ||
@@ -102,12 +101,13 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     };
 
     try {
-      const response = await callApi<{ data: Message }>(
+      const response = await callApi<Message>(
         `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}${API_ROUTES.MESSENGER.SEND_MESSAGE}`,
         HTTP_METHOD_ENUM.POST,
         body
       );
-      const savedMessage = new Message(response.data);
+      const savedMessage = new Message(response);
+
       setMessages((prev) => prev.map((msg) => (msg.id === tempId ? savedMessage : msg)));
     } catch (err) {
       console.error("Gửi tin nhắn thất bại:", err);
@@ -115,8 +115,8 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     }
   };
 
-  const sendMessage = () => {
-    debugger;
+  const sendMessage = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!input.trim() || !sender.id) return;
     const temporaryId = `temp_${Date.now()}`;
     const content = input.trim();
@@ -192,15 +192,13 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
       </ScrollArea>
 
       {/* Input */}
-      <div className="flex gap-2 border-t bg-muted p-4">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Nhập tin nhắn..."
-        />
-        <Button onClick={sendMessage}>Gửi</Button>
-      </div>
+      <form
+        onSubmit={sendMessage} // Dùng onSubmit của form
+        className="flex gap-2 border-t bg-muted p-4"
+      >
+        <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Nhập tin nhắn..." />
+        <Button type="submit">Gửi</Button> {/* Thêm type="submit" cho Button */}
+      </form>
     </div>
   );
 }
