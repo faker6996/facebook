@@ -99,15 +99,15 @@ async function getHandler(req: NextRequest) {
     },
     "2h"
   );
-
   const res = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
   res.headers.set(
     "Set-Cookie",
     serialize("access_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      // secure: true,
       path: "/",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 60 * 60,
     })
   );

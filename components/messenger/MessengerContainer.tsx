@@ -100,6 +100,7 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     const body: SendMessageRequest = {
       sender_id: sender.id!,
       content: content,
+      conversation_id: conversation.conversation_id!,
       message_type: MESSAGE_TYPE.PRIVATE,
       target_id: conversation.other_user_id,
     };

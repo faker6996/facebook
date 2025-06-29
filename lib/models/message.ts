@@ -31,13 +31,14 @@ export class Message {
     this.content = data.content;
     this.message_type = data.message_type;
     this.created_at = data.created_at;
-    this.status = data.status ?? "sent";
+    this.status = data.status ?? "Sent";
   }
 }
 
-export type MessageStatus = "sending" | "sent" | "delivered" | "read" | "failed";
+export type MessageStatus = "Sending" | "Sent" | "Delivered" | "Read" | "Failed";
 export interface SendMessageRequest {
   sender_id: number;
+  conversation_id: number;
   content: string;
   message_type: MESSAGE_TYPE;
   target_id?: number;
