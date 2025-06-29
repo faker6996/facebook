@@ -1,23 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import * as signalR from "@microsoft/signalr";
+import MessageList from "@/components/messenger/MessageList";
 import { Avatar } from "@/components/ui/Avatar";
-import { ScrollArea } from "@/components/ui/ScrollArea";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { cn } from "@/lib/utils/cn";
-import { formatTime } from "@/lib/utils/formatTime";
-import { callApi } from "@/lib/utils/api-client";
+import { ScrollArea } from "@/components/ui/ScrollArea";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
-import { Message, MessageStatus, SendMessageRequest } from "@/lib/models/message";
+import { Message, SendMessageRequest } from "@/lib/models/message";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
 import { User } from "@/lib/models/user";
+import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
-import { MessageStatusIcon } from "@/components/icons/MessageStatusIcon";
-import MessageList from "@/components/messenger/MessageList";
-// ✨ 1. Import component icon bạn đã tạo
+import * as signalR from "@microsoft/signalr";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   conversation: MessengerPreview;
@@ -100,6 +96,7 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     const body: SendMessageRequest = {
       sender_id: sender.id!,
       content: content,
+      conversation_id: conversation.conversation_id!,
       message_type: MESSAGE_TYPE.PRIVATE,
       target_id: conversation.other_user_id,
     };
@@ -114,7 +111,7 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
       setMessages((prev) => prev.map((msg) => (msg.id === tempId ? savedMessage : msg)));
     } catch (err) {
       console.error("Gửi tin nhắn thất bại:", err);
-      setMessages((prev) => prev.map((msg) => (msg.id === tempId ? new Message({ ...msg, status: "failed" }) : msg)));
+      setMessages((prev) => prev.map((msg) => (msg.id === tempId ? new Message({ ...msg, status: "Failed" }) : msg)));
     }
   };
 
@@ -130,7 +127,7 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
       content: content,
       message_type: "text",
       created_at: new Date().toISOString(),
-      status: "sending",
+      status: "Sending",
     });
     setMessages((prev) => [...prev, optimisticMessage]);
     setInput("");
@@ -149,7 +146,7 @@ export default function MessengerContainer({ conversation, onClose }: Props) {
     const optimisticMessage = new Message({
       ...failedMessage,
       id: temporaryId,
-      status: "sending",
+      status: "Sending",
       created_at: new Date().toISOString(),
     });
     setMessages((prev) => [...prev, optimisticMessage]);
