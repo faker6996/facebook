@@ -55,6 +55,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_CHAT_SERVER_URL=${NEXT_PUBLIC_CHAT_SERVER_URL}
     image: your-registry/facebook-app:latest
     restart: unless-stopped
     ports:
