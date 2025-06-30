@@ -62,8 +62,16 @@ services:
     restart: unless-stopped
     ports:
       - "5077:5077"
-    env_file:
-      - ../chat_server_src/.env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=${CHAT_DB_CONNECTION_STRING}
+      - RabbitMQ__HostName=${RABBITMQ_HOSTNAME}
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - ASPNETCORE_URLS=${NEXT_PUBLIC_CHAT_SERVER_URL}
     depends_on:
       - postgres
       - rabbitmq
