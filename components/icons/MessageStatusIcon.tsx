@@ -11,7 +11,7 @@ interface Props {
 // Component này chỉ chứa SVG và logic hiển thị, hoàn toàn tự chủ.
 export function MessageStatusIcon({ status, className = "size-4" }: Props) {
   switch (status) {
-    case "sending":
+    case "Sending":
       // Icon đồng hồ
       return (
         <svg
@@ -28,7 +28,7 @@ export function MessageStatusIcon({ status, className = "size-4" }: Props) {
           <polyline points="12 6 12 12 16 14" />
         </svg>
       );
-    case "sent":
+    case "Sent":
       // Icon 1 dấu check
       return (
         <svg
@@ -44,8 +44,8 @@ export function MessageStatusIcon({ status, className = "size-4" }: Props) {
           <polyline points="20 6 9 17 4 12" />
         </svg>
       );
-    case "delivered":
-    case "read":
+    case "Delivered":
+    case "Read":
       // Icon 2 dấu check. Chúng ta sẽ đổi màu cho trạng thái 'read' bằng className.
       return (
         <svg
