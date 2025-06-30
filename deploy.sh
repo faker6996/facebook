@@ -106,11 +106,11 @@ log "🛑 Dừng các container cũ nếu có"
 docker compose -f docker-compose.prod.yml down --remove-orphans || true
 
 log "🔨 Build lại image cho $FB_DOCKER_SERVICE_NAME (luôn thực hiện)"
-docker compose -f docker-compose.prod.yml build --no-cache "$FB_DOCKER_SERVICE_NAME"
+docker compose -f docker-compose.prod.yml build "$FB_DOCKER_SERVICE_NAME"
 
 if [ "$SHOULD_BUILD_CHAT_SERVER" = "true" ]; then
   log "🔨 Chat Server có thay đổi, build lại image cho $CHAT_DOCKER_SERVICE_NAME"
-  docker compose -f docker-compose.prod.yml build --no-cache "$CHAT_DOCKER_SERVICE_NAME"
+  docker compose -f docker-compose.prod.yml build "$CHAT_DOCKER_SERVICE_NAME"
 else
   log "👍 Bỏ qua build Chat Server."
 fi

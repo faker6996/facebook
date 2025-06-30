@@ -10,8 +10,11 @@ import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import MessengerContainer from "@/components/messenger/MessengerContainer";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
 
 export default function MessengerDropdown() {
+  const [searchUser, setSearchUser] = useState<string>("");
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<MessengerPreview | null>(null);
@@ -38,6 +41,19 @@ export default function MessengerDropdown() {
     fetchData();
   }, []);
 
+  const handleSearchUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await callApi<MessengerPreview[]>(API_ROUTES.SEARCH.USER_NAME(searchUser), HTTP_METHOD_ENUM.GET);
+      setConversations(res);
+    } catch (err) {
+      console.error("Lỗi khi tìm kiếm người dùng:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="absolute right-0 top-14 w-96 bg-card shadow-lg rounded-md p-4 z-50">
@@ -48,39 +64,45 @@ export default function MessengerDropdown() {
         ) : conversations.length === 0 ? (
           <div className="text-muted-foreground">Không có cuộc trò chuyện nào</div>
         ) : (
-          <ul className="divide-y divide-border">
-            {conversations.map((item) => {
-              const isUnread = !item.last_seen_at || !item.last_message_at || new Date(item.last_message_at) > new Date(item.last_seen_at);
+          <div>
+            <form onSubmit={handleSearchUser} className="flex gap-2 border-t bg-muted p-4">
+              <Input value={searchUser} onChange={(e) => setSearchUser(e.target.value)} placeholder="Nhập tên bạn bè..." />
+              <Button type="submit">Tìm</Button> {/* Thêm type="submit" cho Button */}
+            </form>
+            <ul className="divide-y divide-border">
+              {conversations.map((item) => {
+                const isUnread = !item.last_seen_at || !item.last_message_at || new Date(item.last_message_at) > new Date(item.last_seen_at);
 
-              return (
-                <li
-                  key={item.conversation_id}
-                  onClick={() => setSelectedConversation(item)}
-                  className="flex items-center gap-3 py-2 hover:bg-muted cursor-pointer px-2 rounded transition duration-150"
-                >
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                    <Image
-                      src={item.avatar_url || "/avatar.png"}
-                      alt={item.other_user_name ?? "Avatar"}
-                      width={48}
-                      height={48}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-
-                  <div className="flex-1">
-                    <div className={`font-semibold ${isUnread ? "text-foreground" : "text-muted-foreground"}`}>{item.other_user_name}</div>
-                    <div className={`text-sm truncate ${isUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                      {item.last_message}
+                return (
+                  <li
+                    key={item.conversation_id}
+                    onClick={() => setSelectedConversation(item)}
+                    className="flex items-center gap-3 py-2 hover:bg-muted cursor-pointer px-2 rounded transition duration-150"
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                      <Image
+                        src={item.avatar_url || "/avatar.png"}
+                        alt={item.other_user_name ?? "Avatar"}
+                        width={48}
+                        height={48}
+                        className="object-cover w-full h-full"
+                      />
                     </div>
-                    <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
-                  </div>
 
-                  {isUnread && <div className="w-2 h-2 bg-primary rounded-full self-center"></div>}
-                </li>
-              );
-            })}
-          </ul>
+                    <div className="flex-1">
+                      <div className={`font-semibold ${isUnread ? "text-foreground" : "text-muted-foreground"}`}>{item.other_user_name}</div>
+                      <div className={`text-sm truncate ${isUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {item.last_message}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
+                    </div>
+
+                    {isUnread && <div className="w-2 h-2 bg-primary rounded-full self-center"></div>}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         )}
       </div>
 

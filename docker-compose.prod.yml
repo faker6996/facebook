@@ -13,6 +13,11 @@ services:
 
     volumes:
       - /home/infvn/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -23,6 +28,11 @@ services:
     ports: ["6379:6379"]
     volumes:
       - /home/infvn/docker-data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -35,6 +45,11 @@ services:
       - "15672:15672"
     volumes:
       - /home/infvn/docker-data/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running", "-q"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
   web:
     build:
@@ -50,9 +65,12 @@ services:
     environment:
       NODE_ENV: production
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   chat-server:
     build:
@@ -73,5 +91,7 @@ services:
       - Jwt__Audience=${JWT_AUDIENCE}
       - ASPNETCORE_URLS=${NEXT_PUBLIC_CHAT_SERVER_URL}
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
