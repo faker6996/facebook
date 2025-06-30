@@ -106,3 +106,16 @@ CREATE TABLE menu_translations (
   locale VARCHAR(10), -- 'vi', 'en'
   name VARCHAR(100)
 );
+
+ALTER TABLE messages
+ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT ent';
+
+
+CREATE TABLE conversation_participants (
+	id serial4 NOT NULL,
+	conversation_id int4 NULL,
+	user_id int4 NULL,
+	joined_at timestamp NULL,
+	last_seen_at timestamp NULL
+);
+
