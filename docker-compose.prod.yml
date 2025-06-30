@@ -53,3 +53,17 @@ services:
       - postgres
       - redis
       - rabbitmq
+
+  chat-server:
+    build:
+      context: ../chat_server_src
+      dockerfile: Dockerfile
+    image: your-registry/chat-server:latest # Đặt tên image cho chat server
+    restart: unless-stopped
+    ports:
+      - "5077:5077"
+    env_file:
+      - ../chat_server_src/.env
+    depends_on:
+      - postgres
+      - rabbitmq

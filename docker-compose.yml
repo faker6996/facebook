@@ -36,3 +36,12 @@ services:
       - postgres
       - redis
     command: npm run dev_v2
+  chat-server:
+    build:
+      context: ../chat_server_src
+      dockerfile: Dockerfile
+    image: your-registry/chat-server:latest
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - rabbitmq
