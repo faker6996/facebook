@@ -54,6 +54,7 @@ export interface UserInfoSso {
   family_name: string;
   picture: picture;
   locale: string;
+  id: number;
 }
 export interface picture {
   data: pictureData;
