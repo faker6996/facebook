@@ -1,16 +1,16 @@
-import { User, UserInfoSso } from "@/lib/models/user";
+import { User, UserInfoSsoGg } from "@/lib/models/user";
 import { baseRepo } from "@/lib/modules/common/base_repo";
-import { ssoGoogleRepo } from "../repositories/sso_google_app";
 import { hashPassword } from "@/lib/utils/hash";
 
 export const ssoGoogleApp = {
-  async handleAfterSso(userInfo: UserInfoSso): Promise<User> {
+  async handleAfterSso(userInfo: UserInfoSsoGg): Promise<User> {
     // check exits
     const user = await baseRepo.getByField<User>(User, User.columns.email, userInfo.email);
 
     if (user) {
       user.is_sso = true; // Đánh dấu là user SSO
-      user.avatar_url = userInfo.picture?.data.url || user.avatar_url;
+
+      user.avatar_url = userInfo.picture || user.avatar_url;
       user.name = userInfo.name || user.name; // Cập nhật tên nếu có
 
       const updateUser = await baseRepo.update(user);
