@@ -33,3 +33,14 @@ export function loadFromLocalStorage<T>(key: string, defaultOrClass: T | (new (d
     return defaultOrClass instanceof Function ? new defaultOrClass({}) : defaultOrClass;
   }
 }
+
+export function removeFromLocalStorage(key: string): void {
+  if (typeof window === "undefined") return; // tránh lỗi khi SSR
+
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error(`Lỗi khi xoá localStorage với key "${key}":`, error);
+    throw new Error(`Không thể xoá dữ liệu trong localStorage với key "${key}"`);
+  }
+}
