@@ -6,7 +6,13 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import Avatar from "@/components/ui/Avatar";
 import { User } from "@/lib/models/user";
-import { loadFromLocalStorage } from "@/lib/utils/local-storage";
+import { loadFromLocalStorage, removeFromLocalStorage } from "@/lib/utils/local-storage";
+import { callApi } from "@/lib/utils/api-client";
+import { API_ROUTES } from "@/lib/constants/api-routes";
+import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
+import { useRouter } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
+import Button from "@/components/ui/Button";
 
 interface MenuItem {
   key: string;
@@ -66,11 +72,24 @@ const menu: MenuItem[] = [
 ];
 
 export default function AvatarMenuItemContainer() {
-  const [open, setOpen] = useState(true); // mặc định mở, dùng toggle nếu cần
+  const [open, setOpen] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+  const locale = pathname.split("/")[1] || LOCALE.VI; // Lấy locale từ URL
   const [user, setUser] = useState(new User());
   useEffect(() => {
     setUser(loadFromLocalStorage("user", User));
   }, []);
+  const handleLogout = async () => {
+    try {
+      await callApi<void>(API_ROUTES.AUTH.LOGOUT, HTTP_METHOD_ENUM.POST, {});
+
+      removeFromLocalStorage("user");
+      router.push(`/${locale}/login`);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (!open) return null;
 
@@ -89,13 +108,24 @@ export default function AvatarMenuItemContainer() {
 
       {/* Menu items */}
       <nav className="flex flex-col gap-1 px-2 py-4">
-        {menu.map(({ key, label, href = "#", shortcut, icon }) => (
-          <Link key={key} href={href} className="group flex items-center gap-3 rounded-md px-4 py-2 hover:bg-muted transition-colors">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted group-hover:bg-accent">{icon}</span>
-            <span className="flex-1 text-sm font-medium text-foreground break-words">{label}</span>
-            {shortcut && <span className="text-xs text-muted-foreground">{shortcut}</span>}
-          </Link>
-        ))}
+        {menu.map(({ key, label, icon, href = "#", shortcut }) =>
+          key === "logout" ? (
+            <Button
+              key={key}
+              onClick={handleLogout}
+              className="group flex items-center gap-3 rounded-md px-4 py-2 w-full text-left hover:bg-muted transition-colors"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted group-hover:bg-accent">{icon}</span>
+              <span className="flex-1 text-sm font-medium">{label}</span>
+            </Button>
+          ) : (
+            <Link key={key} href={href} className="group flex items-center gap-3 rounded-md px-4 py-2 hover:bg-muted transition-colors">
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted group-hover:bg-accent">{icon}</span>
+              <span className="flex-1 text-sm font-medium text-foreground break-words">{label}</span>
+              {shortcut && <span className="text-xs text-muted-foreground">{shortcut}</span>}
+            </Link>
+          )
+        )}
       </nav>
 
       {/* Footer */}
