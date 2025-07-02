@@ -63,4 +63,24 @@ export const messengerRepo = {
     }
     return messages.rows;
   },
+  async getMessagesAfterIdAsyncRepo(conversationId: number, lastMessageId: number): Promise<Message[]> {
+    const sql = `
+      SELECT 
+        id, 
+        conversation_id, 
+        sender_id, 
+        content, 
+        created_at
+      FROM messages
+      WHERE conversation_id = $1 AND id > $2
+      ORDER BY created_at ASC
+    `;
+    // Thêm lastMessageId vào mảng tham số cho câu lệnh query
+    const messages = await safeQuery(sql, [conversationId, lastMessageId]);
+
+    if (!messages || !messages.rows) {
+      return [];
+    }
+    return messages.rows;
+  },
 };

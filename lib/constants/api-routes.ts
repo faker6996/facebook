@@ -21,12 +21,12 @@ export const API_ROUTES = {
   MESSENGER: {
     RECENT: (id: number) => `/api/messenger/conversations?userId=${id}`,
     MESSAGES: (conversationId: number) => `/api/messenger/messages?conversationId=${conversationId}`,
-    SEND_MESSAGE: `/api/messages`,
+    SYNC: `/api/messenger/messages_sync`,
   },
   SEARCH: {
     USER_NAME: (user_name: string) => `/api/search/user?user_name=${user_name}`,
   },
   CHAT_SERVER: {
-    SENT_MESSAGE: `${process.env.CHAT_SERVER_URL}/api/messages`,
+    SENT_MESSAGE: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/messages`,
   },
 };

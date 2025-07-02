@@ -76,6 +76,46 @@ export default function MessengerContainer({
       }
     });
 
+    conn.onreconnected(async (connectionId) => {
+      debugger;
+      console.log(`✅ SignalR reconnected với connectionId: ${connectionId}`);
+
+      // Lấy ID của tin nhắn cuối cùng mà client đã nhận được
+      // Chúng ta chỉ lấy ID dạng số, bỏ qua các ID tạm thời dạng string
+      const lastMessageId =
+        messages
+          .slice()
+          .reverse()
+          .find((m) => typeof m.id === "number")?.id ?? 0;
+
+      console.log(`Đang đồng bộ tin nhắn từ sau ID: ${lastMessageId}`);
+
+      try {
+        // Gọi API sync để lấy các tin nhắn đã lỡ
+        const missedMessages = await callApi<Message[]>(
+          `${API_ROUTES.MESSENGER.SYNC}?conversationId=${conversation.conversation_id}&lastMessageId=${lastMessageId}`,
+          HTTP_METHOD_ENUM.GET
+        );
+
+        if (missedMessages && missedMessages.length > 0) {
+          console.log(`Tìm thấy ${missedMessages.length} tin nhắn đã lỡ.`);
+          // Chuyển đổi dữ liệu thô thành instance của class Message
+          const missedMessageInstances = missedMessages.map((m) => new Message(m));
+
+          // Thêm các tin nhắn đã lỡ vào state và sắp xếp lại để đảm bảo thứ tự
+          setMessages((prevMessages) =>
+            [...prevMessages, ...missedMessageInstances].sort(
+              (a, b) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()
+            )
+          );
+        } else {
+          console.log("Không có tin nhắn nào bị lỡ.");
+        }
+      } catch (error) {
+        console.error("Lỗi khi đồng bộ tin nhắn đã lỡ:", error);
+      }
+    });
+
     conn.start().catch((err) => console.error("Kết nối SignalR thất bại: ", err));
 
     return () => {
@@ -99,11 +139,7 @@ export default function MessengerContainer({
     };
 
     try {
-      const response = await callApi<Message>(
-        `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}${API_ROUTES.MESSENGER.SEND_MESSAGE}`,
-        HTTP_METHOD_ENUM.POST,
-        body
-      );
+      const response = await callApi<Message>(`${API_ROUTES.CHAT_SERVER.SENT_MESSAGE}`, HTTP_METHOD_ENUM.POST, body);
       const savedMessage = new Message(response);
       // Cập nhật tin nhắn tạm thời thành tin nhắn đã lưu
       setMessages((prev) => prev.map((msg) => (msg.id === tempId ? savedMessage : msg)));
@@ -119,7 +155,7 @@ export default function MessengerContainer({
     event.preventDefault();
     if (!input.trim() || !sender.id) return;
 
-    const temporaryId = `temp_${Date.now()}`; // Tạo ID tạm thời cho tin nhắn optimistic UI
+    const temporaryId = `temp_${Date.now()}`;
     const content = input.trim();
     const optimisticMessage = new Message({
       id: temporaryId,
@@ -131,10 +167,10 @@ export default function MessengerContainer({
       status: "Sending", // Trạng thái đang gửi
     });
 
-    setMessages((prev) => [...prev, optimisticMessage]); // Thêm tin nhắn tạm thời vào UI ngay lập tức
+    setMessages((prev) => [...prev, optimisticMessage]);
     setInput(""); // Xóa input
 
-    performSendMessage(content, temporaryId); // Gửi tin nhắn thực tế đến API
+    performSendMessage(content, temporaryId);
   };
 
   // Xử lý gửi lại tin nhắn bị lỗi
@@ -152,8 +188,8 @@ export default function MessengerContainer({
       created_at: new Date().toISOString(),
     });
 
-    setMessages((prev) => [...prev, optimisticMessage]); // Thêm lại tin nhắn với trạng thái đang gửi
-    performSendMessage(failedMessage.content, temporaryId); // Thử gửi lại
+    setMessages((prev) => [...prev, optimisticMessage]);
+    performSendMessage(failedMessage.content, temporaryId);
   };
 
   return (

@@ -15,9 +15,9 @@ interface SsoReq {
 }
 
 export default function LoginContainer() {
-  const router = useRouter(); // 👈 tạo instance
+  const router = useRouter();
   const pathname = usePathname();
-  const locale = pathname.split("/")[1] || LOCALE.VI; // Lấy locale từ URL
+  const locale = pathname.split("/")[1] || LOCALE.VI;
   const t = useTranslations("LoginPage");
 
   const handleLoginWithFacebook = async () => {
@@ -47,13 +47,10 @@ export default function LoginContainer() {
     const password = form.get("password") as string;
 
     try {
-      /* Không mong đợi data → callApi<void> */
       await callApi<void>(API_ROUTES.AUTH.LOGIN, HTTP_METHOD_ENUM.POST, { email, password });
 
-      // Cookie đã được set => chuyển trang
-      router.push(`/${locale}`); // hoặc /vi, /dashboard … tùy bạn
+      router.push(`/${locale}`);
     } catch (err) {
-      // window.alert đã hiển thị (callApi), ghi log nếu muốn
       console.error(err);
     }
   };
