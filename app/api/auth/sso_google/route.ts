@@ -1,10 +1,12 @@
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { SsoAuthToken } from "@/lib/models/sso_auth_token";
-import { UserInfoSso } from "@/lib/models/user";
+import { UserInfoSso, UserInfoSsoGg } from "@/lib/models/user";
 import { ssoGoogleApp } from "@/lib/modules/auth/sso_google/applications/sso_google_app";
 import { callApi } from "@/lib/utils/api-client";
+import { ApiError } from "@/lib/utils/error";
 import { signJwt } from "@/lib/utils/jwt";
+import { withApiHandler } from "@/lib/utils/withApiHandler";
 import { serialize } from "cookie";
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/lib/utils/withApiHandler";
@@ -31,18 +33,16 @@ async function postHandler(req: NextRequest) {
 
 export const POST = withApiHandler(postHandler);
 
-/* ------------------------------------------------------------------ */
-/* STEP-2: Google redirect lại với mã code → lấy token + user info   */
-/* ------------------------------------------------------------------ */
+// STEP 2: Handle Google redirect with code and fetch access_token + user info
 async function getHandler(req: NextRequest) {
+  // 1. Lấy mã code từ query params
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const locale = searchParams.get("state") || LOCALE.VI;
-  if (!code) {
-    return NextResponse.json({ message: "Missing code" }, { status: 400 });
-  }
 
-  // 1. Đổi mã code lấy access_token
+  if (!code) throw new ApiError("Missing code", 400);
+
+
   const tokenParams = new URLSearchParams({
     code,
     client_id: GOOGLE_CLIENT_ID,
@@ -51,66 +51,59 @@ async function getHandler(req: NextRequest) {
     grant_type: "authorization_code",
   });
 
-  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+  const tokenRes = await fetch(API_ROUTES.AUTH.SSO_GOOGLE_GET_TOKEN, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: tokenParams.toString(),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: tokenParams, // KHÔNG JSON.stringify!
   });
 
   if (!tokenRes.ok) {
-    throw new ApiError("Google token request failed", tokenRes.status);
+    const detail = await tokenRes.text();
+    throw new ApiError(`Google token request failed: ${detail}`, tokenRes.status);
   }
 
-  const tokenData: SsoAuthToken = await tokenRes.json();
+  const tokenData: SsoAuthToken = await tokenRes.json(); // { access_token, refresh_token, ... }
 
-  // 2. Lấy thông tin user từ access_token
-  const userInfoRes = await fetch(API_ROUTES.AUTH.SSO_GOOGLE_GET_INFO, {
+  /* 3️⃣  Lấy thông tin user từ access_token (GET) */
+  const infoRes = await fetch(`${API_ROUTES.AUTH.SSO_GOOGLE_GET_INFO}?alt=json`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${tokenData.access_token}`,
-      "Content-Type": "application/json",
     },
   });
 
-  if (!userInfoRes.ok) {
-    throw new ApiError("Failed to fetch user info from Google", userInfoRes.status);
+  if (!infoRes.ok) {
+    const detail = await infoRes.text();
+    throw new ApiError(`Google user-info request failed: ${detail}`, infoRes.status);
   }
 
-  const userInfo: UserInfoSso = await userInfoRes.json();
+  const userInfo: UserInfoSsoGg = await infoRes.json();
 
-  // 3. Xử lý sau SSO (tạo/đồng bộ user)
+  // 4. Kiểm tra/tạo user trong DB
   const user = await ssoGoogleApp.handleAfterSso(userInfo);
-
-  // 4. Ghi vào Redis (tuỳ chọn)
-  await cacheUser(user);
-
-  // 5. Tạo JWT
+  // Create JWT
   const token = signJwt(
     {
-      sub: userInfo.id,
+      sub: user.id!.toString(),
       email: user.email,
       name: user.name,
       id: user.id!,
     },
     "2h"
   );
-
-  // 6. Set cookie và redirect
-  const res = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
-  res.headers.set(
+  // Redirect with cookie
+  const response = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
+  response.headers.set(
     "Set-Cookie",
     serialize("access_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 60 * 60,
     })
   );
-
-  return res;
+  return response;
 }
 
 export const GET = withApiHandler(getHandler);

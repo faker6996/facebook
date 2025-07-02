@@ -1,21 +1,19 @@
 // app/api/auth/sso_facebook/route.ts
-import { NextRequest, NextResponse } from "next/server";
 import { serialize } from "cookie";
+import { NextRequest, NextResponse } from "next/server";
 
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { SsoAuthToken } from "@/lib/models/sso_auth_token";
 import { UserInfoSso } from "@/lib/models/user";
 
-import { callApi } from "@/lib/utils/api-client";
 import { signJwt } from "@/lib/utils/jwt";
 import { createResponse } from "@/lib/utils/response";
 
-import { withApiHandler } from "@/lib/utils/withApiHandler";
-import { ApiError } from "@/lib/utils/error";
 import { cacheUser } from "@/lib/cache/user";
-import { saveToLocalStorage } from "@/lib/utils/local-storage";
 import { ssoFacebookApp } from "@/lib/modules/auth/sso_facebook/applications/sso_facebook_app";
+import { ApiError } from "@/lib/utils/error";
+import { withApiHandler } from "@/lib/utils/withApiHandler";
 
 const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID!;
 const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET!;
@@ -99,7 +97,6 @@ async function getHandler(req: NextRequest) {
     },
     "2h"
   );
-
   const res = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
   res.headers.set(
     "Set-Cookie",
@@ -107,7 +104,7 @@ async function getHandler(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 60 * 60,
     })
   );

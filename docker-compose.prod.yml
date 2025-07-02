@@ -13,6 +13,11 @@ services:
 
     volumes:
       - /home/infvn/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -23,6 +28,11 @@ services:
     ports: ["6379:6379"]
     volumes:
       - /home/infvn/docker-data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -35,11 +45,18 @@ services:
       - "15672:15672"
     volumes:
       - /home/infvn/docker-data/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running", "-q"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
   web:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_CHAT_SERVER_URL=${NEXT_PUBLIC_CHAT_SERVER_URL}
     image: your-registry/facebook-app:latest
     restart: unless-stopped
     ports:
@@ -50,6 +67,49 @@ services:
     environment:
       NODE_ENV: production
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  chat-server:
+    build:
+      context: ../chat_server_src
+      dockerfile: Dockerfile
+    image: your-registry/chat-server:latest # Đặt tên image cho chat server
+    restart: unless-stopped
+    ports:
+      - "5077:5077"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=${CHAT_DB_CONNECTION_STRING}
+      - RabbitMQ__HostName=${RABBITMQ_HOSTNAME}
+      - RabbitMQ__UserName=${RABBITMQ_DEFAULT_USER}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - ASPNETCORE_URLS=http://+:5077
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # nginx:
+  #   image: nginx:latest
+  #   restart: unless-stopped
+  #   # Mở cổng 80 (HTTP) và 443 (HTTPS) ra thế giới bên ngoài
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     # Mount file cấu hình Nginx
+  #     - /home/infvn/nginx.conf:/etc/nginx/conf.d/default.conf
+  #     # Mount thư mục chứa chứng chỉ SSL từ Let's Encrypt
+  #     - /etc/letsencrypt:/etc/letsencrypt
+  #   depends_on:
+  #     - web
+  #     - chat-server
