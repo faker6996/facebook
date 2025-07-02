@@ -1,17 +1,13 @@
 import { API_ROUTES } from "@/lib/constants/api-routes";
-import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
+import { LOCALE } from "@/lib/constants/enum";
 import { SsoAuthToken } from "@/lib/models/sso_auth_token";
-import { UserInfoSso, UserInfoSsoGg } from "@/lib/models/user";
+import { UserInfoSsoGg } from "@/lib/models/user";
 import { ssoGoogleApp } from "@/lib/modules/auth/sso_google/applications/sso_google_app";
-import { callApi } from "@/lib/utils/api-client";
 import { ApiError } from "@/lib/utils/error";
 import { signJwt } from "@/lib/utils/jwt";
 import { withApiHandler } from "@/lib/utils/withApiHandler";
 import { serialize } from "cookie";
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandler } from "@/lib/utils/withApiHandler";
-import { cacheUser } from "@/lib/cache/user";
-import { ApiError } from "@/lib/utils/error";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
@@ -41,7 +37,6 @@ async function getHandler(req: NextRequest) {
   const locale = searchParams.get("state") || LOCALE.VI;
 
   if (!code) throw new ApiError("Missing code", 400);
-
 
   const tokenParams = new URLSearchParams({
     code,
