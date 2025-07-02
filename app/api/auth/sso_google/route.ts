@@ -9,20 +9,25 @@ import { signJwt } from "@/lib/utils/jwt";
 import { withApiHandler } from "@/lib/utils/withApiHandler";
 import { serialize } from "cookie";
 import { NextRequest, NextResponse } from "next/server";
+import { withApiHandler } from "@/lib/utils/withApiHandler";
+import { cacheUser } from "@/lib/cache/user";
+import { ApiError } from "@/lib/utils/error";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const AUTH_URL = process.env.FRONTEND_URL!;
-const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000/vi";
+const FRONTEND_REDIRECT = process.env.FRONTEND_URL || "http://localhost:3000";
 
-// STEP 1: Redirect user to Google login page
+/* ------------------------------------------------------------------ */
+/* STEP-1: Tạo URL redirect sang Google OAuth                         */
+/* ------------------------------------------------------------------ */
 async function postHandler(req: NextRequest) {
   const { locale } = await req.json();
-
   const redirect_uri = encodeURIComponent(`${AUTH_URL}${API_ROUTES.AUTH.SSO_GOOGLE}`);
-  const client_id = GOOGLE_CLIENT_ID!;
+  const client_id = GOOGLE_CLIENT_ID;
   const scope = encodeURIComponent("email profile");
   const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=${scope}&state=${locale}`;
+
   return NextResponse.json({ redirectUrl: url });
 }
 
@@ -35,10 +40,9 @@ async function getHandler(req: NextRequest) {
   const code = searchParams.get("code");
   const locale = searchParams.get("state") || LOCALE.VI;
 
-  if (!code) throw new ApiError("Missing Facebook code", 400);
+  if (!code) throw new ApiError("Missing code", 400);
 
-  // 2. Đổi mã code lấy access_token
-  /* 1️⃣  Đổi code → access_token (POST form-urlencoded) */
+
   const tokenParams = new URLSearchParams({
     code,
     client_id: GOOGLE_CLIENT_ID,
@@ -87,7 +91,6 @@ async function getHandler(req: NextRequest) {
     },
     "2h"
   );
-
   // Redirect with cookie
   const response = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
   response.headers.set(
@@ -100,7 +103,6 @@ async function getHandler(req: NextRequest) {
       maxAge: 60 * 60,
     })
   );
-
   return response;
 }
 
