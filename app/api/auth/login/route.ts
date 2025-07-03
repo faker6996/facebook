@@ -28,6 +28,7 @@ async function handler(req: NextRequest) {
   res.headers.set(
     "Set-Cookie",
     serialize("access_token", token, {
+      domain: process.env.NODE_ENV === "production" ? ".aistudio.com.vn" : "localhost",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",

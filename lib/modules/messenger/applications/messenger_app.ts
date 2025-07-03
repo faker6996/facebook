@@ -13,4 +13,7 @@ export const messengerApp = {
   async getMessagesByConversationId(conversationId: number) {
     return await messengerRepo.getMessagesByConversationId(conversationId);
   },
+  async getMessagesAfterIdAsync(conversationId: number, lastMessageId: number) {
+    return await messengerRepo.getMessagesAfterIdAsyncRepo(conversationId, lastMessageId);
+  },
 };
