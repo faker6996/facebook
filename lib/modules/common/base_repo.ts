@@ -334,6 +334,25 @@ export class BaseRepo {
     /** 4️⃣  Map → instance */
     return rows.map((r) => new modelClass(r));
   }
+  async deleteById<T>(modelClass: { table: string }, id: number): Promise<void> {
+    if (!id) throw new Error("Missing 'id' parameter for delete.");
+
+    const table = modelClass.table;
+    if (!table) throw new Error("Missing static 'table' on model class.");
+
+    const sql = `DELETE FROM ${table} WHERE id = $1`;
+    await safeQuery(sql, [id]);
+  }
+  async deleteAll<T>(modelClass: { table: string }): Promise<number> {
+    const table = modelClass.table;
+    if (!table) throw new Error("Missing static 'table' on model class.");
+
+    // DELETE trả về số dòng bị xoá, giữ lại sequence ID hiện tại
+    const sql = `DELETE FROM ${table}`;
+    const result = await safeQuery(sql); // result.rowCount trong PG
+
+    return result.rowCount ?? 0; // trả về số bản ghi đã xoá
+  }
 }
 
 export const baseRepo = new BaseRepo();
