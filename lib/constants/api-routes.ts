@@ -29,4 +29,8 @@ export const API_ROUTES = {
   CHAT_SERVER: {
     SENT_MESSAGE: `${process.env.CHAT_SERVER_URL}/api/messages`,
   },
+  RESET_PASSWORD: {
+    REQUEST: `/api/forgot-password`,
+    RESET: "/api/reset-password",
+  },
 };

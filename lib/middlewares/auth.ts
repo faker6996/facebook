@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_ROUTES } from "../constants/api-routes";
 
-const PUBLIC_ROUTES = ["/login", "/register", "/api/public", "/delete-data", "/api/auth/sso_facebook", API_ROUTES.AUTH.SSO_GOOGLE];
+const PUBLIC_ROUTES = [
+  "/login",
+  "/forgot-password",
+  "/reset-password",
+  "/api/forgot-password",
+  "/register",
+  "/api/public",
+  "/delete-data",
+  "/api/auth/sso_facebook",
+  API_ROUTES.AUTH.SSO_GOOGLE,
+];
 
 export async function withAuth(req: NextRequest, res: NextResponse): Promise<NextResponse> {
   const pathname = req.nextUrl.pathname;
