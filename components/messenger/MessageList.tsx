@@ -12,13 +12,11 @@ interface MessageListProps {
 }
 
 const MessageList = ({ messages, senderId, onRetrySend }: MessageListProps) => {
-  console.log("MessageList is rendering..."); // Bạn sẽ thấy log này ít hơn
   return (
     <>
       {messages.map((msg) => {
         const isSender = msg.sender_id === senderId;
         // Log này vẫn sẽ chạy khi MessageList render, nhưng MessageList sẽ không render lại khi bạn typing
-        console.log("Rendering message:", msg);
         return (
           <div
             key={msg.id}
