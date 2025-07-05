@@ -107,7 +107,8 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     };
 
     try {
-      if (!localStreamRef.current) {
+      // Nếu localStreamRef.current đã có, vẫn phải addTrack vào peerConnection mới
+      if (!localStreamRef.current || localStreamRef.current.getTracks().length === 0) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
@@ -118,6 +119,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         );
         localStreamRef.current = stream;
       }
+      // Luôn addTrack vào peerConnection mới (kể cả khi localStreamRef.current đã có)
       localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
     } catch (err) {
       console.error("🚫🚫🚫 LỖI TRUY CẬP CAMERA/MIC:", err);
@@ -151,22 +153,34 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const answerCall = async () => {
     if (!incomingCall || !signalRConnection || signalRConnection.state !== "Connected" || isCalling) return;
 
-    console.log("📞 Trả lời cuộc gọi...");
-    const pc = await createPeerConnection(incomingCall.callerId);
-    if (!pc) {
-      console.error("Không thể tạo PeerConnection để trả lời. Dừng cuộc gọi.");
-      cleanupCall();
-      return;
-    }
+    // 1. Tạo peerConnection
+    const pc = new RTCPeerConnection(rtcConfig);
+
+    // 2. Gán ontrack trước khi signaling
+    pc.ontrack = (e) => {
+      console.log("✅✅✅ SỰ KIỆN ONTRACK ĐÃ CHẠY! ✅✅✅");
+      console.log("Stream nhận được:", e.streams[0]);
+      console.log("Loại track:", e.track.kind);
+      if (e.streams && e.streams[0]) {
+        setRemoteStream(e.streams[0]);
+      }
+    };
 
     peerConnectionRef.current = pc;
-    await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
-    console.log("🔎 Remote Offer SDP (bên nhận):\n", pc.remoteDescription?.sdp);
 
+    // 3. Lấy localStream nếu chưa có
+    if (!localStreamRef.current) {
+      localStreamRef.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    }
+    // 4. Add track NGAY SAU khi có localStream
+    localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
+
+    // 5. Sau đó mới setRemoteDescription
+    await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    console.log("🔎 Local Answer SDP (bên nhận):\n", pc.localDescription?.sdp);
 
+    peerConnectionRef.current = pc;
     setIsCalling(true);
     setIncomingCall(null);
 

@@ -11,9 +11,6 @@ interface Props {
 }
 
 export default function VideoCallWindow({ localStreamRef, remoteStream, onEndCall }: Props) {
-  // LOG 1: Kiểm tra mỗi lần component re-render và giá trị prop nhận được
-  console.log("[VideoCallWindow] Component re-render. Giá trị prop remoteStream:", remoteStream);
-
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -28,18 +25,16 @@ export default function VideoCallWindow({ localStreamRef, remoteStream, onEndCal
 
   /* ----- Gán stream remote ----- */
   useEffect(() => {
-    // LOG 2: Kiểm tra xem useEffect có được kích hoạt khi prop thay đổi không
-    console.log("[useEffect remote] Chạy với dependency remoteStream:", remoteStream);
-
-    if (remoteVideoRef.current && remoteStream) {
-      // LOG 3: Xác nhận cả thẻ video và stream đều tồn tại trước khi gán
-      console.log("[useEffect remote] Bắt đầu gán stream vào thẻ video.", {
-        videoElement: remoteVideoRef.current,
-        streamObject: remoteStream,
+    if (remoteStream) {
+      console.log("Remote stream video tracks:", remoteStream.getVideoTracks());
+      remoteStream.getVideoTracks().forEach((track) => {
+        console.log("Track readyState:", track.readyState, "enabled:", track.enabled);
       });
-
+    }
+    //debugger;
+    if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
-
+      console.log("srcObject set:", remoteVideoRef.current.srcObject);
       const vid = remoteVideoRef.current;
       const handler = () =>
         vid.play().catch((err) => {
@@ -53,12 +48,6 @@ export default function VideoCallWindow({ localStreamRef, remoteStream, onEndCal
       } else {
         vid.addEventListener("canplaythrough", handler, { once: true });
       }
-    } else {
-      // LOG 5: Ghi lại lý do tại sao không gán stream
-      console.warn("[useEffect remote] Bỏ qua việc gán stream vì video element hoặc stream không hợp lệ.", {
-        hasVideoEl: !!remoteVideoRef.current,
-        hasStream: !!remoteStream,
-      });
     }
   }, [remoteStream]);
 
