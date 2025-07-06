@@ -11,6 +11,7 @@ export class User {
   is_sso?: boolean;
   is_active?: boolean;
   sub?: string;
+  last_seen?: string;
 
   static table = "users";
   static columns = {
@@ -26,6 +27,7 @@ export class User {
     is_sso: "is_sso",
     is_active: "is_active",
     sub: "sub",
+    last_seen: "last_seen",
   } as const;
 
   constructor(data: Partial<User> = {}) {
@@ -42,6 +44,7 @@ export class User {
     this.is_sso = data.is_sso;
     this.is_active = data.is_active;
     this.sub = data.sub;
+    this.last_seen = data.last_seen;
   }
 }
 

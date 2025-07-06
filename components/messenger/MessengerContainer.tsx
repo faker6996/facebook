@@ -18,6 +18,7 @@ import type { MessengerPreview } from "@/lib/models/messenger_review";
 import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
+import { cn } from "@/lib/utils/cn";
 
 // ----- Props Interface -----
 interface Props {
@@ -33,6 +34,8 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const [isOtherUserOnline, setIsOtherUserOnline] = useState(conversation.other_is_online);
 
   // ----- useEffect Hooks -----
   // Load tin nhắn ban đầu
@@ -51,10 +54,13 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       }
     })();
 
+    // Cập nhật lại trạng thái khi conversation thay đổi
+    setIsOtherUserOnline(conversation.other_is_online);
+
     return () => {
       isMounted = false;
     };
-  }, [conversation?.conversation_id]);
+  }, [conversation]);
 
   // Thiết lập SignalR cho Chat
   useEffect(() => {
@@ -74,6 +80,22 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         (newMsg.sender_id === sender.id && newMsg.target_id === conversation.other_user_id);
       if (isForCurrent) {
         setMessages((prev) => [...prev, new Message(newMsg)]);
+      }
+    });
+
+    // THÊM MỚI: Lắng nghe sự kiện trạng thái
+    conn.on("UserOnline", (userId: string) => {
+      // So sánh string với number cần cẩn thận
+      if (userId == conversation.other_user_id?.toString()) {
+        console.log(`User ${userId} is now ONLINE.`);
+        setIsOtherUserOnline(true);
+      }
+    });
+
+    conn.on("UserOffline", (userId: string) => {
+      if (userId == conversation.other_user_id?.toString()) {
+        console.log(`User ${userId} is now OFFLINE.`);
+        setIsOtherUserOnline(false);
       }
     });
 
@@ -181,11 +203,17 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
             {/* Avatar với chỉ báo trạng thái hoạt động */}
             <div className="relative flex-shrink-0">
               <Avatar src={conversation.avatar_url ?? "/avatar.png"} size="md" />
-              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card" />
+              {/* CẬP NHẬT: Đổi màu chấm trạng thái dựa trên state */}
+              <span
+                className={cn(
+                  "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                  isOtherUserOnline ? "bg-success" : "bg-gray-400"
+                )}
+              />
             </div>
             <div>
               <p className="font-semibold">{conversation.other_user_name}</p>
-              <p className="text-xs text-muted-foreground">Đang hoạt động</p>
+              <p className="text-xs text-muted-foreground">{isOtherUserOnline ? "Online" : "Offline"}</p>
             </div>
           </div>
           <div className="flex items-center">

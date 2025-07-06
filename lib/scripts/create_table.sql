@@ -108,8 +108,10 @@ CREATE TABLE menu_translations (
 );
 
 ALTER TABLE messages
-ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT ent';
+ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'sent';
 
+ALTER TABLE users
+ADD COLUMN last_seen TIMESTAMP;
 
 CREATE TABLE conversation_participants (
 	id serial4 NOT NULL,
