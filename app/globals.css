@@ -31,6 +31,15 @@
 
   --ring: 240 4.8% 95.9%; /* #f0f1f9 */
   --radius: 0.5rem;
+
+  --success: 142.1 76.2% 36.3%; /* #228B22 - ForestGreen */
+  --success-foreground: 0 0% 100%; /* #ffffff */
+
+  --warning: 45 100% 51%; /* #FFC107 - Amber */
+  --warning-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+
+  --info: 200 86% 55%; /* #3498db - Peter River */
+  --info-foreground: 0 0% 100%; /* #ffffff */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -63,6 +72,15 @@
     --destructive-foreground: 0 85.7% 97.3%; /* #ffecec */
 
     --ring: 216 34% 42%; /* #6366f1 */
+
+    --success: 142.1 70.6% 45.3%; /* Sáng hơn một chút */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 100% 51%; /* Giữ nguyên */
+    --warning-foreground: 222.2 47.4% 11.2%;
+
+    --info: 200 86% 55%; /* Giữ nguyên */
+    --info-foreground: 0 0% 100%;
   }
 }
 
