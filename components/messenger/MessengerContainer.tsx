@@ -3,16 +3,14 @@
 // ----- Imports -----
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as signalR from "@microsoft/signalr";
-import { Video } from "lucide-react";
 
 // Local Imports
+import { CirclePlus, SendHorizontal, X } from "lucide-react";
 import MessageList from "@/components/messenger/MessageList";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { ScrollArea } from "@/components/ui/ScrollArea";
-import VideoCallWindow from "./VideoCallWindow";
-import IncomingCallModal from "./IncomingCallModal";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
 import { Message, SendMessageRequest } from "@/lib/models/message";
@@ -28,63 +26,6 @@ interface Props {
   style?: React.CSSProperties;
 }
 
-// ===================== TURN / STUN =====================
-// Các biến môi trường phải được xuất hiện trong `.env.local` với tiền tố NEXT_PUBLIC_
-const TURN_HOST = process.env.NEXT_PUBLIC_TURN_HOST!; // e.g. turn.cheatersever.com
-const TURN_PORT = process.env.NEXT_PUBLIC_TURN_PORT || "3478";
-const TURN_PORT_TLS = process.env.NEXT_PUBLIC_TURN_PORT_TLS || "5349";
-
-async function fetchIceServers(): Promise<RTCIceServer[]> {
-  // LOG 1: Báo hiệu bắt đầu
-  console.log("📡 Bắt đầu lấy thông tin ICE servers...");
-
-  try {
-    const response = await fetch("/api/turn-cred", {
-      cache: "no-store",
-    });
-
-    // LOG 2: Kiểm tra xem API có trả về lỗi không (ví dụ 404, 500)
-    if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
-    }
-
-    const credentials = await response.json();
-
-    // LOG 3: In ra credentials nhận được để kiểm tra
-    console.log("✅ Lấy được credentials từ API:", credentials);
-
-    const servers = [
-      {
-        urls: `stun:${TURN_HOST}:${TURN_PORT}`,
-      },
-      {
-        urls: `turn:${TURN_HOST}:${TURN_PORT}?transport=udp`,
-        username: credentials.username,
-        credential: credentials.password,
-      },
-      {
-        urls: `turn:${TURN_HOST}:${TURN_PORT}?transport=tcp`,
-        username: credentials.username,
-        credential: credentials.password,
-      },
-      {
-        urls: `turns:${TURN_HOST}:${TURN_PORT_TLS}?transport=tcp`,
-        username: credentials.username,
-        credential: credentials.password,
-      },
-    ];
-
-    // LOG 4: In ra cấu hình cuối cùng trước khi trả về
-    console.log("✅ Cấu hình ICE servers hoàn chỉnh:", servers);
-
-    return servers;
-  } catch (e) {
-    // LOG 5: Bắt bất kỳ lỗi nào khác trong quá trình
-    console.error("🚫 LỖI NGHIÊM TRỌNG KHI FETCH ICE SERVERS:", e);
-    throw e; // Ném lỗi ra ngoài để hàm createPeerConnection biết và dừng lại
-  }
-}
-
 // ----- Component Definition -----
 export default function MessengerContainer({ conversation, onClose, style }: Props) {
   // ----- State cho Chat -----
@@ -92,157 +33,6 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  // ----- State cho Video Call -----
-  const [signalRConnection, setSignalRConnection] = useState<signalR.HubConnection | null>(null);
-  const [isCalling, setIsCalling] = useState(false);
-  const [incomingCall, setIncomingCall] = useState<{ callerId: string; offer: RTCSessionDescriptionInit } | null>(null);
-
-  // Dùng useState cho remote stream để kích hoạt re-render
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-
-  // Cache ICE servers cho 1 phiên trình duyệt
-  const iceServersRef = useRef<RTCIceServer[] | null>(null);
-
-  // ----- Helper Functions for Video Call -----
-  const cleanupCall = useCallback(() => {
-    console.log("🧹 Dọn dẹp cuộc gọi...");
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.getSenders().forEach((s) => {
-        s.track?.stop();
-      });
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
-      localStreamRef.current = null;
-    }
-
-    setRemoteStream(null);
-    setIsCalling(false);
-    setIncomingCall(null);
-  }, []);
-
-  /* ================== Factory ================== */
-  const createPeerConnection = async (targetUserId: string): Promise<RTCPeerConnection | null> => {
-    console.log(`🌀 Tạo PeerConnection cho target: ${targetUserId}`);
-
-    // Lấy/caching ICE servers
-    if (!iceServersRef.current) {
-      try {
-        iceServersRef.current = await fetchIceServers();
-      } catch (e) {
-        console.error("🚫 Không lấy được ICE servers", e);
-        return null;
-      }
-    }
-
-    const pc = new RTCPeerConnection({
-      iceServers: iceServersRef.current,
-      iceTransportPolicy: "all", // cho phép trực tiếp hoặc relay
-    });
-
-    pc.oniceconnectionstatechange = () => {
-      console.log(`❄️ TRẠNG THÁI ICE: ${pc.iceConnectionState}`);
-      if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
-        console.warn("ICE connection failed or disconnected. Ending call.");
-        cleanupCall();
-      }
-    };
-    pc.onsignalingstatechange = () => console.log("🔹 Signaling:", pc.signalingState);
-
-    pc.onicecandidate = (e) => {
-      if (e.candidate) {
-        console.log("🔸 Send ICE candidate:", e.candidate.candidate);
-        signalRConnection?.invoke("SendIceCandidate", targetUserId, JSON.stringify(e.candidate));
-      } else {
-        console.log("🔸 ICE gathering complete.");
-      }
-    };
-
-    pc.ontrack = (e) => {
-      console.log("✅✅✅ SỰ KIỆN ONTRACK ĐÃ CHẠY! ✅✅✅");
-      if (e.streams && e.streams[0]) {
-        setRemoteStream(e.streams[0]);
-      }
-    };
-
-    try {
-      if (!localStreamRef.current || localStreamRef.current.getTracks().length === 0) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        console.log(
-          "🎥 Lấy được local stream:",
-          stream.getTracks().map((t) => t.kind)
-        );
-        localStreamRef.current = stream;
-      }
-      localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
-    } catch (err) {
-      console.error("🚫🚫🚫 LỖI TRUY CẬP CAMERA/MIC:", err);
-      return null;
-    }
-
-    return pc;
-  };
-
-  // ----- Call Flow Functions -----
-  const initiateCall = async () => {
-    if (!signalRConnection || signalRConnection.state !== "Connected" || isCalling) return;
-
-    console.log("📞 Bắt đầu cuộc gọi...");
-    const pc = await createPeerConnection(conversation.other_user_id!.toString());
-    if (!pc) {
-      console.error("Không thể tạo PeerConnection. Dừng cuộc gọi.");
-      cleanupCall();
-      return;
-    }
-
-    peerConnectionRef.current = pc;
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    setIsCalling(true);
-    signalRConnection.invoke("SendCallOffer", conversation.other_user_id!.toString(), JSON.stringify(offer));
-  };
-
-  const answerCall = async () => {
-    if (!incomingCall || !signalRConnection || signalRConnection.state !== "Connected" || isCalling) return;
-
-    const pc = await createPeerConnection(incomingCall.callerId);
-    if (!pc) return;
-
-    peerConnectionRef.current = pc;
-
-    await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-
-    setIsCalling(true);
-    setIncomingCall(null);
-
-    signalRConnection.invoke("SendCallAnswer", incomingCall.callerId, JSON.stringify(answer));
-  };
-
-  const declineCall = () => {
-    if (incomingCall) {
-      signalRConnection?.invoke("EndCall", incomingCall.callerId);
-    }
-    cleanupCall();
-  };
-
-  const endCall = () => {
-    const targetUserId = incomingCall?.callerId || conversation.other_user_id?.toString();
-    if (targetUserId) {
-      signalRConnection?.invoke("EndCall", targetUserId);
-    }
-    cleanupCall();
-  };
 
   // ----- useEffect Hooks -----
   // Load tin nhắn ban đầu
@@ -266,7 +56,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     };
   }, [conversation?.conversation_id]);
 
-  // Thiết lập SignalR
+  // Thiết lập SignalR cho Chat
   useEffect(() => {
     if (!sender?.id || !conversation?.other_user_id) return;
 
@@ -276,8 +66,8 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       })
       .withAutomaticReconnect()
       .build();
-    setSignalRConnection(conn);
 
+    // Lắng nghe tin nhắn mới
     conn.on("ReceiveMessage", (newMsg: any) => {
       const isForCurrent =
         (newMsg.sender_id === conversation.other_user_id && newMsg.target_id === sender.id) ||
@@ -287,6 +77,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       }
     });
 
+    // Đồng bộ tin nhắn khi kết nối lại
     conn.onreconnected(async (connectionId) => {
       console.log(`✅ SignalR reconnected: ${connectionId}`);
       const lastId =
@@ -308,37 +99,13 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       }
     });
 
-    // Video call events
-    conn.on("ReceiveCallOffer", (callerId, offer) => {
-      setIncomingCall({ callerId, offer: JSON.parse(offer) });
-    });
-
-    conn.on("ReceiveCallAnswer", async (answer) => {
-      if (peerConnectionRef.current) {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)));
-      }
-    });
-
-    conn.on("ReceiveIceCandidate", (senderId: string, cand: string) => {
-      try {
-        const data: RTCIceCandidateInit = JSON.parse(cand);
-        if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
-          peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data));
-        }
-      } catch (err) {
-        console.error("ICE parse error", err);
-      }
-    });
-
-    conn.on("CallEnded", () => cleanupCall());
-
     conn.start().catch((err) => console.error("SignalR connect fail", err));
 
+    // Dọn dẹp kết nối khi component unmount
     return () => {
       conn.stop();
-      cleanupCall();
     };
-  }, [sender.id, conversation.other_user_id, cleanupCall]);
+  }, [sender.id, conversation.other_user_id, messages]); // Thêm 'messages' để lấy lastId chính xác khi reconnected
 
   // Cuộn xuống cuối
   useEffect(() => {
@@ -404,59 +171,62 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   return (
     <>
       <div
-        className="fixed bottom-4 z-40 flex w-full max-w-[320px] max-h-[500px] flex-col overflow-hidden rounded-xl border bg-card shadow-lg"
+        // Căn sang góc dưới bên phải, giảm chiều cao tối đa và thêm hiệu ứng chuyển động
+        className="fixed bottom-4 right-4 z-40 flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl transition-all duration-300 ease-soft max-h-[500px]"
         style={style}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 border-b bg-muted px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Avatar src={conversation.avatar_url ?? "/avatar.png"} size="sm" />
+        {/* Header: Thêm padding và làm cho avatar nổi bật hơn */}
+        <div className="flex items-center justify-between gap-3 border-b bg-card p-3">
+          <div className="flex items-center gap-3">
+            {/* Avatar với chỉ báo trạng thái hoạt động */}
+            <div className="relative flex-shrink-0">
+              <Avatar src={conversation.avatar_url ?? "/avatar.png"} size="md" />
+              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card" />
+            </div>
             <div>
-              <p className="text-sm font-semibold">{conversation.other_user_name}</p>
+              <p className="font-semibold">{conversation.other_user_name}</p>
               <p className="text-xs text-muted-foreground">Đang hoạt động</p>
             </div>
           </div>
           <div className="flex items-center">
-            <Button size="icon" variant="ghost" onClick={initiateCall} disabled={isCalling}>
-              <Video className="h-5 w-5" />
-            </Button>
+            {/* Có thể thêm các nút khác ở đây trong tương lai, ví dụ: gọi điện, thông tin */}
             <Button size="icon" variant="ghost" onClick={() => onClose(conversation.conversation_id!)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
-        {/* Message list */}
-        <ScrollArea className="h-[300px] space-y-2 overflow-y-auto p-4">
+        {/* Message list: Giảm khoảng cách giữa các tin nhắn xuống space-y-2 */}
+        <ScrollArea className="flex-1 space-y-2 bg-background/50 p-4">
           <MessageList messages={messages} senderId={sender.id} onRetrySend={handleRetrySend} />
           <div ref={bottomRef} />
         </ScrollArea>
 
-        {/* Input */}
-        <form onSubmit={sendMessage} className="flex gap-2 border-t bg-muted p-4">
-          <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Nhập tin nhắn..." />
-          <Button type="submit">Gửi</Button>
-        </form>
+        {/* Input Form: Thiết kế lại hoàn toàn để trông hiện đại hơn */}
+        <div className="border-t bg-card p-3">
+          <form onSubmit={sendMessage} className="flex items-center gap-2">
+            {/* Các nút hành động phụ */}
+            <Button type="button" size="icon" variant="ghost" className="flex-shrink-0">
+              <CirclePlus className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            {/* Bọc Input trong một div để tạo hiệu ứng bo tròn */}
+            <div className="relative w-full">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Nhập tin nhắn..."
+                // Kiểu dáng bo tròn, có padding
+                className="w-full rounded-full border bg-muted py-2 pl-4 pr-10 focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+
+            {/* Nút gửi */}
+            <Button type="submit" size="icon" variant="ghost" className="flex-shrink-0" disabled={!input.trim()}>
+              <SendHorizontal className={`h-5 w-5 transition-colors ${input.trim() ? "text-primary" : "text-muted-foreground"}`} />
+            </Button>
+          </form>
+        </div>
       </div>
-
-      {isCalling && <VideoCallWindow localStreamRef={localStreamRef} remoteStream={remoteStream} onEndCall={endCall} />}
-
-      {incomingCall && (
-        <IncomingCallModal callerName={conversation.other_user_name ?? "Một người dùng"} onAccept={answerCall} onDecline={declineCall} />
-      )}
     </>
   );
 }
