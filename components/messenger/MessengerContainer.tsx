@@ -28,10 +28,62 @@ interface Props {
   style?: React.CSSProperties;
 }
 
-// ----- WebRTC Configuration -----
-const rtcConfig: RTCConfiguration = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-};
+// ===================== TURN / STUN =====================
+// Các biến môi trường phải được xuất hiện trong `.env.local` với tiền tố NEXT_PUBLIC_
+const TURN_HOST = process.env.NEXT_PUBLIC_TURN_HOST!; // e.g. turn.cheatersever.com
+const TURN_PORT = process.env.NEXT_PUBLIC_TURN_PORT || "3478";
+const TURN_PORT_TLS = process.env.NEXT_PUBLIC_TURN_PORT_TLS || "5349";
+
+async function fetchIceServers(): Promise<RTCIceServer[]> {
+  // LOG 1: Báo hiệu bắt đầu
+  console.log("📡 Bắt đầu lấy thông tin ICE servers...");
+
+  try {
+    const response = await fetch("/api/turn-cred", {
+      cache: "no-store",
+    });
+
+    // LOG 2: Kiểm tra xem API có trả về lỗi không (ví dụ 404, 500)
+    if (!response.ok) {
+      throw new Error(`API call failed with status: ${response.status}`);
+    }
+
+    const credentials = await response.json();
+
+    // LOG 3: In ra credentials nhận được để kiểm tra
+    console.log("✅ Lấy được credentials từ API:", credentials);
+
+    const servers = [
+      {
+        urls: `stun:${TURN_HOST}:${TURN_PORT}`,
+      },
+      {
+        urls: `turn:${TURN_HOST}:${TURN_PORT}?transport=udp`,
+        username: credentials.username,
+        credential: credentials.password,
+      },
+      {
+        urls: `turn:${TURN_HOST}:${TURN_PORT}?transport=tcp`,
+        username: credentials.username,
+        credential: credentials.password,
+      },
+      {
+        urls: `turns:${TURN_HOST}:${TURN_PORT_TLS}?transport=tcp`,
+        username: credentials.username,
+        credential: credentials.password,
+      },
+    ];
+
+    // LOG 4: In ra cấu hình cuối cùng trước khi trả về
+    console.log("✅ Cấu hình ICE servers hoàn chỉnh:", servers);
+
+    return servers;
+  } catch (e) {
+    // LOG 5: Bắt bất kỳ lỗi nào khác trong quá trình
+    console.error("🚫 LỖI NGHIÊM TRỌNG KHI FETCH ICE SERVERS:", e);
+    throw e; // Ném lỗi ra ngoài để hàm createPeerConnection biết và dừng lại
+  }
+}
 
 // ----- Component Definition -----
 export default function MessengerContainer({ conversation, onClose, style }: Props) {
@@ -51,24 +103,25 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
+  // Cache ICE servers cho 1 phiên trình duyệt
+  const iceServersRef = useRef<RTCIceServer[] | null>(null);
+
   // ----- Helper Functions for Video Call -----
   const cleanupCall = useCallback(() => {
     console.log("🧹 Dọn dẹp cuộc gọi...");
     if (peerConnectionRef.current) {
-      peerConnectionRef.current.getSenders().forEach((sender) => {
-        sender.track?.stop();
+      peerConnectionRef.current.getSenders().forEach((s) => {
+        s.track?.stop();
       });
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     }
 
-    // Reset state của remote stream
     setRemoteStream(null);
-
     setIsCalling(false);
     setIncomingCall(null);
   }, []);
@@ -76,7 +129,21 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   /* ================== Factory ================== */
   const createPeerConnection = async (targetUserId: string): Promise<RTCPeerConnection | null> => {
     console.log(`🌀 Tạo PeerConnection cho target: ${targetUserId}`);
-    const pc = new RTCPeerConnection(rtcConfig);
+
+    // Lấy/caching ICE servers
+    if (!iceServersRef.current) {
+      try {
+        iceServersRef.current = await fetchIceServers();
+      } catch (e) {
+        console.error("🚫 Không lấy được ICE servers", e);
+        return null;
+      }
+    }
+
+    const pc = new RTCPeerConnection({
+      iceServers: iceServersRef.current,
+      iceTransportPolicy: "all", // cho phép trực tiếp hoặc relay
+    });
 
     pc.oniceconnectionstatechange = () => {
       console.log(`❄️ TRẠNG THÁI ICE: ${pc.iceConnectionState}`);
@@ -98,16 +165,12 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
     pc.ontrack = (e) => {
       console.log("✅✅✅ SỰ KIỆN ONTRACK ĐÃ CHẠY! ✅✅✅");
-      console.log("Stream nhận được:", e.streams[0]);
-      console.log("Loại track:", e.track.kind);
       if (e.streams && e.streams[0]) {
-        // Dùng setState để cập nhật remote stream
         setRemoteStream(e.streams[0]);
       }
     };
 
     try {
-      // Nếu localStreamRef.current đã có, vẫn phải addTrack vào peerConnection mới
       if (!localStreamRef.current || localStreamRef.current.getTracks().length === 0) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -119,7 +182,6 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         );
         localStreamRef.current = stream;
       }
-      // Luôn addTrack vào peerConnection mới (kể cả khi localStreamRef.current đã có)
       localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
     } catch (err) {
       console.error("🚫🚫🚫 LỖI TRUY CẬP CAMERA/MIC:", err);
@@ -144,7 +206,6 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     peerConnectionRef.current = pc;
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    //console.log("🔎 Local Offer SDP:\n", pc.localDescription?.sdp);
 
     setIsCalling(true);
     signalRConnection.invoke("SendCallOffer", conversation.other_user_id!.toString(), JSON.stringify(offer));
@@ -153,34 +214,15 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const answerCall = async () => {
     if (!incomingCall || !signalRConnection || signalRConnection.state !== "Connected" || isCalling) return;
 
-    // 1. Tạo peerConnection
-    const pc = new RTCPeerConnection(rtcConfig);
-
-    // 2. Gán ontrack trước khi signaling
-    pc.ontrack = (e) => {
-      console.log("✅✅✅ SỰ KIỆN ONTRACK ĐÃ CHẠY! ✅✅✅");
-      console.log("Stream nhận được:", e.streams[0]);
-      console.log("Loại track:", e.track.kind);
-      if (e.streams && e.streams[0]) {
-        setRemoteStream(e.streams[0]);
-      }
-    };
+    const pc = await createPeerConnection(incomingCall.callerId);
+    if (!pc) return;
 
     peerConnectionRef.current = pc;
 
-    // 3. Lấy localStream nếu chưa có
-    if (!localStreamRef.current) {
-      localStreamRef.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    }
-    // 4. Add track NGAY SAU khi có localStream
-    localStreamRef.current.getTracks().forEach((t) => pc.addTrack(t, localStreamRef.current!));
-
-    // 5. Sau đó mới setRemoteDescription
     await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
-    peerConnectionRef.current = pc;
     setIsCalling(true);
     setIncomingCall(null);
 
@@ -203,7 +245,6 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   };
 
   // ----- useEffect Hooks -----
-
   // Load tin nhắn ban đầu
   useEffect(() => {
     if (!conversation?.conversation_id) return;
@@ -214,7 +255,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     (async () => {
       try {
         const response = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversation.conversation_id ?? 0), HTTP_METHOD_ENUM.GET);
-        if (isMounted) setMessages(response?.map((msgData) => new Message(msgData)) ?? []);
+        if (isMounted) setMessages(response?.map((m) => new Message(m)) ?? []);
       } catch (err) {
         console.error("Lỗi tải tin nhắn:", err);
       }
@@ -230,87 +271,68 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     if (!sender?.id || !conversation?.other_user_id) return;
 
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, { withCredentials: true })
+      .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, {
+        withCredentials: true,
+      })
       .withAutomaticReconnect()
       .build();
     setSignalRConnection(conn);
 
-    conn.on("ReceiveMessage", (newMessageData: any) => {
-      const isMessageForCurrentConversation =
-        (newMessageData.sender_id === conversation.other_user_id && newMessageData.target_id === sender.id) ||
-        (newMessageData.sender_id === sender.id && newMessageData.target_id === conversation.other_user_id);
-      if (isMessageForCurrentConversation) {
-        setMessages((prev) => [...prev, new Message(newMessageData)]);
+    conn.on("ReceiveMessage", (newMsg: any) => {
+      const isForCurrent =
+        (newMsg.sender_id === conversation.other_user_id && newMsg.target_id === sender.id) ||
+        (newMsg.sender_id === sender.id && newMsg.target_id === conversation.other_user_id);
+      if (isForCurrent) {
+        setMessages((prev) => [...prev, new Message(newMsg)]);
       }
     });
 
     conn.onreconnected(async (connectionId) => {
-      console.log(`✅ SignalR reconnected với connectionId: ${connectionId}`);
-      const lastMessageId =
+      console.log(`✅ SignalR reconnected: ${connectionId}`);
+      const lastId =
         messages
           .slice()
           .reverse()
           .find((m) => typeof m.id === "number")?.id ?? 0;
-      console.log(`Đang đồng bộ tin nhắn từ sau ID: ${lastMessageId}`);
       try {
-        const missedMessages = await callApi<Message[]>(
-          `${API_ROUTES.MESSENGER.SYNC}?conversationId=${conversation.conversation_id}&lastMessageId=${lastMessageId}`,
+        const missed = await callApi<Message[]>(
+          `${API_ROUTES.MESSENGER.SYNC}?conversationId=${conversation.conversation_id}&lastMessageId=${lastId}`,
           HTTP_METHOD_ENUM.GET
         );
-        if (missedMessages && missedMessages.length > 0) {
-          console.log(`Tìm thấy ${missedMessages.length} tin nhắn đã lỡ.`);
-          const missedMessageInstances = missedMessages.map((m) => new Message(m));
-          setMessages((prevMessages) =>
-            [...prevMessages, ...missedMessageInstances].sort(
-              (a, b) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()
-            )
-          );
-        } else {
-          console.log("Không có tin nhắn nào bị lỡ.");
+        if (missed?.length) {
+          const inst = missed.map((m) => new Message(m));
+          setMessages((prev) => [...prev, ...inst].sort((a, b) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
         }
-      } catch (error) {
-        console.error("Lỗi khi đồng bộ tin nhắn đã lỡ:", error);
+      } catch (err) {
+        console.error("Sync fail:", err);
       }
     });
 
-    // Lắng nghe sự kiện Video Call
+    // Video call events
     conn.on("ReceiveCallOffer", (callerId, offer) => {
-      console.log("Incoming call offer from:", callerId);
       setIncomingCall({ callerId, offer: JSON.parse(offer) });
     });
 
     conn.on("ReceiveCallAnswer", async (answer) => {
-      console.log("📞 Người gọi nhận ANSWER");
       if (peerConnectionRef.current) {
         await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)));
-        console.log("🔎 Answer SDP (bên gọi):\n", peerConnectionRef.current.remoteDescription?.sdp);
-      } else {
-        console.warn("PeerConnection not found when receiving answer.");
       }
     });
 
-    conn.on("ReceiveIceCandidate", (senderId: string, candidateJsonString: string) => {
+    conn.on("ReceiveIceCandidate", (senderId: string, cand: string) => {
       try {
-        const iceCandidateData: RTCIceCandidateInit = JSON.parse(candidateJsonString);
-        console.log("🧊 Nhận ICE Candidate (parse thành công):", iceCandidateData);
+        const data: RTCIceCandidateInit = JSON.parse(cand);
         if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
-          peerConnectionRef.current
-            .addIceCandidate(new RTCIceCandidate(iceCandidateData))
-            .catch((e) => console.error("Lỗi khi thêm ICE Candidate:", e));
-        } else {
-          console.warn("Không thể thêm ICE Candidate: PeerConnection hoặc RemoteDescription chưa sẵn sàng.");
+          peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data));
         }
-      } catch (e) {
-        console.error("Lỗi khi parse ICE Candidate JSON:", e, candidateJsonString);
+      } catch (err) {
+        console.error("ICE parse error", err);
       }
     });
 
-    conn.on("CallEnded", (userId: string) => {
-      console.log(`Cuộc gọi với ${userId} đã kết thúc.`);
-      cleanupCall();
-    });
+    conn.on("CallEnded", () => cleanupCall());
 
-    conn.start().catch((err) => console.error("Kết nối SignalR thất bại: ", err));
+    conn.start().catch((err) => console.error("SignalR connect fail", err));
 
     return () => {
       conn.stop();
@@ -323,66 +345,69 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Gửi tin nhắn đến server
+  // Gửi tin nhắn
   const performSendMessage = async (content: string, tempId: string) => {
     const body: SendMessageRequest = {
       sender_id: sender.id!,
-      content: content,
+      content,
       conversation_id: conversation.conversation_id!,
       message_type: MESSAGE_TYPE.PRIVATE,
       target_id: conversation.other_user_id,
     };
 
     try {
-      const response = await callApi<Message>(`${API_ROUTES.CHAT_SERVER.SENT_MESSAGE}`, HTTP_METHOD_ENUM.POST, body);
-      const savedMessage = new Message(response);
-      setMessages((prev) => prev.map((msg) => (msg.id === tempId ? savedMessage : msg)));
+      const res = await callApi<Message>(API_ROUTES.CHAT_SERVER.SENT_MESSAGE, HTTP_METHOD_ENUM.POST, body);
+      const saved = new Message(res);
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? saved : m)));
     } catch (err) {
-      console.error("Gửi tin nhắn thất bại:", err);
-      setMessages((prev) => prev.map((msg) => (msg.id === tempId ? new Message({ ...msg, status: "Failed" }) : msg)));
+      console.error("Send message error:", err);
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? new Message({ ...m, status: "Failed" }) : m)));
     }
   };
 
-  // Xử lý gửi tin nhắn từ form
-  const sendMessage = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!input.trim() || !sender.id) return;
 
-    const temporaryId = `temp_${Date.now()}`;
+    const tempId = `temp_${Date.now()}`;
     const content = input.trim();
-    const optimisticMessage = new Message({
-      id: temporaryId,
+    const optimistic = new Message({
+      id: tempId,
       sender_id: sender.id,
       target_id: conversation.other_user_id,
-      content: content,
+      content,
       message_type: "text",
       created_at: new Date().toISOString(),
       status: "Sending",
     });
 
-    setMessages((prev) => [...prev, optimisticMessage]);
+    setMessages((prev) => [...prev, optimistic]);
     setInput("");
-
-    performSendMessage(content, temporaryId);
+    performSendMessage(content, tempId);
   };
 
-  // Xử lý gửi lại tin nhắn bị lỗi
-  const handleRetrySend = (failedMessage: Message) => {
-    if (!failedMessage.content) return;
-    setMessages((prev) => prev.filter((m) => m.id !== failedMessage.id));
-    const temporaryId = `temp_${Date.now()}`;
-    const optimisticMessage = new Message({ ...failedMessage, id: temporaryId, status: "Sending", created_at: new Date().toISOString() });
-    setMessages((prev) => [...prev, optimisticMessage]);
-    performSendMessage(failedMessage.content, temporaryId);
+  const handleRetrySend = (failed: Message) => {
+    if (!failed.content) return;
+    setMessages((prev) => prev.filter((m) => m.id !== failed.id));
+    const tempId = `temp_${Date.now()}`;
+    const optimistic = new Message({
+      ...failed,
+      id: tempId,
+      status: "Sending",
+      created_at: new Date().toISOString(),
+    });
+    setMessages((prev) => [...prev, optimistic]);
+    performSendMessage(failed.content, tempId);
   };
 
   // ----- JSX Render -----
   return (
     <>
       <div
-        className="fixed bottom-4 z-40 flex w-full max-w-[320px] flex-col overflow-hidden rounded-xl border bg-card shadow-lg max-h-[500px]"
+        className="fixed bottom-4 z-40 flex w-full max-w-[320px] max-h-[500px] flex-col overflow-hidden rounded-xl border bg-card shadow-lg"
         style={style}
       >
+        {/* Header */}
         <div className="flex items-center justify-between gap-2 border-b bg-muted px-4 py-3">
           <div className="flex items-center gap-2">
             <Avatar src={conversation.avatar_url ?? "/avatar.png"} size="sm" />
@@ -414,11 +439,13 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           </div>
         </div>
 
+        {/* Message list */}
         <ScrollArea className="h-[300px] space-y-2 overflow-y-auto p-4">
           <MessageList messages={messages} senderId={sender.id} onRetrySend={handleRetrySend} />
           <div ref={bottomRef} />
         </ScrollArea>
 
+        {/* Input */}
         <form onSubmit={sendMessage} className="flex gap-2 border-t bg-muted p-4">
           <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Nhập tin nhắn..." />
           <Button type="submit">Gửi</Button>
