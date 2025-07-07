@@ -21,6 +21,7 @@ export async function callApi<T>(
   config?: AxiosRequestConfig // ❶ không còn thuộc tính `silent`
 ): Promise<T> {
   try {
+    debugger;
     const res = await api.request({
       url,
       method,

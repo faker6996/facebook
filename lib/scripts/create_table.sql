@@ -108,8 +108,10 @@ CREATE TABLE menu_translations (
 );
 
 ALTER TABLE messages
-ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT ent';
+ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'sent';
 
+ALTER TABLE users
+ADD COLUMN last_seen TIMESTAMP;
 
 CREATE TABLE conversation_participants (
 	id serial4 NOT NULL,
@@ -117,5 +119,12 @@ CREATE TABLE conversation_participants (
 	user_id int4 NULL,
 	joined_at timestamp NULL,
 	last_seen_at timestamp NULL
+);
+CREATE TABLE password_reset_token (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

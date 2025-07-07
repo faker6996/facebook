@@ -90,7 +90,7 @@ export default function LoginContainer() {
                 <input type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
                 <span className="ml-2">{t("rememberMe")}</span>
               </label>
-              <Link href="/forgot-password" className="text-sm text-primary hover:underline font-medium">
+              <Link href={`/${locale}/forgot-password`} className="text-sm text-primary hover:underline font-medium">
                 {t("forgotPassword")}
               </Link>
             </div>
