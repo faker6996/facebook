@@ -120,4 +120,11 @@ CREATE TABLE conversation_participants (
 	joined_at timestamp NULL,
 	last_seen_at timestamp NULL
 );
+CREATE TABLE password_reset_token (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
