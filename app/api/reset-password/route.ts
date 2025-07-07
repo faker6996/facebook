@@ -8,13 +8,11 @@ import { ResetPasswordToken } from "@/lib/models/password_reset_token";
 import { User } from "@/lib/models/user";
 
 async function handler(req: NextRequest) {
-  debugger;
   const { token, password } = await req.json();
 
   if (!token || !password) {
     throw new ApiError("Thiếu token hoặc mật khẩu", 400);
   }
-
   // 1. Tìm token
   const resetToken = await baseRepo.getByField<ResetPasswordToken>(ResetPasswordToken, ResetPasswordToken.columns.token, token);
 

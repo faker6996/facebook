@@ -9,8 +9,6 @@ import { ResetPasswordToken } from "@/lib/models/password_reset_token";
 import { LOCALE } from "@/lib/constants/enum";
 
 async function handler(req: NextRequest) {
-  debugger;
-
   const { email, locale } = await req.json();
   const user = await baseRepo.getByField<User>(User, User.columns.email, email);
   if (!user) throw new ApiError("Không tìm thấy người dùng", 404);

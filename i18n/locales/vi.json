@@ -1,12 +1,13 @@
 {
   "ErrorPage": {
-    "title": "Đã có lỗi xảy ra!",
-    "message": "Đã xảy ra lỗi hệ thống",
+    "title": "Đã xảy ra lỗi!",
+    "message": "Có gì đó không ổn",
     "retry": "Thử lại"
   },
+
   "LoginPage": {
     "heading": "Đăng nhập vào tài khoản của bạn",
-    "emailLabel": "Địa chỉ Email",
+    "emailLabel": "Địa chỉ email",
     "passwordLabel": "Mật khẩu",
     "rememberMe": "Ghi nhớ đăng nhập",
     "forgotPassword": "Quên mật khẩu?",
@@ -15,18 +16,36 @@
     "social": {
       "google": "Google",
       "facebook": "Facebook"
+    },
+    "ValidationInput": {
+      "required": "Trường này là bắt buộc",
+      "typeMismatch": "Định dạng không hợp lệ",
+      "pattern": "Giá trị không khớp mẫu yêu cầu",
+      "tooShort": "Giá trị quá ngắn",
+      "tooLong": "Giá trị quá dài",
+      "rangeUnderflow": "Số quá nhỏ",
+      "rangeOverflow": "Số quá lớn",
+      "stepMismatch": "Giá trị bước không hợp lệ",
+      "badInput": "Vui lòng nhập số",
+      "invalid": "Giá trị không hợp lệ"
     }
   },
-  "ValidationInput": {
-    "required": "Trường này là bắt buộc",
-    "typeMismatch": "Định dạng không hợp lệ",
-    "pattern": "Giá trị không khớp định dạng",
-    "tooShort": "Giá trị quá ngắn",
-    "tooLong": "Giá trị quá dài",
-    "rangeUnderflow": "Số quá nhỏ",
-    "rangeOverflow": "Số quá lớn",
-    "stepMismatch": "Sai bước nhảy",
-    "badInput": "Vui lòng nhập số",
-    "invalid": "Giá trị không hợp lệ"
+
+  "ResetPassword": {
+    "heading": "Đặt lại mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu mới",
+    "submitButton": "Cập nhật",
+    "successTitle": "Đổi mật khẩu thành công!",
+    "backToLogin": "Quay về trang đăng nhập",
+    "errorDefault": "Đã có lỗi xảy ra"
+  },
+
+  "ForgotPassword": {
+    "heading": "Quên mật khẩu",
+    "emailPlaceholder": "Nhập email của bạn",
+    "submitButton": "Gửi",
+    "sending": "Đang gửi...",
+    "sentSuccess": "Hướng dẫn đặt lại mật khẩu đã được gửi về email.",
+    "errorDefault": "Gửi thất bại."
   }
 }

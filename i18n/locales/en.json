@@ -4,6 +4,7 @@
     "message": "Something went wrong",
     "retry": "Try again"
   },
+
   "LoginPage": {
     "heading": "Sign in to your account",
     "emailLabel": "Email address",
@@ -28,5 +29,23 @@
       "badInput": "Enter a number",
       "invalid": "Invalid value"
     }
+  },
+
+  "ResetPassword": {
+    "heading": "Reset your password",
+    "passwordPlaceholder": "Enter new password",
+    "submitButton": "Update",
+    "successTitle": "Password reset successful!",
+    "backToLogin": "Back to login",
+    "errorDefault": "Something went wrong"
+  },
+
+  "ForgotPassword": {
+    "heading": "Forgot password",
+    "emailPlaceholder": "Enter your email",
+    "submitButton": "Send",
+    "sending": "Sending...",
+    "sentSuccess": "Password reset instructions have been sent to your email.",
+    "errorDefault": "Send failed."
   }
 }
