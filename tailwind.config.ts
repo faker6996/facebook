@@ -39,6 +39,18 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "sans-serif"],
@@ -51,7 +63,7 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       transitionTimingFunction: {
-        'soft': 'cubic-bezier(0.25, 1, 0.5, 1)', // giống smooth slide của iOS
+        soft: "cubic-bezier(0.25, 1, 0.5, 1)", // giống smooth slide của iOS
       },
     },
   },

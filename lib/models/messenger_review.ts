@@ -7,4 +7,5 @@ export class MessengerPreview {
   last_message?: string | null;
   last_message_at?: string | null;
   last_seen_at?: string | null;
+  other_is_online?: boolean;
 }
