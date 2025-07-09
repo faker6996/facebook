@@ -2,7 +2,6 @@ import { safeQuery } from "@/lib/modules/common/safe_query";
 import { User } from "@/lib/models/user";
 import { baseRepo } from "../../common/base_repo";
 import { MessengerPreview } from "@/lib/models/messenger_review";
-import { query } from "@/lib/db";
 import { Message } from "@/lib/models/message";
 
 export const messengerRepo = {
@@ -83,4 +82,6 @@ export const messengerRepo = {
     }
     return messages.rows;
   },
+
+
 };

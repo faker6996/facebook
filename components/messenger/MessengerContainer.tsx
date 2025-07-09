@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as signalR from "@microsoft/signalr";
 
 // Local Imports
-import { CirclePlus, SendHorizontal, X } from "lucide-react";
+import { SendHorizontal, X, Paperclip, Image, FileText } from "lucide-react";
 import MessageList from "@/components/messenger/MessageList";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
@@ -33,7 +33,10 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [sender, setSender] = useState<User>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isOtherUserOnline, setIsOtherUserOnline] = useState(conversation.other_is_online);
 
@@ -134,15 +137,58 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Upload files
+  const uploadFiles = async (files: File[]) => {
+    const uploadPromises = files.map(async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      try {
+        const response = await fetch(API_ROUTES.CHAT_SERVER.UPLOAD_FILE, {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Upload error:', response.status, errorText);
+          throw new Error(`Failed to upload ${file.name}: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Upload response:', result);
+        console.log('Upload response data:', result.data);
+        
+        // Xử lý format response từ chat server
+        return {
+          file_name: result.data?.file_name || result.file_name || result.name || file.name,
+          file_url: result.data?.file_url || result.file_url || result.url,
+          file_type: result.data?.file_type || result.file_type || result.type || file.type,
+          file_size: result.data?.file_size || result.file_size || result.size || file.size,
+        };
+      } catch (error) {
+        console.error('Upload file error:', error);
+        throw error;
+      }
+    });
+    
+    return Promise.all(uploadPromises);
+  };
+
   // Gửi tin nhắn
-  const performSendMessage = async (content: string, tempId: string) => {
+  const performSendMessage = async (content: string, tempId: string, attachments?: any[], contentType?: "text" | "image" | "file") => {
     const body: SendMessageRequest = {
       sender_id: sender.id!,
       content,
       conversation_id: conversation.conversation_id!,
-      message_type: MESSAGE_TYPE.PRIVATE,
+      message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
+      content_type: contentType || "text", // Loại nội dung (text/image/file)
       target_id: conversation.other_user_id,
+      attachments,
     };
+
+    console.log('Sending message:', body);
+    console.log('Attachments detail:', JSON.stringify(attachments, null, 2));
 
     try {
       const res = await callApi<Message>(API_ROUTES.CHAT_SERVER.SENT_MESSAGE, HTTP_METHOD_ENUM.POST, body);
@@ -150,29 +196,61 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       setMessages((prev) => prev.map((m) => (m.id === tempId ? saved : m)));
     } catch (err) {
       console.error("Send message error:", err);
+      console.error("Request body was:", body);
       setMessages((prev) => prev.map((m) => (m.id === tempId ? new Message({ ...m, status: "Failed" }) : m)));
     }
   };
 
-  const sendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+  const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || !sender.id) return;
+    if ((!input.trim() && selectedFiles.length === 0) || !sender.id) return;
 
+    setIsUploading(true);
     const tempId = `temp_${Date.now()}`;
     const content = input.trim();
+    
+    let attachments: any[] = [];
+    if (selectedFiles.length > 0) {
+      try {
+        attachments = await uploadFiles(selectedFiles);
+      } catch (error) {
+        console.error("File upload failed:", error);
+        setIsUploading(false);
+        return;
+      }
+    }
+
+    // Xác định content_type dựa trên input gửi đi
+    let contentType: "text" | "image" | "file" = "text";
+    
+    if (attachments && attachments.length > 0) {
+      // Nếu có attachment, check loại file
+      const firstAttachment = attachments[0];
+      if (firstAttachment.file_type?.startsWith('image/')) {
+        contentType = "image";
+      } else {
+        contentType = "file";
+      }
+    }
+    // Nếu chỉ có text mà không có attachment thì vẫn là "text"
+
     const optimistic = new Message({
       id: tempId,
       sender_id: sender.id,
       target_id: conversation.other_user_id,
       content,
-      message_type: "text",
+      message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
+      content_type: contentType, // Loại nội dung (text/image/file)
       created_at: new Date().toISOString(),
       status: "Sending",
+      attachments: attachments.map(att => ({ ...att, id: Math.random() })),
     });
 
     setMessages((prev) => [...prev, optimistic]);
     setInput("");
-    performSendMessage(content, tempId);
+    setSelectedFiles([]);
+    setIsUploading(false);
+    performSendMessage(content, tempId, attachments, contentType);
   };
 
   const handleRetrySend = (failed: Message) => {
@@ -186,7 +264,29 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       created_at: new Date().toISOString(),
     });
     setMessages((prev) => [...prev, optimistic]);
-    performSendMessage(failed.content, tempId);
+    performSendMessage(failed.content, tempId, failed.attachments);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) return <Image className="h-4 w-4" />;
+    return <FileText className="h-4 w-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // ----- JSX Render -----
@@ -232,11 +332,52 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
         {/* Input Form: Thiết kế lại hoàn toàn để trông hiện đại hơn */}
         <div className="border-t bg-card p-3">
+          {/* Hiển thị files đã chọn */}
+          {selectedFiles.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="flex items-center gap-2 rounded-lg bg-muted p-2">
+                  {getFileIcon(file.type)}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeFile(index)}
+                    className="h-6 w-6"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <form onSubmit={sendMessage} className="flex items-center gap-2">
-            {/* Các nút hành động phụ */}
-            <Button type="button" size="icon" variant="ghost" className="flex-shrink-0">
-              <CirclePlus className="h-5 w-5 text-muted-foreground" />
+            {/* Nút đính kèm file */}
+            <Button 
+              type="button" 
+              size="icon" 
+              variant="ghost" 
+              className="flex-shrink-0"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Paperclip className="h-5 w-5 text-muted-foreground" />
             </Button>
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+              accept="image/*,application/pdf,.doc,.docx,.txt,.xls,.xlsx"
+            />
+
             {/* Bọc Input trong một div để tạo hiệu ứng bo tròn */}
             <div className="relative w-full">
               <Input
@@ -249,8 +390,14 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
             </div>
 
             {/* Nút gửi */}
-            <Button type="submit" size="icon" variant="ghost" className="flex-shrink-0" disabled={!input.trim()}>
-              <SendHorizontal className={`h-5 w-5 transition-colors ${input.trim() ? "text-primary" : "text-muted-foreground"}`} />
+            <Button 
+              type="submit" 
+              size="icon" 
+              variant="ghost" 
+              className="flex-shrink-0" 
+              disabled={(!input.trim() && selectedFiles.length === 0) || isUploading}
+            >
+              <SendHorizontal className={`h-5 w-5 transition-colors ${(input.trim() || selectedFiles.length > 0) && !isUploading ? "text-primary" : "text-muted-foreground"}`} />
             </Button>
           </form>
         </div>

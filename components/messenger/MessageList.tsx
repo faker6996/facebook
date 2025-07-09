@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils/cn";
 import { formatTime } from "@/lib/utils/formatTime";
 import { Message } from "@/lib/models/message";
 import { MessageStatusIcon } from "@/components/icons/MessageStatusIcon";
+import { FileText, Download, Image } from "lucide-react";
+import Button from "@/components/ui/Button";
 
 interface MessageListProps {
   messages: Message[];
@@ -11,6 +13,26 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySend }) => {
+  const getFileIcon = (fileType: string) => {
+    if (fileType?.startsWith('image/')) return <Image className="h-4 w-4" />;
+    return <FileText className="h-4 w-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const downloadFile = (url: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+  };
+
   return (
     <>
       {messages.map((msg, idx) => {
@@ -28,7 +50,47 @@ const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySe
               msg.status === "Failed" && "bg-destructive/20 text-destructive opacity-90"
             )}
           >
-            <p className="text-pretty">{msg.content}</p>
+            {msg.content && <p className="text-pretty">{msg.content}</p>}
+            
+            {/* Hiển thị attachments */}
+            {msg.attachments && msg.attachments.length > 0 && (
+              <div className="space-y-2 mt-2">
+                {msg.attachments.map((attachment, attIdx) => (
+                  <div
+                    key={attIdx}
+                    className={cn(
+                      "flex items-center gap-2 p-2 rounded-lg border",
+                      isSender ? "border-primary-foreground/20 bg-primary-foreground/10" : "border-muted-foreground/20 bg-background/50"
+                    )}
+                  >
+                    {attachment.file_type?.startsWith('image/') ? (
+                      <img
+                        src={attachment.file_url}
+                        alt={attachment.file_name}
+                        className="max-w-full h-32 object-cover rounded"
+                      />
+                    ) : (
+                      <>
+                        {getFileIcon(attachment.file_type || '')}
+                        <div className="flex-1">
+                          <p className="text-xs font-medium truncate">{attachment.file_name}</p>
+                          <p className="text-xs opacity-70">{formatFileSize(attachment.file_size || 0)}</p>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => downloadFile(attachment.file_url || '', attachment.file_name || '')}
+                          className="h-6 w-6"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex items-center self-end mt-1.5 gap-2">
               {msg.status === "Failed" ? (
                 <>
