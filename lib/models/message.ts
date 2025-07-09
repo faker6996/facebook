@@ -1,4 +1,5 @@
 import { MESSAGE_TYPE } from "@/lib/constants/enum";
+import { Attachment } from "./attachment";
 
 export class Message {
   id?: number | string;
@@ -6,9 +7,11 @@ export class Message {
   sender_id?: number;
   target_id?: number;
   content?: string;
-  message_type?: "text" | "image" | "file";
+  message_type?: MESSAGE_TYPE; // PRIVATE/PUBLIC/GROUP
+  content_type?: "text" | "image" | "file"; // text/image/file
   created_at?: string;
   status?: MessageStatus;
+  attachments?: Attachment[];
 
   static table = "messages";
   static columns = {
@@ -18,6 +21,7 @@ export class Message {
     target_id: "target_id",
     content: "content",
     message_type: "message_type",
+    content_type: "content_type",
     created_at: "created_at",
     status: "status",
   } as const;
@@ -30,8 +34,10 @@ export class Message {
     this.target_id = data.target_id;
     this.content = data.content;
     this.message_type = data.message_type;
+    this.content_type = data.content_type;
     this.created_at = data.created_at;
     this.status = data.status ?? "Sent";
+    this.attachments = data.attachments ?? [];
   }
 }
 
@@ -41,5 +47,12 @@ export interface SendMessageRequest {
   conversation_id: number;
   content: string;
   message_type: MESSAGE_TYPE;
+  content_type?: "text" | "image" | "file"; // Thêm content_type riêng
   target_id?: number;
+  attachments?: {
+    file_name: string;
+    file_url: string;
+    file_type: string;
+    file_size: number;
+  }[];
 }

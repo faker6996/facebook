@@ -20,14 +20,17 @@ export async function callApi<T>(
   data?: any,
   config?: AxiosRequestConfig // ❶ không còn thuộc tính `silent`
 ): Promise<T> {
+  console.log(`🔥 API Call: ${method} ${url}`, data);
+  
   try {
-    debugger;
     const res = await api.request({
       url,
       method,
       ...(method === "GET" ? { params: data } : { data }),
       ...config,
     });
+
+    console.log(`✅ API Response: ${method} ${url}`, res.data);
 
     // Backend chuẩn hóa { success, message, data }
     const { success, message, data: payload } = res.data;
@@ -42,7 +45,10 @@ export async function callApi<T>(
     const axiosErr = err as AxiosError;
     const msg = (axiosErr.response?.data as any)?.message || axiosErr.message || "Internal Server Error";
 
-    console.error("[System error]", err);
+    console.error(`❌ API Error: ${method} ${url}`, err);
+    console.error("Error response:", axiosErr.response?.data);
+    console.error("Error status:", axiosErr.response?.status);
+    
     throw new Error(msg);
   }
 }
