@@ -92,6 +92,8 @@ services:
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       - ASPNETCORE_URLS=http://+:5077
+    volumes:
+      - /home/infvn/uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
