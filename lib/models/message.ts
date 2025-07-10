@@ -9,9 +9,12 @@ export class Message {
   content?: string;
   message_type?: MESSAGE_TYPE; // PRIVATE/PUBLIC/GROUP
   content_type?: "text" | "image" | "file"; // text/image/file
+  reply_to_message_id?: number;
   created_at?: string;
   status?: MessageStatus;
   attachments?: Attachment[];
+  replied_message?: Message; // Thông tin tin nhắn được reply
+  reactions?: MessageReaction[]; // Danh sách reactions
 
   static table = "messages";
   static columns = {
@@ -22,6 +25,7 @@ export class Message {
     content: "content",
     message_type: "message_type",
     content_type: "content_type",
+    reply_to_message_id: "reply_to_message_id",
     created_at: "created_at",
     status: "status",
   } as const;
@@ -35,9 +39,12 @@ export class Message {
     this.content = data.content;
     this.message_type = data.message_type;
     this.content_type = data.content_type;
+    this.reply_to_message_id = data.reply_to_message_id;
     this.created_at = data.created_at;
     this.status = data.status ?? "Sent";
     this.attachments = data.attachments ?? [];
+    this.replied_message = data.replied_message;
+    this.reactions = data.reactions ?? [];
   }
 }
 
@@ -49,10 +56,31 @@ export interface SendMessageRequest {
   message_type: MESSAGE_TYPE;
   content_type?: "text" | "image" | "file"; // Thêm content_type riêng
   target_id?: number;
+  reply_to_message_id?: number; // Thêm reply support
   attachments?: {
     file_name: string;
     file_url: string;
     file_type: string;
     file_size: number;
   }[];
+}
+
+export interface MessageReaction {
+  id?: number;
+  message_id?: number;
+  user_id?: number;
+  emoji?: string;
+  reacted_at?: string;
+}
+
+export interface AddReactionRequest {
+  message_id: number;
+  user_id: number;
+  emoji: string;
+}
+
+export interface RemoveReactionRequest {
+  message_id: number;
+  user_id: number;
+  emoji: string;
 }

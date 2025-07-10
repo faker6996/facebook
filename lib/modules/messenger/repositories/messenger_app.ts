@@ -47,32 +47,117 @@ export const messengerRepo = {
   async getMessagesByConversationId(conversationId: number): Promise<any[]> {
     const sql = `
      SELECT 
-        id, 
-        conversation_id, 
-        sender_id, 
-        content, 
-        created_at
-      FROM messages
-      WHERE conversation_id = $1
-      ORDER BY created_at ASC
+        m.id, 
+        m.conversation_id, 
+        m.sender_id, 
+        m.content, 
+        m.created_at,
+        m.status,
+        m.content_type,
+        m.message_type,
+        m.reply_to_message_id,
+        COALESCE(
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', a.id,
+              'file_name', a.file_name,
+              'file_url', a.file_url,
+              'file_type', a.file_type,
+              'file_size', a.file_size,
+              'created_at', a.created_at
+            )
+          ) FILTER (WHERE a.id IS NOT NULL), 
+          '[]'
+        ) AS attachments,
+        COALESCE(
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', r.id,
+              'message_id', r.message_id,
+              'user_id', r.user_id,
+              'emoji', r.emoji,
+              'reacted_at', r.reacted_at
+            )
+          ) FILTER (WHERE r.id IS NOT NULL), 
+          '[]'
+        ) AS reactions
+      FROM messages m
+      LEFT JOIN attachments a ON m.id = a.message_id
+      LEFT JOIN message_reactions r ON m.id = r.message_id
+      WHERE m.conversation_id = $1
+      GROUP BY m.id, m.conversation_id, m.sender_id, m.content, m.created_at, m.status, m.content_type, m.message_type, m.reply_to_message_id
+      ORDER BY m.created_at ASC
     `;
-    const messages = await safeQuery(sql, [conversationId]);
-    if (!messages || !messages.rows) {
-      return [];
+
+    console.log("🔍 SQL Query (Simple):", sql);
+    console.log("🔍 Parameters:", [conversationId]);
+
+    try {
+      const messages = await safeQuery(sql, [conversationId]);
+      console.log("✅ Query result:", messages?.rows?.length, "messages");
+      if (!messages || !messages.rows) {
+        return [];
+      }
+      // Lấy replied messages riêng để tránh JOIN phức tạp
+      const messagesWithReplies = await Promise.all(
+        messages.rows.map(async (message) => {
+          if (message.reply_to_message_id) {
+            try {
+              const repliedQuery = `
+                SELECT id, content, sender_id, content_type, created_at 
+                FROM messages 
+                WHERE id = $1
+              `;
+              const repliedResult = await safeQuery(repliedQuery, [message.reply_to_message_id]);
+              if (repliedResult && repliedResult.rows && repliedResult.rows.length > 0) {
+                message.replied_message = repliedResult.rows[0];
+              }
+            } catch (err) {
+              console.error('Error fetching replied message:', err);
+            }
+          }
+          return message;
+        })
+      );
+      
+      return messagesWithReplies;
+    } catch (error) {
+      console.error("❌ SQL Error in getMessagesByConversationId:", error);
+      console.error("❌ SQL Query that failed:", sql);
+      console.error("❌ Parameters:", [conversationId]);
+      throw error;
     }
-    return messages.rows;
   },
   async getMessagesAfterIdAsyncRepo(conversationId: number, lastMessageId: number): Promise<Message[]> {
     const sql = `
       SELECT 
-        id, 
-        conversation_id, 
-        sender_id, 
-        content, 
-        created_at
-      FROM messages
-      WHERE conversation_id = $1 AND id > $2
-      ORDER BY created_at ASC
+        m.id, 
+        m.conversation_id, 
+        m.sender_id, 
+        m.content, 
+        m.created_at,
+        m.status,
+        m.content_type,
+        m.message_type,
+        m.reply_to_message_id,
+        COALESCE(
+          JSON_AGG(
+            DISTINCT JSON_BUILD_OBJECT(
+              'id', a.id,
+              'file_name', a.file_name,
+              'file_url', a.file_url,
+              'file_type', a.file_type,
+              'file_size', a.file_size,
+              'created_at', a.created_at
+            )
+          ) FILTER (WHERE a.id IS NOT NULL), 
+          '[]'
+        ) AS attachments
+      FROM messages m
+      LEFT JOIN attachments a ON m.id = a.message_id
+      WHERE m.conversation_id = $1 AND m.id > $2
+      GROUP BY m.id, m.conversation_id, m.sender_id, m.content, m.created_at, m.status, m.content_type, m.message_type, m.reply_to_message_id
+      ORDER BY m.created_at ASC
     `;
     // Thêm lastMessageId vào mảng tham số cho câu lệnh query
     const messages = await safeQuery(sql, [conversationId, lastMessageId]);
@@ -82,6 +167,4 @@ export const messengerRepo = {
     }
     return messages.rows;
   },
-
-
 };
