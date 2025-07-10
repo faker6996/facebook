@@ -1,19 +1,19 @@
 "use client";
 
 // ----- Imports -----
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import * as signalR from "@microsoft/signalr";
+import React, { useEffect, useRef, useState } from "react";
 
 // Local Imports
-import { SendHorizontal, X, Paperclip, Image, FileText } from "lucide-react";
+import { X } from "lucide-react";
 import MessageList from "@/components/messenger/MessageList";
+import MessageInput from "@/components/messenger/MessageInput";
+import { useSignalRConnection } from "@/components/messenger/useSignalRConnection";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
-import { Message, SendMessageRequest } from "@/lib/models/message";
+import { Message, SendMessageRequest, AddReactionRequest, RemoveReactionRequest } from "@/lib/models/message";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
 import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
@@ -35,10 +35,20 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [input, setInput] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
 
   const [isOtherUserOnline, setIsOtherUserOnline] = useState(conversation.other_is_online);
+
+  // SignalR Connection
+  useSignalRConnection({
+    sender,
+    conversation,
+    messages,
+    setMessages,
+    setIsOtherUserOnline
+  });
 
   // ----- useEffect Hooks -----
   // Load tin nhắn ban đầu
@@ -50,10 +60,32 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     let isMounted = true;
     (async () => {
       try {
+        console.log('🔥 Loading messages for conversation:', conversation.conversation_id);
         const response = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversation.conversation_id ?? 0), HTTP_METHOD_ENUM.GET);
-        if (isMounted) setMessages(response?.map((m) => new Message(m)) ?? []);
+        console.log('✅ Raw API Response:', response);
+        console.log('✅ Messages loaded successfully:', response?.length);
+        
+        if (isMounted) {
+          console.log('🔄 Mapping response to Message objects...');
+          const mappedMessages = response?.map((m, index) => {
+            console.log(`📝 Processing message ${index}:`, m);
+            try {
+              return new Message(m);
+            } catch (err) {
+              console.error(`❌ Error processing message ${index}:`, err, m);
+              return null;
+            }
+          }).filter((m): m is Message => m !== null) ?? [];
+          
+          console.log('🎯 Final mapped messages:', mappedMessages.length);
+          setMessages(mappedMessages);
+        }
       } catch (err) {
-        console.error("Lỗi tải tin nhắn:", err);
+        console.error("❌ Lỗi tải tin nhắn:", err);
+        console.error("❌ Error details:", {
+          conversationId: conversation.conversation_id,
+          error: err
+        });
       }
     })();
 
@@ -65,72 +97,6 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     };
   }, [conversation]);
 
-  // Thiết lập SignalR cho Chat
-  useEffect(() => {
-    if (!sender?.id || !conversation?.other_user_id) return;
-
-    const conn = new signalR.HubConnectionBuilder()
-      .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, {
-        withCredentials: true,
-      })
-      .withAutomaticReconnect()
-      .build();
-
-    // Lắng nghe tin nhắn mới
-    conn.on("ReceiveMessage", (newMsg: any) => {
-      const isForCurrent =
-        (newMsg.sender_id === conversation.other_user_id && newMsg.target_id === sender.id) ||
-        (newMsg.sender_id === sender.id && newMsg.target_id === conversation.other_user_id);
-      if (isForCurrent) {
-        setMessages((prev) => [...prev, new Message(newMsg)]);
-      }
-    });
-
-    // THÊM MỚI: Lắng nghe sự kiện trạng thái
-    conn.on("UserOnline", (userId: string) => {
-      // So sánh string với number cần cẩn thận
-      if (userId == conversation.other_user_id?.toString()) {
-        console.log(`User ${userId} is now ONLINE.`);
-        setIsOtherUserOnline(true);
-      }
-    });
-
-    conn.on("UserOffline", (userId: string) => {
-      if (userId == conversation.other_user_id?.toString()) {
-        console.log(`User ${userId} is now OFFLINE.`);
-        setIsOtherUserOnline(false);
-      }
-    });
-
-    // Đồng bộ tin nhắn khi kết nối lại
-    conn.onreconnected(async (connectionId) => {
-      console.log(`✅ SignalR reconnected: ${connectionId}`);
-      const lastId =
-        messages
-          .slice()
-          .reverse()
-          .find((m) => typeof m.id === "number")?.id ?? 0;
-      try {
-        const missed = await callApi<Message[]>(
-          `${API_ROUTES.MESSENGER.SYNC}?conversationId=${conversation.conversation_id}&lastMessageId=${lastId}`,
-          HTTP_METHOD_ENUM.GET
-        );
-        if (missed?.length) {
-          const inst = missed.map((m) => new Message(m));
-          setMessages((prev) => [...prev, ...inst].sort((a, b) => new Date(a.created_at ?? "").getTime() - new Date(b.created_at ?? "").getTime()));
-        }
-      } catch (err) {
-        console.error("Sync fail:", err);
-      }
-    });
-
-    conn.start().catch((err) => console.error("SignalR connect fail", err));
-
-    // Dọn dẹp kết nối khi component unmount
-    return () => {
-      conn.stop();
-    };
-  }, [sender.id, conversation.other_user_id, messages]); // Thêm 'messages' để lấy lastId chính xác khi reconnected
 
   // Cuộn xuống cuối
   useEffect(() => {
@@ -176,7 +142,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   };
 
   // Gửi tin nhắn
-  const performSendMessage = async (content: string, tempId: string, attachments?: any[], contentType?: "text" | "image" | "file") => {
+  const performSendMessage = async (content: string, tempId: string, attachments?: any[], contentType?: "text" | "image" | "file", replyToMessageId?: number) => {
     const body: SendMessageRequest = {
       sender_id: sender.id!,
       content,
@@ -184,6 +150,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
       content_type: contentType || "text", // Loại nội dung (text/image/file)
       target_id: conversation.other_user_id,
+      reply_to_message_id: replyToMessageId,
       attachments,
     };
 
@@ -241,6 +208,14 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       content,
       message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
       content_type: contentType, // Loại nội dung (text/image/file)
+      reply_to_message_id: typeof replyingTo?.id === 'number' ? replyingTo.id : undefined,
+      replied_message: replyingTo ? {
+        id: replyingTo.id,
+        content: replyingTo.content,
+        sender_id: replyingTo.sender_id,
+        content_type: replyingTo.content_type,
+        created_at: replyingTo.created_at
+      } : undefined,
       created_at: new Date().toISOString(),
       status: "Sending",
       attachments: attachments.map(att => ({ ...att, id: Math.random() })),
@@ -249,8 +224,9 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     setMessages((prev) => [...prev, optimistic]);
     setInput("");
     setSelectedFiles([]);
+    setReplyingTo(null);
     setIsUploading(false);
-    performSendMessage(content, tempId, attachments, contentType);
+    performSendMessage(content, tempId, attachments, contentType, typeof replyingTo?.id === 'number' ? replyingTo.id : undefined);
   };
 
   const handleRetrySend = (failed: Message) => {
@@ -264,30 +240,118 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       created_at: new Date().toISOString(),
     });
     setMessages((prev) => [...prev, optimistic]);
-    performSendMessage(failed.content, tempId, failed.attachments);
+    performSendMessage(failed.content, tempId, failed.attachments, failed.content_type, failed.reply_to_message_id);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+  const handleReplyMessage = (message: Message) => {
+    setReplyingTo(message);
+    // Auto focus vào input khi reply
+    setTimeout(() => {
+      messageInputRef.current?.focus();
+    }, 100);
   };
 
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  const handleAddReaction = async (messageId: number, emoji: string) => {
+    if (!sender.id) return;
+    
+    // Optimistic update for immediate UI feedback
+    setMessages((prev) => prev.map(msg => {
+      if (msg.id === messageId) {
+        const newReactions = [...(msg.reactions || [])];
+        
+        // Check if user already reacted with this emoji
+        const existingIndex = newReactions.findIndex(r => 
+          r.user_id === sender.id && r.emoji === emoji
+        );
+        
+        if (existingIndex === -1) {
+          // Add new reaction optimistically
+          newReactions.push({
+            id: Math.random(), // temporary ID
+            message_id: messageId,
+            user_id: sender.id!,
+            emoji,
+            reacted_at: new Date().toISOString()
+          });
+        }
+        
+        return new Message({ ...msg, reactions: newReactions });
+      }
+      return msg;
+    }));
+    
+    const body: AddReactionRequest = {
+      message_id: messageId,
+      user_id: sender.id,
+      emoji
+    };
+
+    try {
+      console.log('🎭 Adding reaction:', body);
+      await callApi(`${API_ROUTES.CHAT_SERVER.ADD_REACTION}`, HTTP_METHOD_ENUM.POST, body);
+      // Chat server sẽ broadcast ReceiveReaction event
+    } catch (error) {
+      console.error('❌ Add reaction error:', error);
+      // Revert optimistic update on error
+      setMessages((prev) => prev.map(msg => {
+        if (msg.id === messageId) {
+          const newReactions = (msg.reactions || []).filter(r => 
+            !(r.user_id === sender.id && r.emoji === emoji)
+          );
+          return new Message({ ...msg, reactions: newReactions });
+        }
+        return msg;
+      }));
+    }
   };
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="h-4 w-4" />;
-    return <FileText className="h-4 w-4" />;
+  const handleRemoveReaction = async (messageId: number, emoji: string) => {
+    if (!sender.id) return;
+    
+    // Store the removed reaction for potential rollback
+    let removedReaction: any = null;
+    
+    // Optimistic update for immediate UI feedback
+    setMessages((prev) => prev.map(msg => {
+      if (msg.id === messageId) {
+        const newReactions = (msg.reactions || []).filter(r => {
+          const shouldRemove = r.user_id === sender.id && r.emoji === emoji;
+          if (shouldRemove) {
+            removedReaction = r; // Store for rollback
+          }
+          return !shouldRemove;
+        });
+        
+        return new Message({ ...msg, reactions: newReactions });
+      }
+      return msg;
+    }));
+    
+    const body: RemoveReactionRequest = {
+      message_id: messageId,
+      user_id: sender.id,
+      emoji
+    };
+
+    try {
+      console.log('🎭 Removing reaction:', body);
+      await callApi(`${API_ROUTES.CHAT_SERVER.REMOVE_REACTION}`, HTTP_METHOD_ENUM.POST, body);
+      // Chat server sẽ broadcast RemoveReaction event
+    } catch (error) {
+      console.error('❌ Remove reaction error:', error);
+      // Revert optimistic update on error
+      if (removedReaction) {
+        setMessages((prev) => prev.map(msg => {
+          if (msg.id === messageId) {
+            const newReactions = [...(msg.reactions || []), removedReaction];
+            return new Message({ ...msg, reactions: newReactions });
+          }
+          return msg;
+        }));
+      }
+    }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
 
   // ----- JSX Render -----
   return (
@@ -326,81 +390,29 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
         {/* Message list: Giảm khoảng cách giữa các tin nhắn xuống space-y-2 */}
         <ScrollArea className="flex-1 space-y-2 bg-background/50 p-4">
-          <MessageList messages={messages} senderId={sender.id} onRetrySend={handleRetrySend} />
+          <MessageList 
+            messages={messages} 
+            senderId={sender.id} 
+            onRetrySend={handleRetrySend} 
+            onReplyMessage={handleReplyMessage}
+            onAddReaction={handleAddReaction}
+            onRemoveReaction={handleRemoveReaction}
+          />
           <div ref={bottomRef} />
         </ScrollArea>
 
-        {/* Input Form: Thiết kế lại hoàn toàn để trông hiện đại hơn */}
-        <div className="border-t bg-card p-3">
-          {/* Hiển thị files đã chọn */}
-          {selectedFiles.length > 0 && (
-            <div className="mb-3 space-y-2">
-              {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 rounded-lg bg-muted p-2">
-                  {getFileIcon(file.type)}
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => removeFile(index)}
-                    className="h-6 w-6"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <form onSubmit={sendMessage} className="flex items-center gap-2">
-            {/* Nút đính kèm file */}
-            <Button 
-              type="button" 
-              size="icon" 
-              variant="ghost" 
-              className="flex-shrink-0"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Paperclip className="h-5 w-5 text-muted-foreground" />
-            </Button>
-            
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={handleFileSelect}
-              accept="image/*,application/pdf,.doc,.docx,.txt,.xls,.xlsx"
-            />
-
-            {/* Bọc Input trong một div để tạo hiệu ứng bo tròn */}
-            <div className="relative w-full">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Nhập tin nhắn..."
-                // Kiểu dáng bo tròn, có padding
-                className="w-full rounded-full border bg-muted py-2 pl-4 pr-10 focus-visible:ring-1 focus-visible:ring-ring"
-              />
-            </div>
-
-            {/* Nút gửi */}
-            <Button 
-              type="submit" 
-              size="icon" 
-              variant="ghost" 
-              className="flex-shrink-0" 
-              disabled={(!input.trim() && selectedFiles.length === 0) || isUploading}
-            >
-              <SendHorizontal className={`h-5 w-5 transition-colors ${(input.trim() || selectedFiles.length > 0) && !isUploading ? "text-primary" : "text-muted-foreground"}`} />
-            </Button>
-          </form>
-        </div>
+        {/* Message Input */}
+        <MessageInput
+          ref={messageInputRef}
+          input={input}
+          setInput={setInput}
+          selectedFiles={selectedFiles}
+          setSelectedFiles={setSelectedFiles}
+          isUploading={isUploading}
+          replyingTo={replyingTo}
+          setReplyingTo={setReplyingTo}
+          onSendMessage={sendMessage}
+        />
       </div>
     </>
   );

@@ -29,6 +29,8 @@ export const API_ROUTES = {
   CHAT_SERVER: {
     SENT_MESSAGE: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/messages`,
     UPLOAD_FILE: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/upload`,
+    ADD_REACTION: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/reactions/add`,
+    REMOVE_REACTION: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/reactions/remove`,
   },
   RESET_PASSWORD: {
     REQUEST: `/api/forgot-password`,
