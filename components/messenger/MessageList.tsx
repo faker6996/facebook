@@ -147,14 +147,15 @@ const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySe
             {/* Reaction Picker */}
             {showReactionPicker === Number(msg.id) && (
               <div className={cn(
-                "absolute -top-12 z-10 bg-background border rounded-lg shadow-lg p-2 flex gap-1",
-                isSender ? "left-2" : "right-2"
+                "absolute -top-12 z-20 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-1",
+                "min-w-fit whitespace-nowrap",
+                isSender ? "right-0" : "left-0"
               )}>
                 {availableReactions.map((emoji) => (
                   <button
                     key={emoji}
                     onClick={() => handleReactionClick(Number(msg.id), emoji)}
-                    className="hover:bg-muted p-1 rounded text-lg transition-colors"
+                    className="hover:bg-muted p-2 rounded-md text-lg transition-colors active:scale-95"
                   >
                     {emoji}
                   </button>
@@ -202,7 +203,10 @@ const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySe
 
             {/* Reactions Display */}
             {msg.reactions && msg.reactions.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className={cn(
+                "flex flex-wrap gap-1 mt-2 relative z-10",
+                isSender ? "justify-end" : "justify-start"
+              )}>
                 {availableReactions.map((emoji) => {
                   const count = getReactionCount(msg.reactions, emoji);
                   const userReacted = hasUserReacted(msg.reactions, emoji);
@@ -214,10 +218,11 @@ const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySe
                       key={emoji}
                       onClick={() => handleReactionClick(Number(msg.id), emoji)}
                       className={cn(
-                        "flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors",
+                        "flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all duration-200",
+                        "border shadow-sm hover:shadow-md active:scale-95",
                         userReacted 
-                          ? "bg-primary/20 text-primary border border-primary/30" 
-                          : "bg-muted hover:bg-muted/70"
+                          ? "bg-primary/10 text-primary border-primary/40 hover:bg-primary/20" 
+                          : "bg-card border-border hover:bg-muted/50"
                       )}
                     >
                       <span>{emoji}</span>

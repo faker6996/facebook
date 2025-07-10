@@ -159,8 +159,20 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
     try {
       const res = await callApi<Message>(API_ROUTES.CHAT_SERVER.SENT_MESSAGE, HTTP_METHOD_ENUM.POST, body);
-      const saved = new Message(res);
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? saved : m)));
+      console.log('✅ Message sent successfully:', res);
+      
+      setMessages((prev) => prev.map((m) => {
+        if (m.id === tempId) {
+          // Preserve replied_message from optimistic if server doesn't return it
+          const serverMessage = new Message(res);
+          if (!serverMessage.replied_message && m.replied_message) {
+            console.log('📨 Preserving replied_message from optimistic update');
+            serverMessage.replied_message = m.replied_message;
+          }
+          return serverMessage;
+        }
+        return m;
+      }));
     } catch (err) {
       console.error("Send message error:", err);
       console.error("Request body was:", body);
