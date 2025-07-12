@@ -31,6 +31,23 @@ export const API_ROUTES = {
     UPLOAD_FILE: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/upload`,
     ADD_REACTION: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/reactions/add`,
     REMOVE_REACTION: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/reactions/remove`,
+    
+    // Group management
+    CREATE_GROUP: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups`,
+    UPDATE_GROUP: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}`,
+    GROUP_INFO: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/info`,
+    GROUP_MEMBERS: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/members`,
+    ADD_MEMBERS: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/members`,
+    REMOVE_MEMBER: (id: number, userId: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/members/${userId}`,
+    LEAVE_GROUP: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/leave`,
+    PROMOTE_MEMBER: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/promote`,
+    GET_INVITE_LINK: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/invite-link`,
+    
+    // Join requests
+    JOIN_GROUP: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/requests`,
+    GET_JOIN_REQUESTS: (id: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${id}/requests`,
+    HANDLE_JOIN_REQUEST: (groupId: number, requestId: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${groupId}/requests/${requestId}`,
+    JOIN_VIA_INVITE: (inviteCode: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/join/${inviteCode}`,
   },
   RESET_PASSWORD: {
     REQUEST: `/api/forgot-password`,

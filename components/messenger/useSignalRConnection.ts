@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import * as signalR from "@microsoft/signalr";
 import { Message } from "@/lib/models/message";
 import { User } from "@/lib/models/user";
+import { GroupMember } from "@/lib/models/group";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
@@ -13,6 +14,11 @@ interface UseSignalRConnectionProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   setIsOtherUserOnline: (isOnline: boolean) => void;
+  // Group-specific props
+  isGroup?: boolean;
+  groupMembers?: GroupMember[];
+  setGroupMembers?: React.Dispatch<React.SetStateAction<GroupMember[]>>;
+  onGroupEvent?: (eventType: string, data: any) => void;
 }
 
 export const useSignalRConnection = ({
@@ -20,10 +26,14 @@ export const useSignalRConnection = ({
   conversation,
   messages,
   setMessages,
-  setIsOtherUserOnline
+  setIsOtherUserOnline,
+  isGroup = false,
+  groupMembers = [],
+  setGroupMembers,
+  onGroupEvent
 }: UseSignalRConnectionProps) => {
   useEffect(() => {
-    if (!sender?.id || !conversation?.other_user_id) return;
+    if (!sender?.id || (!conversation?.other_user_id && !isGroup)) return;
 
     const conn = new signalR.HubConnectionBuilder()
       .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, {
@@ -36,9 +46,17 @@ export const useSignalRConnection = ({
 
     // Lắng nghe tin nhắn mới
     conn.on("ReceiveMessage", async (newMsg: any) => {
-      const isForCurrent =
-        (newMsg.sender_id === conversation.other_user_id && newMsg.target_id === sender.id) ||
-        (newMsg.sender_id === sender.id && newMsg.target_id === conversation.other_user_id);
+      let isForCurrent = false;
+      
+      if (isGroup) {
+        // For group messages, check if message is for this conversation
+        isForCurrent = newMsg.conversation_id === conversation.conversation_id;
+      } else {
+        // For private messages, check sender/target
+        isForCurrent =
+          (newMsg.sender_id === conversation.other_user_id && newMsg.target_id === sender.id) ||
+          (newMsg.sender_id === sender.id && newMsg.target_id === conversation.other_user_id);
+      }
       
       if (isForCurrent) {
         console.log('📨 Received new message:', newMsg);
@@ -192,11 +210,75 @@ export const useSignalRConnection = ({
       console.log("🔍 Connection state:", conn.state);
     });
 
-    conn.onreconnected((connectionId) => {
+    conn.onreconnected(async (connectionId) => {
       console.log("🟢 SignalR reconnected successfully:", connectionId);
       console.log("🔍 Connection state:", conn.state);
       console.log("✅ Chat functionality restored");
+      
+      // Rejoin group if needed
+      if (isGroup && conversation.conversation_id) {
+        try {
+          await conn.invoke('JoinGroup', conversation.conversation_id.toString());
+          console.log("🏠 Rejoined group:", conversation.conversation_id);
+        } catch (error) {
+          console.error("❌ Failed to rejoin group:", error);
+        }
+      }
     });
+
+    // Group-specific event listeners
+    if (isGroup) {
+      conn.on("GroupMemberAdded", (data: { groupId: number, member: GroupMember }) => {
+        console.log('👥 Member added:', data);
+        if (data.groupId === conversation.conversation_id) {
+          setGroupMembers?.(prev => [...prev, data.member]);
+          onGroupEvent?.('member_added', data);
+        }
+      });
+
+      conn.on("GroupMemberRemoved", (data: { groupId: number, userId: number, reason: string }) => {
+        console.log('👥 Member removed:', data);
+        if (data.groupId === conversation.conversation_id) {
+          setGroupMembers?.(prev => prev.filter(m => m.user_id !== data.userId));
+          onGroupEvent?.('member_removed', data);
+        }
+      });
+
+      conn.on("GroupMemberPromoted", (data: { groupId: number, userId: number, newRole: string }) => {
+        console.log('👑 Member promoted:', data);
+        if (data.groupId === conversation.conversation_id) {
+          setGroupMembers?.(prev => prev.map(m => 
+            m.user_id === data.userId ? { ...m, role: data.newRole as any } : m
+          ));
+          onGroupEvent?.('member_promoted', data);
+        }
+      });
+
+      conn.on("GroupUpdated", (data: { groupId: number, group: any }) => {
+        console.log('📝 Group updated:', data);
+        if (data.groupId === conversation.conversation_id) {
+          onGroupEvent?.('group_updated', data);
+        }
+      });
+
+      conn.on("UserJoinedGroup", (data: { groupId: number, userId: number }) => {
+        console.log('👋 User joined group:', data);
+        if (data.groupId === conversation.conversation_id) {
+          setGroupMembers?.(prev => prev.map(m => 
+            m.user_id === data.userId ? { ...m, is_online: true } : m
+          ));
+        }
+      });
+
+      conn.on("UserLeftGroup", (data: { groupId: number, userId: number }) => {
+        console.log('👋 User left group:', data);
+        if (data.groupId === conversation.conversation_id) {
+          setGroupMembers?.(prev => prev.map(m => 
+            m.user_id === data.userId ? { ...m, is_online: false } : m
+          ));
+        }
+      });
+    }
 
     // Start connection with retry
     const startConnection = async () => {
@@ -207,7 +289,18 @@ export const useSignalRConnection = ({
         await conn.start();
         console.log("✅ SignalR connected successfully");
         console.log("🔍 Final connection state:", conn.state);
-        console.log("🎯 Ready to receive events: ReceiveMessage, ReceiveReaction, RemoveReaction");
+        
+        // Join group if it's a group conversation
+        if (isGroup && conversation.conversation_id) {
+          try {
+            await conn.invoke('JoinGroup', conversation.conversation_id.toString());
+            console.log("🏠 Joined group:", conversation.conversation_id);
+          } catch (error) {
+            console.error("❌ Failed to join group:", error);
+          }
+        }
+        
+        console.log("🎯 Ready to receive events: ReceiveMessage, ReceiveReaction, RemoveReaction", isGroup ? "+ Group Events" : "");
       } catch (err) {
         console.error("❌ SignalR connection failed:", err);
         console.log("🔍 Failed connection state:", conn.state);
@@ -220,7 +313,22 @@ export const useSignalRConnection = ({
 
     // Cleanup
     return () => {
+      // Leave group before disconnecting
+      if (isGroup && conversation.conversation_id) {
+        conn.invoke('LeaveGroup', conversation.conversation_id.toString()).catch(console.error);
+      }
+      
+      // Remove group event listeners
+      if (isGroup) {
+        conn.off('GroupMemberAdded');
+        conn.off('GroupMemberRemoved');
+        conn.off('GroupMemberPromoted');
+        conn.off('GroupUpdated');
+        conn.off('UserJoinedGroup');
+        conn.off('UserLeftGroup');
+      }
+      
       conn.stop();
     };
-  }, [sender.id, conversation.other_user_id, messages]);
+  }, [sender.id, conversation.other_user_id, conversation.conversation_id, isGroup, messages]);
 };

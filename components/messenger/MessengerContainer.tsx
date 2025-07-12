@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 // Local Imports
-import { X } from "lucide-react";
+import { X, Info, Settings, Users } from "lucide-react";
 import MessageList from "@/components/messenger/MessageList";
 import MessageInput from "@/components/messenger/MessageInput";
 import { useSignalRConnection } from "@/components/messenger/useSignalRConnection";
@@ -15,6 +15,7 @@ import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
 import { Message, SendMessageRequest, AddReactionRequest, RemoveReactionRequest } from "@/lib/models/message";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
+import { GroupMember } from "@/lib/models/group";
 import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
@@ -40,6 +41,14 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const messageInputRef = useRef<HTMLInputElement>(null);
 
   const [isOtherUserOnline, setIsOtherUserOnline] = useState(conversation.other_is_online);
+  
+  // Group-specific state
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('member');
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
+
+  const isGroup = conversation.is_group === true;
 
   // SignalR Connection
   useSignalRConnection({
@@ -47,11 +56,28 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     conversation,
     messages,
     setMessages,
-    setIsOtherUserOnline
+    setIsOtherUserOnline,
+    // Group-specific props
+    isGroup,
+    groupMembers,
+    setGroupMembers,
+    onGroupEvent: (eventType, data) => {
+      switch (eventType) {
+        case 'member_added':
+          setGroupMembers(prev => [...prev, data.member]);
+          break;
+        case 'member_removed':
+          setGroupMembers(prev => prev.filter(m => m.user_id !== data.userId));
+          break;
+        case 'group_updated':
+          // Update conversation info if needed
+          break;
+      }
+    }
   });
 
   // ----- useEffect Hooks -----
-  // Load tin nhắn ban đầu
+  // Load tin nhắn ban đầu và group data
   useEffect(() => {
     if (!conversation?.conversation_id) return;
     const currentUser = loadFromLocalStorage("user", User);
@@ -80,6 +106,24 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           console.log('🎯 Final mapped messages:', mappedMessages.length);
           setMessages(mappedMessages);
         }
+
+        // Load group data if it's a group
+        if (isGroup && isMounted) {
+          try {
+            const members = await callApi<GroupMember[]>(
+              API_ROUTES.CHAT_SERVER.GROUP_MEMBERS(conversation.conversation_id),
+              HTTP_METHOD_ENUM.GET
+            );
+            setGroupMembers(members);
+            
+            const currentMember = members.find(m => m.user_id === currentUser?.id);
+            if (currentMember) {
+              setCurrentUserRole(currentMember.role);
+            }
+          } catch (error) {
+            console.error('Failed to load group data:', error);
+          }
+        }
       } catch (err) {
         console.error("❌ Lỗi tải tin nhắn:", err);
         console.error("❌ Error details:", {
@@ -95,7 +139,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     return () => {
       isMounted = false;
     };
-  }, [conversation]);
+  }, [conversation, isGroup]);
 
 
   // Cuộn xuống cuối
@@ -147,9 +191,9 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       sender_id: sender.id!,
       content,
       conversation_id: conversation.conversation_id!,
-      message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
+      message_type: isGroup ? MESSAGE_TYPE.GROUP : MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
       content_type: contentType || "text", // Loại nội dung (text/image/file)
-      target_id: conversation.other_user_id,
+      target_id: isGroup ? undefined : conversation.other_user_id,
       reply_to_message_id: replyToMessageId,
       attachments,
     };
@@ -218,7 +262,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       sender_id: sender.id,
       target_id: conversation.other_user_id,
       content,
-      message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
+      message_type: isGroup ? MESSAGE_TYPE.GROUP : MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
       content_type: contentType, // Loại nội dung (text/image/file)
       reply_to_message_id: typeof replyingTo?.id === 'number' ? replyingTo.id : undefined,
       replied_message: replyingTo ? {
@@ -373,34 +417,67 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         className="fixed bottom-4 right-4 z-40 flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl transition-all duration-300 ease-soft max-h-[500px]"
         style={style}
       >
-        {/* Header: Thêm padding và làm cho avatar nổi bật hơn */}
+        {/* Header - Enhanced for groups */}
         <div className="flex items-center justify-between gap-3 border-b bg-card p-3">
           <div className="flex items-center gap-3">
             {/* Avatar với chỉ báo trạng thái hoạt động */}
             <div className="relative flex-shrink-0">
-              <Avatar src={conversation.avatar_url ?? "/avatar.png"} size="md" />
-              {/* CẬP NHẬT: Đổi màu chấm trạng thái dựa trên state */}
-              <span
-                className={cn(
-                  "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
-                  isOtherUserOnline ? "bg-success" : "bg-gray-400"
-                )}
+              <Avatar 
+                src={isGroup ? conversation.group_avatar_url : conversation.avatar_url ?? "/avatar.png"} 
+                size="md" 
+                className={isGroup ? 'rounded-lg' : 'rounded-full'} // Different style for groups
               />
+              {!isGroup && (
+                <span
+                  className={cn(
+                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                    isOtherUserOnline ? "bg-success" : "bg-gray-400"
+                  )}
+                />
+              )}
             </div>
             <div>
-              <p className="font-semibold">{conversation.other_user_name}</p>
-              <p className="text-xs text-muted-foreground">{isOtherUserOnline ? "Online" : "Offline"}</p>
+              <p className="font-semibold">
+                {isGroup ? conversation.name : conversation.other_user_name}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isGroup 
+                  ? `${groupMembers.length} thành viên • ${groupMembers.filter(m => m.is_online).length} đang online`
+                  : (isOtherUserOnline ? "Online" : "Offline")
+                }
+              </p>
             </div>
           </div>
-          <div className="flex items-center">
-            {/* Có thể thêm các nút khác ở đây trong tương lai, ví dụ: gọi điện, thông tin */}
+          <div className="flex items-center gap-1">
+            {isGroup && (
+              <>
+                <Button 
+                  size="icon" 
+                  variant="ghost"
+                  onClick={() => setShowGroupInfo(true)}
+                  title="Thông tin nhóm"
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+                {(currentUserRole === 'admin' || currentUserRole === 'moderator') && (
+                  <Button 
+                    size="icon" 
+                    variant="ghost"
+                    onClick={() => setShowGroupSettings(true)}
+                    title="Cài đặt nhóm"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
+            )}
             <Button size="icon" variant="ghost" onClick={() => onClose(conversation.conversation_id!)}>
               <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
-        {/* Message list: Giảm khoảng cách giữa các tin nhắn xuống space-y-2 */}
+        {/* Message list - Enhanced for groups */}
         <ScrollArea className="flex-1 space-y-2 bg-background/50 p-4">
           <MessageList 
             messages={messages} 
@@ -409,6 +486,14 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
             onReplyMessage={handleReplyMessage}
             onAddReaction={handleAddReaction}
             onRemoveReaction={handleRemoveReaction}
+            // Group-specific props
+            isGroup={isGroup}
+            getSenderName={(senderId: number) => {
+              if (!isGroup) return '';
+              const member = groupMembers.find(m => m.user_id === senderId);
+              return member?.name || 'Unknown User';
+            }}
+            groupMembers={groupMembers}
           />
           <div ref={bottomRef} />
         </ScrollArea>
@@ -426,6 +511,39 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           onSendMessage={sendMessage}
         />
       </div>
+      
+      {/* Group Modals - Placeholder for now */}
+      {isGroup && showGroupInfo && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+          onClick={() => setShowGroupInfo(false)}
+        >
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4">Thông tin nhóm</h3>
+            <p className="text-sm text-gray-600 mb-2">Tên: {conversation.name}</p>
+            <p className="text-sm text-gray-600 mb-2">Thành viên: {groupMembers.length}</p>
+            <p className="text-sm text-gray-600 mb-4">Online: {groupMembers.filter(m => m.is_online).length}</p>
+            <Button onClick={() => setShowGroupInfo(false)} className="w-full">
+              Đóng
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {isGroup && showGroupSettings && (currentUserRole === 'admin' || currentUserRole === 'moderator') && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+          onClick={() => setShowGroupSettings(false)}
+        >
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4">Cài đặt nhóm</h3>
+            <p className="text-sm text-gray-600 mb-4">Bạn là {currentUserRole === 'admin' ? 'Quản trị viên' : 'Điều hành viên'}</p>
+            <Button onClick={() => setShowGroupSettings(false)} className="w-full">
+              Đóng
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

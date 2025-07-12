@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { formatTime } from "@/lib/utils/formatTime";
 import { Message, MessageReaction } from "@/lib/models/message";
+import { GroupMember } from "@/lib/models/group";
+import { Avatar } from "@/components/ui/Avatar";
 import { MessageStatusIcon } from "@/components/icons/MessageStatusIcon";
-import { FileText, Download, Image, X, FileVideo, FileAudio, Archive, File, Reply, Smile } from "lucide-react";
+import { FileText, Download, Image, X, FileVideo, FileAudio, Archive, File, Reply, Smile, Crown, Shield } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 interface MessageListProps {
@@ -13,14 +15,33 @@ interface MessageListProps {
   onReplyMessage?: (message: Message) => void;
   onAddReaction?: (messageId: number, emoji: string) => void;
   onRemoveReaction?: (messageId: number, emoji: string) => void;
+  // Group-specific props
+  isGroup?: boolean;
+  getSenderName?: (senderId: number) => string;
+  groupMembers?: GroupMember[];
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySend, onReplyMessage, onAddReaction, onRemoveReaction }) => {
+const MessageList: React.FC<MessageListProps> = ({ 
+  messages, senderId, onRetrySend, onReplyMessage, onAddReaction, onRemoveReaction,
+  isGroup = false, getSenderName, groupMembers = []
+}) => {
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [viewingImageName, setViewingImageName] = useState<string>("");
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null);
 
   const availableReactions = ["❤️", "👍", "😂", "😮", "😢", "😡"];
+
+  const getSenderRole = (senderUserId: number): string => {
+    if (!isGroup) return '';
+    const member = groupMembers.find(m => m.user_id === senderUserId);
+    return member?.role || 'member';
+  };
+
+  const getSenderAvatar = (senderUserId: number): string => {
+    if (!isGroup) return '';
+    const member = groupMembers.find(m => m.user_id === senderUserId);
+    return member?.avatar_url || '/avatar.png';
+  };
 
   const getFileIcon = (fileType: string) => {
     if (fileType?.startsWith('image/')) return <Image className="h-4 w-4" />;
@@ -83,20 +104,64 @@ const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySe
       {messages.map((msg, idx) => {
         const isSender = msg.sender_id === senderId;
         const key = (msg as any).clientId ?? `${msg.id}-${idx}`;
+        const senderName = isGroup && !isSender ? getSenderName?.(msg.sender_id || 0) : '';
+        const senderRole = getSenderRole(msg.sender_id || 0);
+        const senderAvatar = getSenderAvatar(msg.sender_id || 0);
+        
+        const showAvatar = isGroup && !isSender && (
+          idx === messages.length - 1 || 
+          messages[idx + 1]?.sender_id !== msg.sender_id
+        );
 
         return (
           <div
             key={key}
             className={cn(
-              "max-w-[80%] w-fit break-words rounded-xl px-3 py-2 text-sm shadow-md flex flex-col group relative",
-              // Sử dụng màu từ theme
-              isSender ? "ml-auto bg-primary text-primary-foreground" : "mr-auto bg-muted text-foreground",
-              // Sử dụng màu destructive với độ trong suốt 20% cho nền
-              msg.status === "Failed" && "bg-destructive/20 text-destructive opacity-90",
-              // Nếu không có content và chỉ có attachments, điều chỉnh padding
-              !msg.content && msg.attachments && msg.attachments.length > 0 && "py-2"
+              "flex gap-2 max-w-[85%]",
+              isSender ? "ml-auto flex-row-reverse" : "mr-auto"
             )}
           >
+            {/* Avatar for group messages */}
+            {showAvatar && (
+              <Avatar 
+                src={senderAvatar} 
+                size="sm" 
+                className="mt-auto flex-shrink-0" 
+              />
+            )}
+            
+            <div className={cn(
+              "flex flex-col gap-1",
+              isSender ? "items-end" : "items-start"
+            )}>
+              {/* Sender name for group messages */}
+              {isGroup && !isSender && senderName && (
+                <div className="flex items-center gap-1 px-3">
+                  <span className="text-xs font-medium text-gray-600">
+                    {senderName}
+                  </span>
+                  {senderRole === 'admin' && (
+                    <Crown className="h-3 w-3 text-yellow-500" />
+                  )}
+                  {senderRole === 'moderator' && (
+                    <Shield className="h-3 w-3 text-blue-500" />
+                  )}
+                </div>
+              )}
+
+              {/* Message bubble */}
+              <div
+                className={cn(
+                  "relative group px-3 py-2 rounded-2xl max-w-xs break-words text-sm shadow-md flex flex-col",
+                  isSender
+                    ? "bg-primary text-primary-foreground"
+                    : isGroup 
+                      ? "bg-gray-100 text-gray-900 border-l-2 border-l-blue-500" // Group message style
+                      : "bg-muted text-muted-foreground",
+                  msg.status === "Failed" && "bg-destructive/20 text-destructive opacity-90",
+                  !msg.content && msg.attachments && msg.attachments.length > 0 && "py-2"
+                )}
+              >
             {/* Replied Message Preview */}
             {msg.replied_message && (
               <div className={cn(
@@ -233,29 +298,34 @@ const MessageList: React.FC<MessageListProps> = ({ messages, senderId, onRetrySe
               </div>
             )}
 
-            <div className="flex items-center self-end mt-1.5 gap-2">
-              {msg.status === "Failed" ? (
-                <>
-                  <span className="text-xs font-semibold">Gửi lỗi</span>
-                  <button onClick={() => onRetrySend(msg)} className="text-xs font-bold hover:underline">
+              </div>
+
+              {/* Message status */}
+              <div className="flex items-center gap-1 px-3">
+                <span className="text-xs text-muted-foreground">
+                  {formatTime(msg.created_at)}
+                </span>
+                {isSender && (
+                  <MessageStatusIcon
+                    status={msg.status}
+                    className={cn(
+                      "h-3 w-3",
+                      isSender ? "text-primary-foreground/80" : "text-muted-foreground",
+                      msg.status === "Read" && "!text-cyan-300"
+                    )}
+                  />
+                )}
+                {msg.status === 'Failed' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-5 text-xs text-red-600 hover:text-red-700"
+                    onClick={() => onRetrySend(msg)}
+                  >
                     Thử lại
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className={cn("text-[11px]", isSender ? "text-primary-foreground/70" : "text-muted-foreground")}>{formatTime(msg.created_at)}</p>
-                  {isSender && (
-                    <MessageStatusIcon
-                      status={msg.status}
-                      className={cn(
-                        "size-4",
-                        isSender ? "text-primary-foreground/80" : "text-muted-foreground",
-                        msg.status === "Read" && "!text-cyan-300"
-                      )}
-                    />
-                  )}
-                </>
-              )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         );
