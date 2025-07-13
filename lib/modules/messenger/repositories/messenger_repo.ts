@@ -10,38 +10,114 @@ export const messengerRepo = {
   },
   async getRecentConversations(userId: number): Promise<MessengerPreview[]> {
     const sql = `
-      SELECT
-        c.id AS conversation_id,
-        u.id AS other_user_id,
-        u.name AS other_user_name,
-        u.avatar_url,
-        m.content AS last_message,
-        m.created_at AS last_message_at,
-        cp1.last_seen_at AS last_seen_at,
-        cp2.user_id AS target_id
-      FROM conversations c
-      JOIN conversation_participants cp1
-          ON cp1.conversation_id = c.id
-          AND cp1.user_id = $1                 -- <-- khóa chặt cp1 là “mình”
-      JOIN conversation_participants cp2
-          ON cp2.conversation_id = c.id
-          AND cp2.user_id <> cp1.user_id       -- người còn lại
-      JOIN users u       ON u.id = cp2.user_id
-      LEFT JOIN LATERAL (
-        SELECT *
+      WITH user_conversations AS (
+        -- Get all conversations where current user is participant
+        SELECT DISTINCT c.id AS conversation_id
+        FROM conversations c
+        JOIN conversation_participants cp ON cp.conversation_id = c.id
+        WHERE cp.user_id = $1
+      ),
+      conversation_info AS (
+        SELECT 
+          c.id AS conversation_id,
+          c.is_group,
+          c.name AS group_name,
+          c.avatar_url AS group_avatar_url,
+          -- Count ALL participants in this conversation
+          (SELECT COUNT(*)::integer FROM conversation_participants cp WHERE cp.conversation_id = c.id) AS member_count,
+          -- For private conversations, get the other user info
+          CASE 
+            WHEN c.is_group = false THEN 
+              (SELECT u.id FROM users u 
+               JOIN conversation_participants cp ON cp.user_id = u.id 
+               WHERE cp.conversation_id = c.id AND u.id != $1 LIMIT 1)
+            ELSE NULL 
+          END AS other_user_id,
+          CASE 
+            WHEN c.is_group = false THEN 
+              (SELECT u.name FROM users u 
+               JOIN conversation_participants cp ON cp.user_id = u.id 
+               WHERE cp.conversation_id = c.id AND u.id != $1 LIMIT 1)
+            ELSE NULL 
+          END AS other_user_name,
+          CASE 
+            WHEN c.is_group = false THEN 
+              (SELECT u.avatar_url FROM users u 
+               JOIN conversation_participants cp ON cp.user_id = u.id 
+               WHERE cp.conversation_id = c.id AND u.id != $1 LIMIT 1)
+            ELSE NULL 
+          END AS avatar_url
+        FROM conversations c
+        WHERE c.id IN (SELECT conversation_id FROM user_conversations)
+      ),
+      latest_messages AS (
+        SELECT DISTINCT ON (m.conversation_id)
+          m.conversation_id,
+          m.content AS last_message_content,
+          m.created_at AS last_message_at,
+          u.name AS last_message_sender
         FROM messages m
-        WHERE m.conversation_id = c.id
-        ORDER BY m.created_at DESC
-        LIMIT 1
-      ) m ON true
-      ORDER BY m.created_at DESC NULLS LAST
+        JOIN users u ON u.id = m.sender_id
+        WHERE m.conversation_id IN (SELECT conversation_id FROM conversation_info)
+        ORDER BY m.conversation_id, m.created_at DESC
+      )
+      SELECT 
+        ci.conversation_id,
+        ci.is_group,
+        -- Group fields
+        ci.group_name AS name,
+        ci.group_avatar_url,
+        ci.member_count,
+        -- Private conversation fields  
+        ci.other_user_id,
+        ci.other_user_name,
+        ci.avatar_url,
+        -- Latest message info
+        lm.last_message_content,
+        lm.last_message_at,
+        lm.last_message_sender,
+        0 AS unread_count, -- TODO: implement unread count logic
+        false AS other_is_online -- TODO: implement online status
+      FROM conversation_info ci
+      LEFT JOIN latest_messages lm ON lm.conversation_id = ci.conversation_id
+      ORDER BY lm.last_message_at DESC NULLS LAST, ci.conversation_id DESC
     `;
 
-    var data = await safeQuery(sql, [userId]);
+    console.log("🔍 Getting conversations for user:", userId);
+    const data = await safeQuery(sql, [userId]);
+    
     if (!data || !data.rows) {
       return [];
     }
-    return data.rows;
+    
+    console.log("✅ Retrieved conversations count:", data.rows.length);
+    
+    // Debug member counts
+    data.rows.forEach(row => {
+      if (row.is_group) {
+        console.log(`📊 Group "${row.name}" member_count from query:`, row.member_count);
+      }
+    });
+    
+    // Map results to proper format
+    return data.rows.map(row => ({
+      conversation_id: row.conversation_id,
+      is_group: row.is_group,
+      // Group properties
+      name: row.is_group ? row.name : row.other_user_name,
+      member_count: row.is_group ? row.member_count : 2,
+      group_avatar_url: row.group_avatar_url,
+      // Private conversation properties
+      other_user_id: row.is_group ? null : row.other_user_id,
+      other_user_name: row.is_group ? null : row.other_user_name,
+      other_is_online: row.is_group ? null : row.other_is_online,
+      avatar_url: row.is_group ? null : row.avatar_url,
+      // Message properties
+      last_message_content: row.last_message_content,
+      last_message_at: row.last_message_at,
+      last_message_sender: row.is_group ? row.last_message_sender : null,
+      unread_count: row.unread_count
+    }));
   },
 
   async getMessagesByConversationId(conversationId: number): Promise<any[]> {

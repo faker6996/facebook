@@ -16,6 +16,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
+  title?: string;
 }
 
 // Sử dụng kiểu trong component
@@ -32,6 +33,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   fullWidth = false,
+  title,
 }) => {
   const baseStyles =
     "relative inline-flex items-center justify-center gap-2 rounded-md font-medium overflow-hidden transition-all duration-200 ease-soft focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 active:scale-[0.98] transform-gpu";
@@ -43,6 +45,7 @@ const Button: React.FC<ButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
+      title={title}
       className={cn(
         baseStyles,
         variantStyle,

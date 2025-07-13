@@ -1,7 +1,7 @@
 import { User, UserInfoSso } from "@/lib/models/user";
 import { baseRepo } from "../../common/base_repo";
 import { hashPassword } from "@/lib/utils/hash";
-import { messengerRepo } from "@/lib/modules/messenger/repositories/messenger_app";
+import { messengerRepo } from "@/lib/modules/messenger/repositories/messenger_repo";
 
 export const messengerApp = {
   async getAll() {

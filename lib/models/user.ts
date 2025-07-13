@@ -8,6 +8,7 @@ export class User {
   phone_number?: string;
   address?: string;
   created_at?: string;
+  updated_at?: string;
   is_sso?: boolean;
   is_active?: boolean;
   sub?: string;
@@ -24,6 +25,7 @@ export class User {
     phone_number: "phone_number",
     address: "address",
     created_at: "created_at",
+    updated_at: "updated_at",
     is_sso: "is_sso",
     is_active: "is_active",
     sub: "sub",
@@ -41,6 +43,7 @@ export class User {
     this.phone_number = data.phone_number;
     this.address = data.address;
     this.created_at = data.created_at;
+    this.updated_at = data.updated_at;
     this.is_sso = data.is_sso;
     this.is_active = data.is_active;
     this.sub = data.sub;

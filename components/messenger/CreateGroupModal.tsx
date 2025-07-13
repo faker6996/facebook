@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Users, Plus, Check, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Button from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import Input from "@/components/ui/Input";
@@ -32,6 +33,8 @@ export default function CreateGroupModal({
   onGroupCreated, 
   currentUser 
 }: CreateGroupModalProps) {
+  const t = useTranslations("CreateGroup");
+  
   const [step, setStep] = useState<'details' | 'members'>('details');
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
@@ -75,41 +78,50 @@ export default function CreateGroupModal({
     }
   }, [isOpen]);
 
-  // Search users
+  // Search users function
+  const searchUsers = async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const users = await callApi<User[]>(
+        API_ROUTES.SEARCH.USER_NAME(query),
+        HTTP_METHOD_ENUM.GET
+      );
+      
+      // Filter out current user and already selected users
+      const filteredUsers = (users || [])
+        .filter(user => user.id !== currentUser.id)
+        .map(user => ({
+          ...user,
+          isSelected: selectedUsers.some(selected => selected.id === user.id)
+        }));
+      
+      setSearchResults(filteredUsers);
+    } catch (error) {
+      console.error('Failed to search users:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Auto search with debounce
   useEffect(() => {
-    const searchUsers = async () => {
-      if (!searchQuery.trim() || searchQuery.length < 2) {
-        setSearchResults([]);
-        return;
-      }
-
-      setIsSearching(true);
-      try {
-        const users = await callApi<User[]>(
-          API_ROUTES.SEARCH.USER_NAME(searchQuery),
-          HTTP_METHOD_ENUM.GET
-        );
-        
-        // Filter out current user and already selected users
-        const filteredUsers = (users || [])
-          .filter(user => user.id !== currentUser.id)
-          .map(user => ({
-            ...user,
-            isSelected: selectedUsers.some(selected => selected.id === user.id)
-          }));
-        
-        setSearchResults(filteredUsers);
-      } catch (error) {
-        console.error('Failed to search users:', error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    const debounceTimer = setTimeout(searchUsers, 300);
+    const debounceTimer = setTimeout(() => searchUsers(searchQuery), 300);
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, selectedUsers, currentUser.id]);
+
+  // Handle Enter key search
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      e.preventDefault();
+      searchUsers(searchQuery);
+    }
+  };
 
   const handleUserToggle = (user: UserSearchResult) => {
     if (user.isSelected) {
@@ -186,7 +198,7 @@ export default function CreateGroupModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold text-card-foreground">
-            {step === 'details' ? 'Tạo nhóm mới' : 'Thêm thành viên'}
+            {step === 'details' ? t('title') : t('addMembers')}
           </h2>
           <Button size="icon" variant="ghost" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -200,46 +212,46 @@ export default function CreateGroupModal({
               {/* Group Name */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Tên nhóm *
+                  {t('groupName')} *
                 </label>
                 <Input
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="Nhập tên nhóm (tối thiểu 3 ký tự)"
+                  placeholder={t('groupNamePlaceholder')}
                   maxLength={50}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {groupName.length}/50 ký tự
+                  {groupName.length}/50 {t('charactersCount')}
                 </p>
               </div>
 
               {/* Group Description */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Mô tả nhóm
+                  {t('groupDescription')}
                 </label>
                 <Textarea
                   value={groupDescription}
                   onChange={(e) => setGroupDescription(e.target.value)}
-                  placeholder="Mô tả về nhóm của bạn..."
+                  placeholder={t('groupDescriptionPlaceholder')}
                   rows={3}
                   maxLength={200}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {groupDescription.length}/200 ký tự
+                  {groupDescription.length}/200 {t('charactersCount')}
                 </p>
               </div>
 
               {/* Group Settings */}
               <div className="space-y-3">
-                <h3 className="font-medium">Cài đặt nhóm</h3>
+                <h3 className="font-medium">{t('groupSettings')}</h3>
                 
                 {/* Public/Private */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">Nhóm công khai</p>
+                    <p className="text-sm font-medium">{t('publicGroup')}</p>
                     <p className="text-xs text-muted-foreground">
-                      Mọi người có thể tìm thấy và tham gia nhóm
+                      {t('publicGroupDescription')}
                     </p>
                   </div>
                   <Switch
@@ -251,9 +263,9 @@ export default function CreateGroupModal({
                 {/* Require Approval */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">Yêu cầu duyệt</p>
+                    <p className="text-sm font-medium">{t('requireApproval')}</p>
                     <p className="text-xs text-muted-foreground">
-                      Admin phê duyệt yêu cầu tham gia
+                      {t('requireApprovalDescription')}
                     </p>
                   </div>
                   <Switch
@@ -265,7 +277,7 @@ export default function CreateGroupModal({
                 {/* Max Members */}
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Số thành viên tối đa
+                    {t('maxMembers')}
                   </label>
                   <Input
                     type="number"
@@ -275,7 +287,7 @@ export default function CreateGroupModal({
                     max={500}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Từ 5 đến 500 thành viên
+                    {t('maxMembersRange')}
                   </p>
                 </div>
               </div>
@@ -289,7 +301,8 @@ export default function CreateGroupModal({
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Tìm kiếm bạn bè..."
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder={t('searchPlaceholder')}
                     className="pl-10"
                   />
                 </div>
@@ -299,15 +312,15 @@ export default function CreateGroupModal({
               {selectedUsers.length > 0 && (
                 <div className="p-4 border-b border-border">
                   <p className="text-sm font-medium mb-2">
-                    Đã chọn ({selectedUsers.length})
+                    {t('selected')} ({selectedUsers.length})
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedUsers.map(user => (
+                    {selectedUsers.map((user, index) => (
                       <div
-                        key={user.id}
+                        key={`selected-${user.id}-${user.user_name || user.email}-${index}`}
                         className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
                       >
-                        <Avatar src={user.avatar_url} size="xs" />
+                        <Avatar src={user.avatar_url} size="sm" />
                         <span>{user.name || user.user_name}</span>
                         <button
                           onClick={() => handleRemoveSelectedUser(user.id!)}
@@ -325,21 +338,21 @@ export default function CreateGroupModal({
               <ScrollArea className="flex-1 p-4">
                 {isSearching ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Đang tìm kiếm...
+                    {t('searching')}
                   </div>
                 ) : searchResults.length === 0 && searchQuery.length >= 2 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Không tìm thấy người dùng nào
+                    {t('noUsersFound')}
                   </div>
                 ) : searchQuery.length < 2 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Nhập tên để tìm kiếm bạn bè
+                    {t('enterToSearch')}
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {searchResults.map(user => (
+                    {searchResults.map((user, index) => (
                       <div
-                        key={user.id}
+                        key={`search-${user.id}-${user.user_name || user.email}-${index}`}
                         className={cn(
                           "flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors",
                           user.isSelected && "bg-primary/10"
@@ -373,14 +386,14 @@ export default function CreateGroupModal({
           {step === 'details' ? (
             <>
               <Button variant="outline" onClick={onClose} className="flex-1">
-                Hủy
+                {t('cancel')}
               </Button>
               <Button 
                 onClick={() => setStep('members')}
                 disabled={!canProceedToMembers()}
                 className="flex-1"
               >
-                Tiếp theo
+                {t('next')}
               </Button>
             </>
           ) : (
@@ -390,14 +403,14 @@ export default function CreateGroupModal({
                 onClick={() => setStep('details')} 
                 className="flex-1"
               >
-                Quay lại
+                {t('back')}
               </Button>
               <Button 
                 onClick={handleCreateGroup}
                 disabled={!canCreateGroup() || isCreating}
                 className="flex-1"
               >
-                {isCreating ? 'Đang tạo...' : 'Tạo nhóm'}
+                {isCreating ? t('creating') : t('create')}
               </Button>
             </>
           )}
