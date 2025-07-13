@@ -1,9 +1,9 @@
 export const VARIANT_STYLES_ALERT = {
-  default: "border border-border bg-muted text-foreground",
-  info: "border border-blue-300 bg-blue-50 text-blue-900",
-  success: "border border-green-300 bg-green-50 text-green-900",
-  warning: "border border-yellow-300 bg-yellow-50 text-yellow-900",
-  error: "border border-red-300 bg-red-50 text-red-900",
+  default: "border border-border bg-card/50 backdrop-blur-sm text-foreground",
+  info: "border border-info/30 bg-info/10 backdrop-blur-sm text-info-foreground",
+  success: "border border-success/30 bg-success/10 backdrop-blur-sm text-success-foreground",
+  warning: "border border-warning/30 bg-warning/10 backdrop-blur-sm text-warning-foreground",
+  error: "border border-destructive/30 bg-destructive/10 backdrop-blur-sm text-destructive-foreground",
 };
 
 // const variantIcons: Record<AlertVariant, ReactNode> = {

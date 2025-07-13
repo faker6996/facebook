@@ -38,17 +38,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, descript
           <label 
             className={cn(
               "text-sm font-medium transition-colors duration-200",
-              isFocused ? "text-primary" : "text-gray-700 dark:text-gray-200",
-              errMsg && "text-red-500"
+              isFocused ? "text-primary" : "text-foreground",
+              errMsg && "text-destructive"
             )}
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-destructive ml-1">*</span>}
           </label>
           <span 
             className={cn(
               "text-xs ml-auto transition-all duration-300 transform",
-              errMsg ? "text-red-500 opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
+              errMsg ? "text-destructive opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
             )} 
             aria-live="polite" 
             role="alert"
@@ -73,14 +73,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, descript
           aria-invalid={!!errMsg}
           className={cn(
             "w-full px-4 py-3 border rounded-lg text-sm transition-all duration-200 ease-soft",
-            "bg-white dark:bg-neutral-800 text-black dark:text-white",
-            "placeholder:text-gray-400 dark:placeholder:text-gray-500",
-            "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
-            "hover:border-gray-300 dark:hover:border-gray-600",
+            "bg-background text-foreground",
+            "placeholder:text-muted-foreground",
+            "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
+            "hover:border-accent-foreground/20",
             errMsg 
-              ? "border-red-500 focus:ring-red-500/50 focus:border-red-500" 
-              : "border-gray-200 dark:border-gray-700",
-            "shadow-sm focus:shadow-md",
+              ? "border-destructive focus:ring-destructive/20 focus:border-destructive" 
+              : "border-input",
+            "shadow-sm focus:shadow-md backdrop-blur-sm",
+            "disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           {...rest}
@@ -101,7 +102,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ label, error, descript
       {description && (
         <p className={cn(
           "text-xs transition-colors duration-200",
-          isFocused ? "text-primary/70" : "text-muted-foreground dark:text-gray-400"
+          isFocused ? "text-primary/70" : "text-muted-foreground"
         )}>
           {description}
         </p>

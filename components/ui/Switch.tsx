@@ -15,12 +15,18 @@ export const Switch: React.FC<SwitchProps> = ({ checked, onCheckedChange, label,
       <div className="relative inline-block w-10 h-6">
         <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onCheckedChange(e.target.checked)} {...props} />
         {/* Background track */}
-        <div className={cn("block w-full h-full rounded-full transition-colors", checked ? "bg-primary" : "bg-muted")} />
+        <div className={cn(
+          "block w-full h-full rounded-full transition-all duration-200 ease-soft", 
+          checked ? "bg-primary shadow-md" : "bg-muted hover:bg-muted/80"
+        )} />
         {/* Handle */}
         <div
           className={cn(
-            "absolute left-0 top-0 w-6 h-6 bg-background border border-input rounded-full shadow transition-transform",
-            checked ? "translate-x-4" : "translate-x-0"
+            "absolute left-0 top-0 w-6 h-6 bg-background border rounded-full shadow-sm transition-all duration-200 ease-soft",
+            "hover:shadow-md active:scale-95",
+            checked 
+              ? "translate-x-4 border-primary/20 shadow-primary/20" 
+              : "translate-x-0 border-input hover:border-accent-foreground/30"
           )}
         />
       </div>
