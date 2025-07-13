@@ -28,9 +28,9 @@ export const VARIANT_STYLES_BTN = {
 };
 
 export const SIZE_STYLES_BTN = {
-  sm: "px-3 py-1.5 text-sm h-8 min-w-[2rem]",
-  md: "px-4 py-2 text-sm h-10 min-w-[2.5rem]",
-  lg: "px-6 py-3 text-base h-12 min-w-[3rem]",
-  smx: "px-3.5 py-1.5 text-[13px] h-9 min-w-[2.25rem]",
-  icon: "w-10 h-10 p-0 rounded-full flex items-center justify-center",
+  sm: "px-3 py-1.5 text-sm h-8 min-w-[2rem] md:px-2.5 md:py-1 md:h-7 md:text-xs",
+  md: "px-4 py-2 text-sm h-10 min-w-[2.5rem] md:px-3 md:py-1.5 md:h-9",
+  lg: "px-6 py-3 text-base h-12 min-w-[3rem] md:px-4 md:py-2 md:h-10 md:text-sm",
+  smx: "px-3.5 py-1.5 text-[13px] h-9 min-w-[2.25rem] md:px-3 md:py-1 md:h-8 md:text-xs",
+  icon: "w-11 h-11 p-0 rounded-full flex items-center justify-center md:w-10 md:h-10",
 };

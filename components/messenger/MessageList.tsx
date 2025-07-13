@@ -117,8 +117,8 @@ const MessageList: React.FC<MessageListProps> = ({
           <div
             key={key}
             className={cn(
-              "flex gap-2 max-w-[85%]",
-              isSender ? "ml-auto flex-row-reverse" : "mr-auto"
+              "flex gap-2 w-full max-w-none",
+              isSender ? "justify-end" : "justify-start"
             )}
           >
             {/* Avatar for group messages */}
@@ -131,20 +131,20 @@ const MessageList: React.FC<MessageListProps> = ({
             )}
             
             <div className={cn(
-              "flex flex-col gap-1",
+              "flex flex-col gap-1 max-w-[70%] min-w-0",
               isSender ? "items-end" : "items-start"
             )}>
               {/* Sender name for group messages */}
               {isGroup && !isSender && senderName && (
                 <div className="flex items-center gap-1 px-3">
-                  <span className="text-xs font-medium text-gray-600">
+                  <span className="text-xs font-medium text-muted-foreground truncate">
                     {senderName}
                   </span>
                   {senderRole === 'admin' && (
-                    <Crown className="h-3 w-3 text-yellow-500" />
+                    <Crown className="h-3 w-3 text-yellow-500 flex-shrink-0" />
                   )}
                   {senderRole === 'moderator' && (
-                    <Shield className="h-3 w-3 text-blue-500" />
+                    <Shield className="h-3 w-3 text-blue-500 flex-shrink-0" />
                   )}
                 </div>
               )}
@@ -152,11 +152,12 @@ const MessageList: React.FC<MessageListProps> = ({
               {/* Message bubble */}
               <div
                 className={cn(
-                  "relative group px-3 py-2 rounded-2xl max-w-xs break-words text-sm shadow-md flex flex-col",
+                  "relative group px-3 py-2 rounded-2xl break-words text-sm shadow-md flex flex-col",
+                  "max-w-full min-w-0 word-wrap break-all",
                   isSender
                     ? "bg-primary text-primary-foreground"
                     : isGroup 
-                      ? "bg-gray-100 text-gray-900 border-l-2 border-l-blue-500" // Group message style
+                      ? "bg-muted text-foreground border-l-2 border-l-primary" // Group message style
                       : "bg-muted text-muted-foreground",
                   msg.status === "Failed" && "bg-destructive/20 text-destructive opacity-90",
                   !msg.content && msg.attachments && msg.attachments.length > 0 && "py-2"
@@ -228,7 +229,7 @@ const MessageList: React.FC<MessageListProps> = ({
               </div>
             )}
 
-            {msg.content && <p className="text-pretty">{msg.content}</p>}
+            {msg.content && <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.content}</p>}
             
             {/* Hiển thị attachments */}
             {msg.attachments && msg.attachments.length > 0 && (
@@ -245,7 +246,7 @@ const MessageList: React.FC<MessageListProps> = ({
                       <img
                         src={attachment.file_url}
                         alt={attachment.file_name}
-                        className="max-w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-full max-w-[200px] h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => openImageViewer(attachment.file_url || '', attachment.file_name || '')}
                       />
                     ) : (
@@ -254,7 +255,7 @@ const MessageList: React.FC<MessageListProps> = ({
                         onClick={() => downloadFile(attachment.file_url || '', attachment.file_name || '')}
                       >
                         {getFileIcon(attachment.file_type || '')}
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate">{attachment.file_name}</p>
                           <p className="text-xs opacity-70">{formatFileSize(attachment.file_size || 0)}</p>
                         </div>

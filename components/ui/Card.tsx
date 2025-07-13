@@ -28,10 +28,10 @@ const Card = ({
   return (
     <div 
       className={cn(
-        "rounded-xl border bg-card text-card-foreground transition-all duration-300 ease-soft",
-        "shadow-sm hover:shadow-lg",
-        hoverable && "hover:-translate-y-1 hover:shadow-xl hover:border-primary/20",
-        clickable && "cursor-pointer active:scale-[0.98] hover:bg-accent/5",
+        "rounded-lg md:rounded-xl border bg-card text-card-foreground transition-all duration-300 ease-soft",
+        "shadow-sm hover:shadow-lg mx-2 md:mx-0",
+        hoverable && "md:hover:-translate-y-1 hover:shadow-xl hover:border-primary/20",
+        clickable && "cursor-pointer active:scale-[0.98] md:hover:bg-accent/5",
         "backdrop-blur-sm border-border",
         className
       )}
@@ -50,17 +50,17 @@ const Card = ({
         )}
         
         {(title || description) && (
-          <div className="relative flex flex-col space-y-2 p-6">
+          <div className="relative flex flex-col space-y-2 p-4 md:p-6">
             {title && (
               <h3 className={cn(
-                "text-lg font-semibold leading-none tracking-tight transition-colors duration-200",
+                "text-base md:text-lg font-semibold leading-none tracking-tight transition-colors duration-200",
                 isHovered && hoverable && "text-primary"
               )}>
                 {title}
               </h3>
             )}
             {description && (
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
                 {description}
               </p>
             )}
@@ -68,13 +68,13 @@ const Card = ({
         )}
         
         {children && (
-          <div className="relative p-6 pt-0">
+          <div className="relative p-4 md:p-6 pt-0">
             {children}
           </div>
         )}
         
         {footer && (
-          <div className="relative flex items-center p-6 pt-0 border-t border-border mt-4">
+          <div className="relative flex items-center p-4 md:p-6 pt-0 border-t border-border mt-4">
             {footer}
           </div>
         )}

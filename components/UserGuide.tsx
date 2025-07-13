@@ -19,7 +19,110 @@ import { Skeleton, SkeletonAvatar, SkeletonText, SkeletonPost, SkeletonMessage }
 import Alert from "@/components/ui/Alert";
 
 // Import icons
-import { Heart, MessageCircle, Share, Settings, User, Image, Video, Plus, Edit, Trash, Grid, List } from "lucide-react";
+import { Heart, MessageCircle, Share, Settings, User, Image, Video, Plus, Edit, Trash, Grid, List, Search, ChevronDown, ChevronRight, Users, Bell, Check, X, AlertTriangle, Info, Upload, Download, Play, Pause, SkipForward, Star } from "lucide-react";
+
+// Import responsive utilities
+import { useResponsive, RESPONSIVE_CLASSES } from "@/lib/utils/responsive";
+import { ResponsiveLayout, ResponsiveGrid, ResponsiveContainer, ResponsiveText, MobileOnly, TabletOnly, DesktopOnly } from "@/components/layout/ResponsiveLayout";
+import { cn } from "@/lib/utils/cn";
+
+// ----- Responsive Demo Section -----
+const ResponsiveDemo = () => {
+  const { deviceType, screenSize, isMobile, isTablet, isDesktop } = useResponsive();
+
+  return (
+    <Card title="📱 Responsive Design Demo" className="mb-8">
+      <div className="space-y-6">
+        {/* Device Info */}
+        <div className="p-4 bg-muted/50 rounded-lg">
+          <h4 className="font-semibold mb-2">Current Device Info</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Device Type:</span>
+              <span className={cn(
+                "ml-2 px-2 py-1 rounded text-xs",
+                deviceType === 'mobile' && "bg-red-100 text-red-800",
+                deviceType === 'tablet' && "bg-yellow-100 text-yellow-800", 
+                deviceType === 'desktop' && "bg-green-100 text-green-800"
+              )}>
+                {deviceType.toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium">Screen:</span>
+              <span className="ml-2">{screenSize.width} x {screenSize.height}px</span>
+            </div>
+            <div>
+              <span className="font-medium">Breakpoints:</span>
+              <span className="ml-2">
+                {isMobile && "📱"} {isTablet && "📟"} {isDesktop && "💻"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Responsive Text Demo */}
+        <div>
+          <h4 className="font-semibold mb-4">Responsive Typography</h4>
+          <div className="space-y-3">
+            <ResponsiveText as="h1" variant="heading" className="font-bold text-primary">
+              Responsive Heading (scales with device)
+            </ResponsiveText>
+            <ResponsiveText as="h3" variant="subheading" className="font-semibold text-muted-foreground">
+              Responsive Subheading
+            </ResponsiveText>
+            <ResponsiveText variant="body">
+              This is responsive body text that adapts to screen size. On mobile it's smaller, on desktop it's larger for better readability.
+            </ResponsiveText>
+          </div>
+        </div>
+
+        {/* Responsive Grid Demo */}
+        <div>
+          <h4 className="font-semibold mb-4">Responsive Grid Layout</h4>
+          <ResponsiveGrid variant="cards" gap="md">
+            {Array.from({ length: 6 }, (_, i) => (
+              <Card key={i} title={`Card ${i + 1}`} className="h-32">
+                <p className="text-sm text-muted-foreground">
+                  Grid adapts: 1 col mobile, 2 cols tablet, 3 cols desktop
+                </p>
+              </Card>
+            ))}
+          </ResponsiveGrid>
+        </div>
+
+        {/* Device-Specific Content */}
+        <div>
+          <h4 className="font-semibold mb-4">Device-Specific Components</h4>
+          <div className="space-y-3">
+            <MobileOnly>
+              <Alert variant="info" title="Mobile Only" description="This alert only shows on mobile devices" />
+            </MobileOnly>
+            <TabletOnly>
+              <Alert variant="warning" title="Tablet Only" description="This alert only shows on tablet devices" />
+            </TabletOnly>
+            <DesktopOnly>
+              <Alert variant="success" title="Desktop Only" description="This alert only shows on desktop devices" />
+            </DesktopOnly>
+          </div>
+        </div>
+
+        {/* Responsive Button Sizes */}
+        <div>
+          <h4 className="font-semibold mb-4">Responsive Button Sizes</h4>
+          <div className="flex flex-wrap gap-3">
+            <Button size="sm" variant="primary">Small (scales down on desktop)</Button>
+            <Button size="md" variant="success">Medium (responsive)</Button>
+            <Button size="lg" variant="info">Large (scales down on desktop)</Button>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Buttons are larger on mobile for easier touch interaction, smaller on desktop to save space.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 const UserGuideContent: React.FC = () => {
   // State for demonstrations
@@ -59,13 +162,19 @@ const UserGuideContent: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-12">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-foreground">UI Components Guide</h1>
-        <p className="text-lg text-muted-foreground">
-          Complete component library for Facebook Clone project
-        </p>
-      </div>
+    <ResponsiveContainer size="wide">
+      <div className="py-8 space-y-12">
+        <div className="text-center space-y-4">
+          <ResponsiveText as="h1" variant="heading" className="font-bold text-foreground">
+            🎨 UI Components Guide
+          </ResponsiveText>
+          <ResponsiveText variant="body" className="text-muted-foreground">
+            Complete component library for Facebook Clone project with responsive design patterns
+          </ResponsiveText>
+        </div>
+
+        {/* Responsive Demo - Always first */}
+        <ResponsiveDemo />
 
       {/* Buttons Section */}
       <section className="space-y-6">
@@ -531,7 +640,18 @@ const UserGuideContent: React.FC = () => {
           </div>
         </Card>
       </section>
-    </div>
+
+      {/* Footer */}
+      <Card className="text-center">
+        <ResponsiveText variant="body" className="text-muted-foreground">
+          🚀 All components are production-ready with responsive design, dark mode support, and accessibility features.
+        </ResponsiveText>
+        <ResponsiveText variant="caption" className="text-muted-foreground mt-2">
+          Built with Next.js 15.3.1, TypeScript, and TailwindCSS 4.1.7
+        </ResponsiveText>
+      </Card>
+      </div>
+    </ResponsiveContainer>
   );
 };
 

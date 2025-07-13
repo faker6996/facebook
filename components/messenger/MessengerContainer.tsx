@@ -10,7 +10,6 @@ import MessageInput from "@/components/messenger/MessageInput";
 import { useGlobalSignalRConnection } from "@/components/messenger/useGlobalSignalRConnection";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
-import { ScrollArea } from "@/components/ui/ScrollArea";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
 import { Message, SendMessageRequest, AddReactionRequest, RemoveReactionRequest } from "@/lib/models/message";
@@ -431,32 +430,43 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   return (
     <>
       <div
-        // Căn sang góc dưới bên phải, giảm chiều cao tối đa và thêm hiệu ứng chuyển động
-        className="fixed bottom-4 right-4 z-40 flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl transition-all duration-300 ease-soft max-h-[500px]"
+        // Mobile: Full screen, Desktop: Fixed bottom-right chat window
+        className={cn(
+          "fixed z-40 flex flex-col overflow-hidden border bg-card shadow-2xl transition-all duration-300 ease-soft",
+          // Mobile styles (default)
+          "inset-0 rounded-none max-h-none",
+          // Desktop styles (md+) - Fixed positioning to bottom (right is handled by style prop) 
+          "md:fixed md:bottom-4 md:top-auto md:left-auto md:w-80 md:h-[480px] md:rounded-2xl md:max-h-[480px]"
+        )}
         style={style}
       >
-        {/* Header - Enhanced for groups */}
-        <div className="flex items-center justify-between gap-3 border-b bg-card p-3">
-          <div className="flex items-center gap-3">
+        {/* Header - Enhanced for groups and mobile */}
+        <div className="flex items-center justify-between gap-3 border-b bg-card p-3 md:p-4 min-h-16 md:min-h-auto">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {/* Avatar với chỉ báo trạng thái hoạt động */}
             <div className="relative flex-shrink-0">
               <Avatar
                 src={isGroup ? conversation.group_avatar_url : conversation.avatar_url ?? "/avatar.png"}
                 size="md"
-                className={isGroup ? "rounded-lg" : "rounded-full"} // Different style for groups
+                className={cn(
+                  "w-10 h-10 md:w-8 md:h-8",
+                  isGroup ? "rounded-lg" : "rounded-full"
+                )}
               />
               {!isGroup && (
                 <span
                   className={cn(
-                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
-                    isOtherUserOnline ? "bg-success" : "bg-gray-400"
+                    "absolute bottom-0 right-0 block h-3 w-3 md:h-2.5 md:w-2.5 rounded-full ring-2 ring-card",
+                    isOtherUserOnline ? "bg-success" : "bg-muted-foreground"
                   )}
                 />
               )}
             </div>
-            <div>
-              <p className="font-semibold">{isGroup ? conversation.name : conversation.other_user_name}</p>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-base md:text-sm truncate">
+                {isGroup ? conversation.name : conversation.other_user_name}
+              </p>
+              <p className="text-sm md:text-xs text-muted-foreground truncate">
                 {isGroup
                   ? `${groupMembers.length} thành viên • ${groupMembers.filter((m) => m.is_online).length} đang online`
                   : isOtherUserOnline
@@ -465,45 +475,52 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-shrink-0">
             {isGroup && (
               <>
-                <Button size="icon" variant="ghost" onClick={() => setShowGroupInfo(true)} title="Thông tin nhóm">
-                  <Info className="h-4 w-4" />
+                <Button size="icon" variant="ghost" onClick={() => setShowGroupInfo(true)} title="Thông tin nhóm"
+                  className="w-10 h-10 md:w-8 md:h-8">
+                  <Info className="h-5 w-5 md:h-4 md:w-4" />
                 </Button>
                 {(currentUserRole === "admin" || currentUserRole === "moderator") && (
-                  <Button size="icon" variant="ghost" onClick={() => setShowGroupSettings(true)} title="Cài đặt nhóm">
-                    <Settings className="h-4 w-4" />
+                  <Button size="icon" variant="ghost" onClick={() => setShowGroupSettings(true)} title="Cài đặt nhóm"
+                    className="w-10 h-10 md:w-8 md:h-8">
+                    <Settings className="h-5 w-5 md:h-4 md:w-4" />
                   </Button>
                 )}
               </>
             )}
-            <Button size="icon" variant="ghost" onClick={() => onClose(conversation.conversation_id!)}>
-              <X className="h-5 w-5" />
+            <Button size="icon" variant="ghost" onClick={() => onClose(conversation.conversation_id!)}
+              className="w-10 h-10 md:w-8 md:h-8">
+              <X className="h-6 w-6 md:h-5 md:w-5" />
             </Button>
           </div>
         </div>
 
-        {/* Message list - Enhanced for groups */}
-        <ScrollArea className="flex-1 space-y-2 bg-background/50 p-4">
-          <MessageList
-            messages={messages}
-            senderId={sender.id}
-            onRetrySend={handleRetrySend}
-            onReplyMessage={handleReplyMessage}
-            onAddReaction={handleAddReaction}
-            onRemoveReaction={handleRemoveReaction}
-            // Group-specific props
-            isGroup={isGroup}
-            getSenderName={(senderId: number) => {
-              if (!isGroup) return "";
-              const member = groupMembers.find((m) => m.user_id === senderId);
-              return member?.name || "Unknown User";
-            }}
-            groupMembers={groupMembers}
-          />
-          <div ref={bottomRef} />
-        </ScrollArea>
+        {/* Message list - Enhanced for groups and mobile */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-background/50">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-4">
+            <div className="space-y-3 min-h-full flex flex-col justify-end">
+              <MessageList
+                messages={messages}
+                senderId={sender.id}
+                onRetrySend={handleRetrySend}
+                onReplyMessage={handleReplyMessage}
+                onAddReaction={handleAddReaction}
+                onRemoveReaction={handleRemoveReaction}
+                // Group-specific props
+                isGroup={isGroup}
+                getSenderName={(senderId: number) => {
+                  if (!isGroup) return "";
+                  const member = groupMembers.find((m) => m.user_id === senderId);
+                  return member?.name || "Unknown User";
+                }}
+                groupMembers={groupMembers}
+              />
+              <div ref={bottomRef} />
+            </div>
+          </div>
+        </div>
 
         {/* Message Input */}
         <MessageInput
@@ -519,29 +536,45 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         />
       </div>
 
-      {/* Group Modals - Placeholder for now */}
+      {/* Group Modals - Responsive for mobile */}
       {isGroup && showGroupInfo && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowGroupInfo(false)}>
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4">Thông tin nhóm</h3>
-            <p className="text-sm text-gray-600 mb-2">Tên: {conversation.name}</p>
-            <p className="text-sm text-gray-600 mb-2">Thành viên: {groupMembers.length}</p>
-            <p className="text-sm text-gray-600 mb-4">Online: {groupMembers.filter((m) => m.is_online).length}</p>
-            <Button onClick={() => setShowGroupInfo(false)} className="w-full">
-              Đóng
-            </Button>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowGroupInfo(false)}>
+          <div className="bg-card rounded-lg md:rounded-xl max-w-md w-full border shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 md:p-6">
+              <h3 className="text-lg md:text-xl font-semibold mb-4">Thông tin nhóm</h3>
+              <div className="space-y-3">
+                <p className="text-sm md:text-base text-muted-foreground">
+                  <span className="font-medium">Tên:</span> {conversation.name}
+                </p>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  <span className="font-medium">Thành viên:</span> {groupMembers.length}
+                </p>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  <span className="font-medium">Online:</span> {groupMembers.filter((m) => m.is_online).length}
+                </p>
+              </div>
+              <Button onClick={() => setShowGroupInfo(false)} className="w-full mt-6" size="lg">
+                Đóng
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {isGroup && showGroupSettings && (currentUserRole === "admin" || currentUserRole === "moderator") && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowGroupSettings(false)}>
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4">Cài đặt nhóm</h3>
-            <p className="text-sm text-gray-600 mb-4">Bạn là {currentUserRole === "admin" ? "Quản trị viên" : "Điều hành viên"}</p>
-            <Button onClick={() => setShowGroupSettings(false)} className="w-full">
-              Đóng
-            </Button>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowGroupSettings(false)}>
+          <div className="bg-card rounded-lg md:rounded-xl max-w-md w-full border shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 md:p-6">
+              <h3 className="text-lg md:text-xl font-semibold mb-4">Cài đặt nhóm</h3>
+              <p className="text-sm md:text-base text-muted-foreground mb-6">
+                Bạn là <span className="font-medium text-primary">
+                  {currentUserRole === "admin" ? "Quản trị viên" : "Điều hành viên"}
+                </span>
+              </p>
+              <Button onClick={() => setShowGroupSettings(false)} className="w-full" size="lg">
+                Đóng
+              </Button>
+            </div>
           </div>
         </div>
       )}
