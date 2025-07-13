@@ -24,10 +24,14 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const res = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
-
-      saveToLocalStorage("user", res);
-      return res;
+      try {
+        const res = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
+        saveToLocalStorage("user", res);
+        return res;
+      } catch (error) {
+        // Silently handle authentication error - user will be redirected by middleware
+        console.log("User not authenticated, skipping profile fetch");
+      }
     };
     fetchUserProfile();
   }, []);

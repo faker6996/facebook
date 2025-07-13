@@ -15,11 +15,11 @@ import { Users, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface MessengerDropdownProps {
-  onCloseDropdown: () => void;
+  onClose: () => void;
   onOpenConversation: (conversation: MessengerPreview) => void; // New prop
 }
 
-export default function MessengerDropdown({ onCloseDropdown, onOpenConversation }: MessengerDropdownProps) {
+export default function MessengerDropdown({ onClose, onOpenConversation }: MessengerDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [searchUser, setSearchUser] = useState<string>("");
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
@@ -65,7 +65,7 @@ export default function MessengerDropdown({ onCloseDropdown, onOpenConversation 
         (target as Element)?.closest('[data-modal="true"]');
 
       if (!isModalClick) {
-        onCloseDropdown();
+        onClose();
       }
     };
 
@@ -73,7 +73,7 @@ export default function MessengerDropdown({ onCloseDropdown, onOpenConversation 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [onCloseDropdown]);
+  }, [onClose]);
 
   const handleSearchUser = async (e: React.FormEvent) => {
     e.preventDefault();

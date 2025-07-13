@@ -11,14 +11,14 @@ const api = axios.create({
 /**
  * Gửi request và **chỉ** trả `payload` (data) khi backend trả `success: true`.
  * Nếu backend trả `success: false` (lỗi nghiệp vụ) **hoặc** gặp lỗi hệ thống (network/5xx):
- *   • Hiển thị `window.alert`
+ *   • Hiển thị `window.alert` (trừ auth endpoints)
  *   • Ném lỗi để caller tự `try/catch` khi cần
  */
 export async function callApi<T>(
   url: string,
   method: "GET" | "POST" | "PUT" | "DELETE",
   data?: any,
-  config?: AxiosRequestConfig // ❶ không còn thuộc tính `silent`
+  config?: AxiosRequestConfig & { silent?: boolean } // Add silent option
 ): Promise<T> {
   console.log(`🔥 API Call: ${method} ${url}`, data);
   
@@ -35,7 +35,16 @@ export async function callApi<T>(
     // Backend chuẩn hóa { success, message, data }
     const { success, message, data: payload } = res.data;
 
-    if (!success) alert(message);
+    // Don't show alert for auth endpoints or when silent flag is set
+    const isAuthEndpoint = url.includes('/auth/');
+    const shouldShowAlert = !config?.silent && !isAuthEndpoint;
+    
+    if (!success) {
+      if (shouldShowAlert) {
+        alert(message);
+      }
+      throw new Error(message); // Always throw error for failed API calls
+    }
 
     return payload as T;
 
