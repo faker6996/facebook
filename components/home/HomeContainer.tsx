@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
-import { callApi } from "@/lib/utils/api-client";
-import { User } from "@/lib/models/user";
 import { Menu } from "@/lib/models/menu";
+import { User } from "@/lib/models/user";
+import { callApi } from "@/lib/utils/api-client";
+import { useEffect, useState } from "react";
 
-import Card from "@/components/ui/Card";
 import Container from "@/components/Container";
 import Header from "@/components/layout/Header";
 import LeftSidebar from "@/components/layout/SidebarLeft";
 import SidebarRight from "@/components/layout/SidebarRight";
-import MessengerContainer from "@/components/messenger/MessengerContainer";
-import UserGuild from "@/components/UserGuild";
+import UserGuide from "@/components/UserGuide";
 import { saveToLocalStorage } from "@/lib/utils/local-storage";
 
 interface HomeContainerProps {
@@ -44,15 +42,7 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto bg-background text-card-foreground">
           <Container className="py-6">
-            <div className="space-y-4">
-              <Card>📷 Story</Card>
-              <Card>📝 Bài viết 1</Card>
-              <Card>📝 Bài viết 2</Card>
-              <Card>📝 Bài viết 3</Card>
-            </div>
-            {/* <MessengerContainer></MessengerContainer> */}
-
-            <UserGuild></UserGuild>
+            <UserGuide></UserGuide>
           </Container>
         </main>
 
