@@ -28,7 +28,7 @@ export const useSignalRConnection = ({
   setMessages,
   setIsOtherUserOnline,
   isGroup = false,
-  groupMembers = [],
+  groupMembers: _groupMembers = [],
   setGroupMembers,
   onGroupEvent
 }: UseSignalRConnectionProps) => {
@@ -239,8 +239,8 @@ export const useSignalRConnection = ({
           joinGroupFailCount++;
           console.error("❌ Failed to rejoin group (attempt", joinGroupFailCount, "):", error);
           console.error("❌ Error details:", {
-            name: error?.name,
-            message: error?.message
+            name: (error as any)?.name,
+            message: (error as any)?.message
           });
           
           if (joinGroupFailCount >= MAX_JOIN_FAILURES) {
@@ -395,17 +395,17 @@ export const useSignalRConnection = ({
             joinGroupFailCount++;
             console.error("❌ Failed to join group (attempt", joinGroupFailCount, "):", error);
             console.error("❌ Error details:", {
-              name: error?.name,
-              message: error?.message,
-              stack: error?.stack,
-              toString: error?.toString?.(),
+              name: (error as any)?.name,
+              message: (error as any)?.message,
+              stack: (error as any)?.stack,
+              toString: (error as any)?.toString?.(),
               connectionState: conn.state,
               connectionId: conn.connectionId
             });
             
             // Check if it's a connection closure error
-            if (error?.message?.includes('connection being closed') || 
-                error?.message?.includes('Invocation canceled')) {
+            if ((error as any)?.message?.includes('connection being closed') || 
+                (error as any)?.message?.includes('Invocation canceled')) {
               console.error("🔴 Connection was closed during JoinGroup - this suggests server-side issue");
               console.error("🔍 Possible causes:");
               console.error("  - Server doesn't support JoinGroup method");
