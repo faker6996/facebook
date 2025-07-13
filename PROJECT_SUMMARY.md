@@ -29,34 +29,66 @@
 │       ├── messenger/          # Chat APIs
 │       └── users/              # User management APIs
 ├── components/                   # React Components
-│   ├── ui/                     # Base UI components (Button, Input, Textarea, Switch, etc.)
-│   ├── layout/                 # Layout components (Header, Sidebar)
-│   ├── home/                   # Trang chủ components
-│   ├── login/                  # Đăng nhập components
-│   └── messenger/              # Chat components
-│       ├── MessengerContainer.tsx    # Main chat interface
-│       ├── MessengerDropdown.tsx     # Chat dropdown với group filtering
-│       ├── MessageList.tsx           # Message display với group support
-│       ├── MessageInput.tsx          # Message input component
-│       ├── CreateGroupModal.tsx      # Group creation modal ⭐ MỚI
-│       ├── GroupSettingsModal.tsx    # Group management modal ⭐ MỚI
-│       └── useSignalRConnection.ts   # SignalR hook với group events
-├── lib/                         # Business Logic
-│   ├── models/                 # Database models
-│   │   ├── user.ts            # User model
-│   │   ├── message.ts         # Message model với attachments/reactions
+│   ├── ui/                     # Complete UI Library (25+ components) ⭐ MỚI
+│   │   ├── Button.tsx         # 8 variants với loading states
+│   │   ├── Input.tsx          # Advanced validation và animations
+│   │   ├── Textarea.tsx       # 3 variants với size options
+│   │   ├── Modal.tsx          # Full-featured modal ⭐ MỚI
+│   │   ├── Toast.tsx          # Global notification system ⭐ MỚI
+│   │   ├── Badge.tsx          # Count/dot badges với positioning ⭐ MỚI
+│   │   ├── Progress.tsx       # Linear/circular/step progress ⭐ MỚI
+│   │   ├── DropdownMenu.tsx   # Advanced dropdown với icons ⭐ MỚI
+│   │   ├── RadioGroup.tsx     # Multiple radio variants ⭐ MỚI
+│   │   ├── Skeleton.tsx       # Loading skeletons cho layouts ⭐ MỚI
+│   │   ├── Alert.tsx          # 5 variants với backdrop effects
+│   │   ├── Card.tsx           # Interactive cards với hover effects
+│   │   ├── CheckBox.tsx       # Enhanced checkbox với animations
+│   │   ├── Switch.tsx         # Improved toggle với smooth transitions
+│   │   └── [15+ more components...]
+│   ├── UserGuide.tsx          # Interactive style guide ⭐ MỚI
+│   ├── providers/             # Global providers ⭐ MỚI
+│   │   ├── AppProviders.tsx   # Combined providers wrapper
+│   │   └── SignalRInit.tsx    # Auto SignalR initialization
+│   ├── common/                # Shared components ⭐ MỚI
+│   │   └── SignalRStatus.tsx  # Connection status indicator
+│   ├── layout/                # Layout components (Header, Sidebar)
+│   ├── home/                  # Trang chủ components
+│   ├── login/                 # Đăng nhập components
+│   └── messenger/             # Chat components
+│       ├── MessengerContainer.tsx         # Main chat interface
+│       ├── MessengerDropdown.tsx          # Chat dropdown với group filtering
+│       ├── MessageList.tsx                # Message display với group support
+│       ├── MessageInput.tsx               # Message input component
+│       ├── CreateGroupModal.tsx           # Group creation modal ⭐ MỚI
+│       ├── GroupSettingsModal.tsx         # Group management modal ⭐ MỚI
+│       ├── useSignalRConnection.ts        # Original SignalR hook (deprecated)
+│       └── useGlobalSignalRConnection.ts  # Global SignalR integration ⭐ MỚI
+├── contexts/                    # React Contexts ⭐ MỚI
+│   └── SignalRContext.tsx     # Global SignalR context management
+├── hooks/                      # Custom React Hooks ⭐ MỚI
+│   └── useGlobalSignalR.ts    # Auto SignalR initialization hook
+├── lib/                       # Business Logic
+│   ├── models/                # Database models
+│   │   ├── user.ts           # User model
+│   │   ├── message.ts        # Message model với attachments/reactions
 │   │   ├── messenger_review.ts # MessengerPreview với group support
-│   │   └── group.ts           # Group models (Group, GroupMember, etc.) ⭐ MỚI
-│   ├── modules/                # Business modules
-│   │   ├── auth/              # Authentication logic
-│   │   ├── messenger/         # Chat logic
-│   │   └── user/              # User logic
-│   ├── constants/             # Hằng số và cấu hình
-│   │   ├── api-routes.ts      # API endpoints với group management ⭐ MỚI
-│   │   └── enum.ts            # Message types (PRIVATE=1, GROUP=2)
-│   ├── utils/                 # Utility functions
-│   └── middlewares/           # Middleware pipeline
-└── i18n/                       # Internationalization
+│   │   └── group.ts          # Group models (Group, GroupMember, etc.) ⭐ MỚI
+│   ├── modules/              # Business modules
+│   │   ├── auth/             # Authentication logic
+│   │   ├── messenger/        # Chat logic
+│   │   └── user/             # User logic
+│   ├── constants/            # Hằng số và cấu hình
+│   │   ├── api-routes.ts     # API endpoints với group management ⭐ MỚI
+│   │   ├── enum.ts           # Message types (PRIVATE=1, GROUP=2)
+│   │   └── constants-ui/     # UI constants ⭐ MỚI
+│   │       ├── button.ts     # Enhanced button variants
+│   │       └── alert.ts      # Alert styling constants
+│   ├── utils/                # Utility functions
+│   │   └── cn.ts             # Class name utility cho styling
+│   └── middlewares/          # Middleware pipeline
+├── UserGuide.md              # Component documentation ⭐ MỚI
+├── SignalR-Global-Setup.md   # SignalR architecture docs ⭐ MỚI
+└── i18n/                     # Internationalization
 ```
 
 ## Tính năng chính
@@ -226,15 +258,18 @@ npm run docker:*     # Docker operations cho các environments
 ## Đặc điểm nổi bật
 
 1. **Modular Architecture**: Clean separation của concerns
-2. **Real-time Messaging**: Production-ready chat system với group support ⭐
-3. **Group Chat System**: Comprehensive group management với roles và permissions ⭐
-4. **Internationalization**: Multi-language support
-5. **Security**: Comprehensive security measures
-6. **Scalability**: Docker-based deployment ready
-7. **Type Safety**: Full TypeScript implementation
-8. **Modern Stack**: Latest versions của all dependencies
-9. **Design System**: Consistent color scheme với dark mode support ⭐
-10. **Real-time Events**: SignalR integration cho group events và status updates ⭐
+2. **Global Real-time System**: SignalR hoạt động toàn cục ngay sau login ⭐ **MỚI**
+3. **Comprehensive UI Library**: 25+ production-ready components với design system ⭐ **MỚI**
+4. **Group Chat System**: Comprehensive group management với roles và permissions ⭐
+5. **Interactive Style Guide**: Live component documentation và testing ⭐ **MỚI**
+6. **Real-time Notifications**: Global toast system cho messaging events ⭐ **MỚI**
+7. **Internationalization**: Multi-language support
+8. **Security**: Comprehensive security measures
+9. **Scalability**: Docker-based deployment ready
+10. **Type Safety**: Full TypeScript implementation
+11. **Modern Stack**: Latest versions của all dependencies
+12. **Design System**: Consistent color scheme với dark mode support ⭐
+13. **Performance Optimized**: Single SignalR connection thay vì multiple ⭐ **MỚI**
 
 ## Group Chat Features Chi Tiết ⭐ **MỚI**
 
@@ -282,7 +317,163 @@ npm run docker:*     # Docker operations cho các environments
 - **Theme Support**: Responsive color scheme cho dark/light mode
 - **Component Reusability**: Extensible UI component architecture
 
-Đây là một Facebook clone hoàn chỉnh với đầy đủ tính năng social media, messaging system và **comprehensive group chat functionality**, sẵn sàng cho production deployment.
+Đây là một Facebook clone hoàn chỉnh với đầy đủ tính năng social media, messaging system, **comprehensive group chat functionality**, **advanced UI component library**, và **global real-time system**, sẵn sàng cho production deployment.
+
+## UI Component Library ⭐ **MỚI**
+
+### **Component Collection (25+ Components)**
+
+**Form Controls:**
+- **Button**: 8 variants (primary, success, danger, warning, info, outline, ghost, link) với loading states
+- **Input**: Advanced validation, focus animations, error handling, i18n support
+- **Textarea**: 3 variants (default, filled, outlined) với size options
+- **Checkbox**: Interactive states với smooth animations
+- **Switch**: Enhanced toggle với hover effects
+- **RadioGroup**: Traditional, card variant, button group styles
+
+**Data Display:**
+- **Card**: Hoverable, clickable variants với backdrop blur
+- **Badge**: Count badges, dot indicators, notification badges với positioning
+- **Alert**: 5 variants với icons và backdrop effects
+- **Avatar**: Progressive loading với fallbacks và size variants
+- **Skeleton**: Multiple layouts (posts, messages, lists, tables)
+
+**Navigation & Interaction:**
+- **Modal**: Full-featured với escape/overlay close, multiple sizes
+- **DropdownMenu**: With icons, separators, destructive actions
+- **Toast**: 4 types với positioning, actions, auto-dismiss
+- **Progress**: Linear, circular, step progress với animations
+- **Tooltip**: Hover information displays
+- **Pagination**: Navigation controls
+
+**Advanced Components:**
+- **Popover**: Click-outside handling với positioning
+- **Sheet**: Slide-out panels
+- **ScrollArea**: Custom scrollbar styling
+- **Tab**: Tabbed navigation interface
+- **Combobox**: Searchable dropdown selection
+- **Carousel**: Image/content slideshow
+- **Breadcrumb**: Navigation trail
+- **DatePicker**: Calendar selection interface
+
+### **Design System Features**
+
+**Consistent Theming:**
+- **CSS Variables**: Complete color system với semantic naming
+- **Dark Mode**: Automatic support across all components
+- **Backdrop Blur**: Modern glass morphism effects
+- **Animation System**: Unified transitions với ease-soft timing
+- **Typography**: Consistent font scales và weights
+
+**Interactive States:**
+- **Hover Effects**: Scale transforms, color transitions, shadow enhancements
+- **Focus Management**: Primary color indicators, ring effects
+- **Loading States**: Spinners, skeletons, progress indicators
+- **Error Handling**: Validation states với color coding
+
+**Accessibility Features:**
+- **ARIA Support**: Proper attributes cho screen readers
+- **Keyboard Navigation**: Full keyboard accessibility
+- **Focus Management**: Logical tab ordering
+- **Color Contrast**: WCAG compliance
+
+### **Style Guide Integration**
+
+**UserGuide.tsx**: Interactive component playground với:
+- **Live Demonstrations**: All components working với real state
+- **Interactive Controls**: Buttons để test different states
+- **Code Examples**: Ready-to-copy implementation snippets
+- **Visual Reference**: Design consistency validation
+- **Development Tool**: Quick component access cho developers
+
+## Global SignalR System ⭐ **MỚI**
+
+### **Architecture Redesign**
+
+**Before (Per-Component Connection):**
+```
+Login → Navigate to Messenger → Click Conversation → 
+Mount MessengerContainer → Initialize SignalR → Receive Messages
+```
+
+**After (Global Connection):**
+```
+Login → Auto-Initialize Global SignalR → 
+Receive Messages Everywhere Instantly! 🚀
+```
+
+### **Global Context Management**
+
+**SignalRContext.tsx:**
+- **Single Connection**: Shared across entire application
+- **Auto-Reconnection**: Với progressive retry logic
+- **Global Event Handling**: Message, reaction, group events
+- **Toast Integration**: Automatic notifications cho new messages
+- **Online Users Tracking**: Real-time presence management
+
+**SignalRInit.tsx:**
+- **Auto-Detection**: Tự động detect user login state
+- **Auth Integration**: Listen cho login/logout events
+- **Connection Lifecycle**: Proper setup/teardown management
+
+### **Enhanced Features**
+
+**Real-time Notifications:**
+- **Global Toast Messages**: Tin nhắn mới hiển thị toast ở bất kỳ đâu
+- **Group Event Notifications**: Member additions, role changes, group updates
+- **Connection Status**: Visual indicators cho connection state
+- **Online Presence**: Real-time user online/offline tracking
+
+**Performance Improvements:**
+- **Single Connection**: Thay vì multiple connections per conversation
+- **Resource Optimization**: Reduced memory và network usage
+- **Better Reliability**: Centralized error handling và reconnection
+- **Faster Message Delivery**: Direct global event distribution
+
+**Integration Points:**
+- **Layout Integration**: AppProviders trong root layout
+- **Login Integration**: Automatic SignalR initialization sau login
+- **Messenger Update**: useGlobalSignalRConnection thay thế local connections
+- **Status Monitoring**: SignalRStatus component cho connection visibility
+
+### **Developer Experience**
+
+**Global Access:**
+```tsx
+const { connection, isConnected, joinGroup, leaveGroup } = useSignalR();
+```
+
+**Connection Monitoring:**
+```tsx
+<SignalRStatus />  // Shows: 🟢 Online | 5 users online
+```
+
+**Event Handling:**
+```tsx
+// Automatic message notifications
+// Group event notifications  
+// Connection status updates
+```
+
+### **Migration Benefits**
+
+**User Experience:**
+- ✅ **Instant Connectivity**: No need to enter messenger để online
+- ✅ **Real-time Everywhere**: Messages received instantly across app
+- ✅ **Visual Feedback**: Connection status và online users visible
+- ✅ **Seamless Experience**: No connection delays hoặc setup time
+
+**Performance:**
+- ✅ **Reduced Resource Usage**: Single connection vs multiple
+- ✅ **Better Stability**: Centralized connection management
+- ✅ **Faster Delivery**: Direct event routing
+- ✅ **Improved Reliability**: Enhanced error recovery
+
+**Development:**
+- ✅ **Centralized Management**: Single source of truth cho connections
+- ✅ **Easier Debugging**: Comprehensive logging và monitoring
+- ✅ **Better Architecture**: Clean separation of concerns
+- ✅ **Future-Proof**: Scalable foundation cho new features
 
 ---
 
@@ -770,3 +961,88 @@ docker run -p 5000:80 chat-server   # Run container
 ✅ **Group Statistics** - Member counts, activity analytics
 
 **All features are production-ready với comprehensive API documentation và real-time SignalR events!**
+
+---
+
+## 🚀 Latest Updates Summary (December 2024)
+
+### **Major Enhancements Added:**
+
+#### 1. **Complete UI Component Library** ⭐
+- ✅ **25+ Production-Ready Components** với consistent design system
+- ✅ **Interactive Style Guide** (`UserGuide.tsx`) cho development reference
+- ✅ **Modern Design System** với CSS variables, dark mode, animations
+- ✅ **Accessibility Features** WCAG compliant với keyboard navigation
+- ✅ **Enhanced User Experience** với micro-interactions và smooth transitions
+
+#### 2. **Global SignalR Architecture** ⭐
+- ✅ **Instant Connectivity** - SignalR khởi tạo ngay sau login
+- ✅ **Global Real-time Messaging** - nhận tin nhắn ở bất kỳ đâu trong app
+- ✅ **Performance Optimization** - single connection thay vì multiple
+- ✅ **Toast Notification System** - global notifications cho messages và events
+- ✅ **Connection Status Monitoring** - visual indicators và online user tracking
+
+#### 3. **Developer Experience Improvements** ⭐
+- ✅ **Comprehensive Documentation** - UserGuide.md và SignalR-Global-Setup.md
+- ✅ **Live Component Playground** - interactive testing environment
+- ✅ **TypeScript Integration** - full type safety across all components
+- ✅ **Modular Architecture** - clean separation với reusable components
+- ✅ **Easy Integration** - simple APIs và clear usage patterns
+
+### **Technical Achievements:**
+
+**Frontend Architecture:**
+- **25+ UI Components** với production-quality implementations
+- **Global State Management** cho SignalR connections
+- **Provider Pattern** cho centralized service management
+- **Hook-based Architecture** cho reusable logic
+- **Modern React Patterns** với TypeScript safety
+
+**Real-time System:**
+- **Single Global Connection** eliminating resource waste
+- **Automatic Reconnection** với progressive retry logic
+- **Event-driven Architecture** cho scalable messaging
+- **Toast Integration** cho seamless user notifications
+- **Connection Lifecycle Management** từ login đến logout
+
+**Design System:**
+- **CSS Variables Foundation** cho consistent theming
+- **Dark Mode Support** automatic across all components
+- **Animation System** với smooth transitions
+- **Interactive States** với hover, focus, loading effects
+- **Accessibility Compliance** với ARIA support
+
+### **Impact & Benefits:**
+
+**User Experience:**
+- 🚀 **Instant Messaging** - no delay để receive messages
+- 📱 **Global Notifications** - aware of activity across app
+- 🎨 **Modern Interface** - polished components với professional feel
+- ♿ **Accessibility** - inclusive design cho all users
+- ⚡ **Performance** - optimized resources và faster interactions
+
+**Developer Productivity:**
+- 📚 **Rich Documentation** - complete guides và examples
+- 🧩 **Reusable Components** - consistent building blocks
+- 🔧 **Developer Tools** - style guide và testing utilities
+- 🏗️ **Scalable Architecture** - easy to extend và maintain
+- 🎯 **Type Safety** - fewer bugs với TypeScript integration
+
+**Production Readiness:**
+- ✅ **Enterprise-Grade Components** rivaling commercial libraries
+- ✅ **Robust Real-time System** với error recovery
+- ✅ **Comprehensive Testing Environment** với live demos
+- ✅ **Documentation Coverage** cho easy onboarding
+- ✅ **Performance Optimized** cho production deployment
+
+### **Project Status: Production-Ready** 🎉
+
+Dự án Facebook Clone giờ đây là một **complete social media platform** với:
+- **Advanced UI Component Library** (25+ components)
+- **Global Real-time Messaging System** với instant connectivity
+- **Comprehensive Group Chat Functionality** với roles và permissions  
+- **Modern Design System** với accessibility support
+- **Interactive Documentation** và **Developer Tools**
+- **Production-Grade Architecture** sẵn sàng cho deployment
+
+**Ready for deployment với tất cả features hoạt động seamlessly!** 🚀

@@ -4,10 +4,10 @@
 import React, { useEffect, useRef, useState } from "react";
 
 // Local Imports
-import { X, Info, Settings, Users } from "lucide-react";
+import { X, Info, Settings } from "lucide-react";
 import MessageList from "@/components/messenger/MessageList";
 import MessageInput from "@/components/messenger/MessageInput";
-import { useSignalRConnection } from "@/components/messenger/useSignalRConnection";
+import { useGlobalSignalRConnection } from "@/components/messenger/useGlobalSignalRConnection";
 import { Avatar } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import { ScrollArea } from "@/components/ui/ScrollArea";
@@ -50,8 +50,8 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
   const isGroup = conversation.is_group === true;
 
-  // SignalR Connection
-  useSignalRConnection({
+  // Global SignalR Connection
+  useGlobalSignalRConnection({
     sender,
     conversation,
     messages,

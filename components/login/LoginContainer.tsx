@@ -5,6 +5,7 @@ import Input from "@/components/ui/Input";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { callApi } from "@/lib/utils/api-client";
+import { triggerAuthChange } from "@/components/providers/SignalRInit";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -49,6 +50,9 @@ export default function LoginContainer() {
     try {
       await callApi<void>(API_ROUTES.AUTH.LOGIN, HTTP_METHOD_ENUM.POST, { email, password });
 
+      // Trigger SignalR initialization
+      triggerAuthChange();
+      
       router.push(`/${locale}`);
     } catch (err) {
       console.error(err);

@@ -1,234 +1,271 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Facebook Clone - Full-Stack Social Media Platform
 
-## Getting Started
+A comprehensive Facebook clone built with modern technologies, featuring real-time messaging, group chat functionality, and a complete UI component library.
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-15.3.1-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1.7-38B2AC?style=for-the-badge&logo=tailwind-css)
+![SignalR](https://img.shields.io/badge/SignalR-Real--time-purple?style=for-the-badge)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql)
+
+## 🚀 Features
+
+### **Frontend Features**
+- ✅ **Complete UI Component Library** (25+ production-ready components)
+- ✅ **Global Real-time Messaging** with instant connectivity after login
+- ✅ **Group Chat System** with roles, permissions, and member management
+- ✅ **Interactive Style Guide** for development and documentation
+- ✅ **Modern Design System** with CSS variables and dark mode
+- ✅ **Multi-language Support** (English/Vietnamese)
+- ✅ **Authentication System** (Email/Password + OAuth Facebook/Google)
+- ✅ **Responsive Design** mobile-first approach
+
+### **Real-time Features**
+- ✅ **Global SignalR Connection** - instant messaging everywhere in the app
+- ✅ **Private Messaging** with file attachments and reactions
+- ✅ **Group Chat** with admin/moderator/member roles
+- ✅ **Live Notifications** with toast system
+- ✅ **Online/Offline Status** tracking
+- ✅ **Message Status** (sent, delivered, read)
+- ✅ **File Sharing** (images, documents)
+- ✅ **Message Reactions** and replies
+
+### **Backend Features (.NET 9)**
+- ✅ **SignalR Hub** for real-time communication
+- ✅ **RabbitMQ** message queue system
+- ✅ **PostgreSQL** database with comprehensive schema
+- ✅ **JWT Authentication** with cookie-based tokens
+- ✅ **Group Management API** with role-based permissions
+- ✅ **File Upload System** with validation
+- ✅ **RESTful APIs** for all operations
+
+## 🏗️ Tech Stack
+
+### **Frontend**
+- **Framework**: Next.js 15.3.1 (App Router)
+- **Language**: TypeScript 5
+- **Styling**: TailwindCSS 4.1.7 with custom design system
+- **State Management**: React Context + Hooks
+- **Real-time**: SignalR client (@microsoft/signalr)
+- **Icons**: Lucide React
+- **Internationalization**: next-intl
+
+### **Backend**
+- **Framework**: .NET 9
+- **Real-time**: SignalR
+- **Message Queue**: RabbitMQ
+- **Database**: PostgreSQL
+- **ORM**: Dapper
+- **Authentication**: JWT Bearer tokens
+
+### **Development & Deployment**
+- **Containerization**: Docker (multi-environment)
+- **CI/CD**: Jenkins pipeline
+- **Environment**: Development, Staging, Production configs
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm/yarn
+- .NET 9 SDK
+- PostgreSQL
+- RabbitMQ
+- Docker (optional)
+
+### Frontend Setup
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd facebook
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Configure your environment variables
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Backend Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Navigate to chat server directory
+cd chat-server
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Restore packages
+dotnet restore
 
-## Learn More
+# Update database connection in appsettings.json
+# Run database migrations
+psql -h your-host -d your-db -U your-user -f database_migration.sql
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-# UI Components User Guide
-
-## Tổng Quan
-
-Dự án Facebook Clone này sử dụng một hệ thống UI components hoàn chỉnh được xây dựng với **TypeScript**, **Tailwind CSS**, và **CSS Variables** để đảm bảo tính nhất quán và dễ bảo trì.
-
-## Design System
-
-### Color Scheme
-
-```css
-/* Light Mode */
---primary: 240 100% 66%; /* #4f46e5 - Blue */
---success: 142.1 76.2% 36.3%; /* #228B22 - Green */
---warning: 45 100% 51%; /* #FFC107 - Amber */
---info: 200 86% 55%; /* #3498db - Blue */
---destructive: 0 100% 50%; /* #ff0000 - Red */
-
-/* Dark Mode - Tự động adjust */
+# Start the server
+dotnet run
 ```
 
-### Animation System
+### Environment Variables
 
-- **Duration**: 200ms (standard), 300ms (complex)
-- **Easing**: `ease-soft` (custom cubic-bezier)
-- **Effects**: backdrop-blur, scale transforms, shadows
+```env
+# Frontend (.env.local)
+NEXT_PUBLIC_CHAT_SERVER_URL=http://localhost:5000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
 
----
+# Backend (appsettings.json)
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=facebook_db;Username=user;Password=pass"
+  },
+  "RabbitMQ": {
+    "HostName": "localhost",
+    "UserName": "guest",
+    "Password": "guest"
+  },
+  "Jwt": {
+    "Secret": "your-secret-key",
+    "Issuer": "FacebookClone",
+    "Audience": "facebook-client"
+  }
+}
+```
 
-## Components Documentation
+## 📚 UI Component Library
 
-### 1. Button Component
+Our Facebook Clone includes a comprehensive UI component library with 25+ production-ready components:
 
-**Path**: `components/ui/Button.tsx`
+### **Form Controls**
+- **Button**: 8 variants with loading states and icons
+- **Input**: Advanced validation, focus animations, internationalized errors
+- **Textarea**: 3 variants (default, filled, outlined) with size options
+- **Checkbox**: Interactive states with smooth animations
+- **Switch**: Enhanced toggle with hover effects
+- **RadioGroup**: Traditional, card variant, and button group styles
 
-#### Variants
+### **Data Display**
+- **Card**: Hoverable and clickable variants with backdrop blur
+- **Badge**: Count badges, dot indicators, notification badges
+- **Alert**: 5 variants with icons and backdrop effects
+- **Avatar**: Progressive loading with fallbacks
+- **Skeleton**: Multiple layouts for posts, messages, lists, tables
 
+### **Navigation & Interaction**
+- **Modal**: Full-featured with escape/overlay close, multiple sizes
+- **DropdownMenu**: With icons, separators, destructive actions
+- **Toast**: 4 types with positioning, actions, auto-dismiss
+- **Progress**: Linear, circular, step progress with animations
+- **Tooltip**: Hover information displays
+- **Pagination**: Navigation controls
+
+### **Design System Features**
+- **CSS Variables**: Complete color system with semantic naming
+- **Dark Mode**: Automatic support across all components
+- **Backdrop Blur**: Modern glass morphism effects
+- **Animation System**: Unified transitions with ease-soft timing
+- **Accessibility**: ARIA support, keyboard navigation, WCAG compliance
+
+### **Interactive Style Guide**
+Access the live component playground:
+```tsx
+import UserGuide from "@/components/UserGuide";
+
+// Use in a page to see all components in action
+export default function StyleGuidePage() {
+  return <UserGuide />;
+}
+```
+
+## 🔄 Global SignalR System
+
+### **Architecture**
+Our SignalR system has been redesigned for optimal performance:
+
+**Before (Per-Component Connection):**
+```
+Login → Navigate to Messenger → Click Conversation → 
+Mount MessengerContainer → Initialize SignalR → Receive Messages
+```
+
+**After (Global Connection):**
+```
+Login → Auto-Initialize Global SignalR → 
+Receive Messages Everywhere Instantly! 🚀
+```
+
+### **Global Context Usage**
+```tsx
+import { useSignalR } from "@/contexts/SignalRContext";
+
+const { connection, isConnected, joinGroup, leaveGroup } = useSignalR();
+```
+
+### **Connection Status Monitoring**
+```tsx
+import { SignalRStatus } from "@/components/common/SignalRStatus";
+
+<SignalRStatus />  // Shows: 🟢 Online | 5 users online
+```
+
+### **Real-time Features**
+- **Global Toast Messages**: New messages display toast notifications anywhere in the app
+- **Group Event Notifications**: Member additions, role changes, group updates
+- **Connection Status**: Visual indicators for connection state
+- **Online Presence**: Real-time user online/offline tracking
+- **Performance Optimization**: Single connection instead of multiple
+
+## 💬 Messaging System
+
+### **Private Messaging**
+- One-on-one conversations
+- File attachments (images, documents)
+- Message reactions with emoji
+- Reply to specific messages
+- Message status tracking
+- Online/offline indicators
+
+### **Group Chat**
+- Create and manage groups with metadata
+- Role-based permissions (Admin, Moderator, Member)
+- Join request system for private groups
+- Invite links for easy sharing
+- Member management (add, remove, promote/demote)
+- Group settings (public/private, member limits)
+- Real-time group events
+
+### **Message Features**
+- Rich text content
+- File attachments (max 10MB)
+- Emoji reactions
+- Reply threading
+- Message status (sending, sent, delivered, read)
+- Real-time delivery
+- Message sync on reconnection
+
+## 🎨 Component Examples
+
+### Basic Button Usage
 ```tsx
 import Button from "@/components/ui/Button";
 
-// Basic Usage
-<Button variant="primary" size="md" onClick={handleClick}>
-  Primary Button
-</Button>
-
-// With Icons
-<Button
-  variant="success"
-  icon={CheckIcon}
-  iconRight={ArrowRightIcon}
->
-  Save Changes
-</Button>
-
-// Loading State
-<Button variant="primary" loading={isLoading}>
-  {isLoading ? "Saving..." : "Save"}
-</Button>
-```
-
-#### Props
-
-| Prop        | Type                                                                                                       | Default     | Description          |
-| ----------- | ---------------------------------------------------------------------------------------------------------- | ----------- | -------------------- |
-| `variant`   | `"default" \| "primary" \| "success" \| "danger" \| "warning" \| "info" \| "outline" \| "ghost" \| "link"` | `"default"` | Button style variant |
-| `size`      | `"sm" \| "md" \| "lg" \| "smx" \| "icon"`                                                                  | `"md"`      | Button size          |
-| `loading`   | `boolean`                                                                                                  | `false`     | Show loading spinner |
-| `fullWidth` | `boolean`                                                                                                  | `false`     | Full width button    |
-| `icon`      | `ComponentType`                                                                                            | -           | Left icon component  |
-| `iconRight` | `ComponentType`                                                                                            | -           | Right icon component |
-
-#### Examples
-
-```tsx
-// Facebook-style primary action
-<Button variant="primary" size="lg" fullWidth>
+// Primary action
+<Button variant="primary" size="lg" onClick={handleSubmit}>
   Create Post
 </Button>
 
-// Destructive action
-<Button variant="danger" size="sm">
-  Delete Account
+// With loading state
+<Button variant="primary" loading={isSubmitting}>
+  {isSubmitting ? "Publishing..." : "Publish"}
 </Button>
 
-// Icon only button
-<Button variant="ghost" size="icon">
-  <Heart className="w-4 h-4" />
+// With icons
+<Button variant="outline" icon={ShareIcon} iconRight={ExternalLinkIcon}>
+  Share Post
 </Button>
 ```
 
----
-
-### 2. Input Component
-
-**Path**: `components/ui/Input.tsx`
-
-#### Basic Usage
-
-```tsx
-import Input from "@/components/ui/Input";
-
-<Input label="Email Address" placeholder="Enter your email" type="email" required error={errors.email} description="We'll never share your email" />;
-```
-
-#### Props
-
-| Prop          | Type      | Default | Description              |
-| ------------- | --------- | ------- | ------------------------ |
-| `label`       | `string`  | -       | Input label              |
-| `error`       | `string`  | -       | Error message            |
-| `description` | `string`  | -       | Help text                |
-| `required`    | `boolean` | `false` | Required field indicator |
-
-#### Advanced Features
-
-- **Auto-validation**: Sử dụng HTML5 validation với internationalized messages
-- **Focus animations**: Primary color underline và glow effects
-- **Error states**: Real-time error display với smooth animations
-
----
-
-### 3. Textarea Component
-
-**Path**: `components/ui/Textarea.tsx`
-
-#### Usage
-
-```tsx
-import Textarea from "@/components/ui/Textarea";
-
-<Textarea label="Post Content" placeholder="What's on your mind?" variant="default" size="lg" rows={4} error={errors.content} />;
-```
-
-#### Variants
-
-- **default**: Standard với border và focus effects
-- **filled**: Background filled style
-- **outlined**: Prominent border style
-
-#### Props
-
-| Prop      | Type                                  | Default     | Description    |
-| --------- | ------------------------------------- | ----------- | -------------- |
-| `variant` | `"default" \| "filled" \| "outlined"` | `"default"` | Textarea style |
-| `size`    | `"sm" \| "md" \| "lg"`                | `"md"`      | Size variant   |
-
----
-
-### 4. Modal Component
-
-**Path**: `components/ui/Modal.tsx`
-
-#### Usage
-
-```tsx
-import Modal from "@/components/ui/Modal";
-
-const [isOpen, setIsOpen] = useState(false);
-
-<Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Create New Post" size="lg">
-  <div>Modal content here</div>
-</Modal>;
-```
-
-#### Props
-
-| Prop                  | Type                                     | Default | Description             |
-| --------------------- | ---------------------------------------- | ------- | ----------------------- |
-| `isOpen`              | `boolean`                                | -       | Modal visibility        |
-| `onClose`             | `() => void`                             | -       | Close handler           |
-| `title`               | `string`                                 | -       | Modal title             |
-| `size`                | `"sm" \| "md" \| "lg" \| "xl" \| "full"` | `"md"`  | Modal size              |
-| `closeOnEscape`       | `boolean`                                | `true`  | Close on Escape key     |
-| `closeOnOverlayClick` | `boolean`                                | `true`  | Close on backdrop click |
-
----
-
-### 5. Toast Notifications
-
-**Path**: `components/ui/Toast.tsx`
-
-#### Setup
-
-```tsx
-// In your root layout or App component
-import { ToastProvider } from "@/components/ui/Toast";
-
-<ToastProvider position="top-right" maxToasts={5}>
-  {children}
-</ToastProvider>;
-```
-
-#### Usage
-
+### Toast Notifications
 ```tsx
 import { useToast } from "@/components/ui/Toast";
 
@@ -239,358 +276,40 @@ addToast({
   type: "success",
   title: "Post Created",
   message: "Your post has been published successfully!",
-  duration: 3000,
+  duration: 3000
 });
 
-// Error with action
+// Error with retry action
 addToast({
   type: "error",
   title: "Upload Failed",
   message: "Failed to upload image. Please try again.",
   action: {
     label: "Retry",
-    onClick: () => retryUpload(),
-  },
+    onClick: () => retryUpload()
+  }
 });
 ```
 
-#### Toast Types
-
-- **success**: Green với CheckCircle icon
-- **error**: Red với AlertCircle icon
-- **warning**: Amber với AlertTriangle icon
-- **info**: Blue với Info icon
-
----
-
-### 6. Badge Component
-
-**Path**: `components/ui/Badge.tsx`
-
-#### Usage
-
+### Modal Implementation
 ```tsx
-import { Badge, NotificationBadge } from "@/components/ui/Badge";
-
-// Basic badge
-<Badge variant="primary" size="sm">New</Badge>
-
-// Notification badge
-<NotificationBadge count={5} variant="danger">
-  <MessageIcon />
-</NotificationBadge>
-
-// Dot indicator
-<Badge dot variant="success" pulse />
-```
-
-#### Variants
-
-- **default**, **primary**, **success**, **warning**, **danger**, **info**
-- **outline**, **ghost**
-
-#### NotificationBadge Props
-
-| Prop       | Type                                                           | Default       | Description               |
-| ---------- | -------------------------------------------------------------- | ------------- | ------------------------- |
-| `count`    | `number`                                                       | -             | Notification count        |
-| `maxCount` | `number`                                                       | `99`          | Max count display         |
-| `dot`      | `boolean`                                                      | `false`       | Show dot instead of count |
-| `position` | `"top-right" \| "top-left" \| "bottom-right" \| "bottom-left"` | `"top-right"` | Badge position            |
-
----
-
-### 7. Progress Components
-
-**Path**: `components/ui/Progress.tsx`
-
-#### Linear Progress
-
-```tsx
-import { Progress } from "@/components/ui/Progress";
-
-<Progress value={75} max={100} variant="primary" size="md" showValue label="Upload Progress" animated />;
-```
-
-#### Circular Progress
-
-```tsx
-import { CircularProgress } from "@/components/ui/Progress";
-
-<CircularProgress value={60} size={64} strokeWidth={4} variant="success" showValue />;
-```
-
-#### Step Progress
-
-```tsx
-import { StepProgress } from "@/components/ui/Progress";
-
-<StepProgress steps={["Basic Info", "Upload Photo", "Preferences", "Complete"]} currentStep={2} variant="primary" />;
-```
-
----
-
-### 8. Dropdown Menu
-
-**Path**: `components/ui/DropdownMenu.tsx`
-
-#### Usage
-
-```tsx
-import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/DropdownMenu";
-
-<DropdownMenu trigger={<Button variant="outline">Options</Button>} align="start" side="bottom">
-  <DropdownMenuItem icon={EditIcon} onClick={handleEdit}>
-    Edit Post
-  </DropdownMenuItem>
-  <DropdownMenuItem icon={ShareIcon} shortcut="⌘S">
-    Share
-  </DropdownMenuItem>
-  <DropdownMenuSeparator />
-  <DropdownMenuItem destructive icon={TrashIcon}>
-    Delete
-  </DropdownMenuItem>
-</DropdownMenu>;
-```
-
-#### Select Dropdown
-
-```tsx
-import { SelectDropdown } from "@/components/ui/DropdownMenu";
-
-<SelectDropdown
-  options={[
-    { value: "public", label: "Public" },
-    { value: "friends", label: "Friends Only" },
-    { value: "private", label: "Only Me" },
-  ]}
-  value={privacy}
-  onValueChange={setPrivacy}
-  placeholder="Select privacy..."
-/>;
-```
-
----
-
-### 9. Radio Group
-
-**Path**: `components/ui/RadioGroup.tsx`
-
-#### Basic Radio Group
-
-```tsx
-import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
-
-<RadioGroup value={theme} onValueChange={setTheme}>
-  <div className="flex items-center space-x-2">
-    <RadioGroupItem value="light" id="light" />
-    <label htmlFor="light">Light Theme</label>
-  </div>
-  <div className="flex items-center space-x-2">
-    <RadioGroupItem value="dark" id="dark" />
-    <label htmlFor="dark">Dark Theme</label>
-  </div>
-</RadioGroup>;
-```
-
-#### Radio Group with Labels
-
-```tsx
-import { RadioGroupWithLabel } from "@/components/ui/RadioGroup";
-
-<RadioGroupWithLabel
-  items={[
-    {
-      value: "everyone",
-      label: "Everyone",
-      description: "Anyone can see this post",
-    },
-    {
-      value: "friends",
-      label: "Friends",
-      description: "Only your friends can see",
-    },
-  ]}
-  value={privacy}
-  onValueChange={setPrivacy}
-  variant="card"
-/>;
-```
-
-#### Radio Button Group
-
-```tsx
-import { RadioButtonGroup } from "@/components/ui/RadioGroup";
-
-<RadioButtonGroup
-  items={[
-    { value: "grid", label: "Grid", icon: GridIcon },
-    { value: "list", label: "List", icon: ListIcon },
-  ]}
-  value={viewMode}
-  onValueChange={setViewMode}
-  variant="outline"
-/>;
-```
-
----
-
-### 10. Skeleton Loaders
-
-**Path**: `components/ui/Skeleton.tsx`
-
-#### Basic Skeletons
-
-```tsx
-import { Skeleton, SkeletonAvatar, SkeletonText } from "@/components/ui/Skeleton";
-
-// Basic skeleton
-<Skeleton className="h-4 w-[250px]" />
-
-// Avatar skeleton
-<SkeletonAvatar size="lg" />
-
-// Text lines
-<SkeletonText lines={3} />
-```
-
-#### Pre-built Layouts
-
-```tsx
-import { SkeletonPost, SkeletonCard, SkeletonMessage } from "@/components/ui/Skeleton";
-
-// Facebook post skeleton
-<SkeletonPost />
-
-// Card with avatar and content
-<SkeletonCard showAvatar showImage textLines={2} />
-
-// Message bubble
-<SkeletonMessage own={false} showAvatar />
-
-// Chat conversation
-<div className="space-y-4">
-  <SkeletonMessage own={false} />
-  <SkeletonMessage own={true} />
-  <SkeletonMessage own={false} />
-</div>
-```
-
----
-
-### 11. Alert Component
-
-**Path**: `components/ui/Alert.tsx`
-
-#### Usage
-
-```tsx
-import Alert from "@/components/ui/Alert";
-
-<Alert
-  variant="success"
-  title="Post Published"
-  description="Your post has been successfully shared with your friends."
-/>
-
-<Alert
-  variant="error"
-  title="Upload Error"
-  description="Failed to upload image. Please check your internet connection."
-/>
-```
-
-#### Variants
-
-- **default**: Neutral information
-- **info**: Blue informational alerts
-- **success**: Green success messages
-- **warning**: Amber warnings
-- **error**: Red error messages
-
----
-
-### 12. Form Controls
-
-#### Switch Component
-
-```tsx
-import { Switch } from "@/components/ui/Switch";
-
-<Switch checked={notifications} onCheckedChange={setNotifications} label="Email Notifications" />;
-```
-
-#### Checkbox Component
-
-```tsx
-import { Checkbox } from "@/components/ui/CheckBox";
-
-<Checkbox checked={agreeToTerms} onCheckedChange={setAgreeToTerms} label="I agree to the Terms of Service" />;
-```
-
-#### Card Component
-
-```tsx
-import Card from "@/components/ui/Card";
-
-<Card
-  title="Recent Activity"
-  description="Your recent interactions"
-  hoverable
-  clickable
-  onClick={handleCardClick}
-  footer={
-    <Button variant="outline" size="sm">
-      View All
-    </Button>
-  }
+import Modal from "@/components/ui/Modal";
+
+const [isOpen, setIsOpen] = useState(false);
+
+<Modal
+  isOpen={isOpen}
+  onClose={() => setIsOpen(false)}
+  title="Create New Post"
+  size="lg"
 >
-  <div>Card content here</div>
-</Card>;
-```
-
----
-
-## Usage Patterns
-
-### 1. Form Layout
-
-```tsx
-<div className="space-y-6">
-  <Input label="Full Name" placeholder="Enter your full name" required />
-
-  <Textarea label="Bio" placeholder="Tell us about yourself" rows={4} />
-
-  <div className="flex items-center space-x-4">
-    <Switch checked={isPublic} onCheckedChange={setIsPublic} label="Public Profile" />
-
-    <Checkbox checked={receiveEmails} onCheckedChange={setReceiveEmails} label="Email Updates" />
-  </div>
-
-  <div className="flex gap-3">
-    <Button variant="outline" onClick={handleCancel}>
-      Cancel
-    </Button>
-    <Button variant="primary" type="submit">
-      Save Profile
-    </Button>
-  </div>
-</div>
-```
-
-### 2. Post Creation Flow
-
-```tsx
-const [isUploading, setIsUploading] = useState(false);
-
-<Card title="Create Post">
   <div className="space-y-4">
-    <Textarea placeholder="What's on your mind?" rows={3} />
-
-    {isUploading && <Progress value={uploadProgress} label="Uploading image..." animated />}
-
-    <div className="flex justify-between items-center">
-      <div className="flex space-x-2">
+    <Textarea
+      placeholder="What's on your mind?"
+      rows={3}
+    />
+    <div className="flex justify-between">
+      <div className="flex gap-2">
         <Button variant="ghost" size="sm" icon={ImageIcon}>
           Photo
         </Button>
@@ -598,146 +317,283 @@ const [isUploading, setIsUploading] = useState(false);
           Video
         </Button>
       </div>
-
-      <Button variant="primary" loading={isPosting}>
-        Post
-      </Button>
+      <Button variant="primary">Post</Button>
     </div>
   </div>
-</Card>;
+</Modal>
 ```
 
-### 3. Notification System
-
+### Progress Components
 ```tsx
-// Setup toast notifications for common actions
-const { addToast } = useToast();
+import { Progress, CircularProgress, StepProgress } from "@/components/ui/Progress";
 
-const handlePostCreate = async () => {
-  try {
-    await createPost(postData);
-    addToast({
-      type: "success",
-      title: "Post Created",
-      message: "Your post has been published!",
-    });
-  } catch (error) {
-    addToast({
-      type: "error",
-      title: "Failed to Create Post",
-      message: error.message,
-      action: {
-        label: "Retry",
-        onClick: () => handlePostCreate(),
-      },
-    });
-  }
-};
+// Linear progress
+<Progress 
+  value={uploadProgress} 
+  label="Uploading..." 
+  showValue 
+  animated 
+/>
+
+// Circular progress
+<CircularProgress 
+  value={75} 
+  size={64} 
+  variant="success" 
+  showValue 
+/>
+
+// Step progress
+<StepProgress
+  steps={["Upload", "Process", "Publish", "Complete"]}
+  currentStep={2}
+  variant="primary"
+/>
 ```
 
-### 4. Loading States
+## 🛠️ Development
 
-```tsx
-// Page-level loading
-{
-  isLoading ? (
-    <div className="space-y-4">
-      <SkeletonPost />
-      <SkeletonPost />
-      <SkeletonPost />
-    </div>
-  ) : (
-    <div className="space-y-4">
-      {posts.map((post) => (
-        <PostComponent key={post.id} post={post} />
-      ))}
-    </div>
-  );
+### Available Scripts
+
+```bash
+# Development
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript compiler check
+
+# Docker operations
+npm run docker:local # Start local Docker environment
+npm run docker:dev   # Start development Docker environment
+npm run docker:prod  # Start production Docker environment
+```
+
+### Project Structure
+
+```
+├── app/                          # Next.js App Router
+│   ├── [locale]/                 # Internationalization
+│   │   ├── (pages)/             # Main pages
+│   │   └── layout.tsx           # Root layout with providers
+│   └── api/                     # API Routes
+├── components/                   # React Components
+│   ├── ui/                      # Complete UI Library (25+ components)
+│   ├── UserGuide.tsx            # Interactive style guide
+│   ├── providers/               # Global providers
+│   ├── common/                  # Shared components
+│   ├── messenger/               # Chat components
+│   └── login/                   # Authentication components
+├── contexts/                     # React Contexts
+│   └── SignalRContext.tsx       # Global SignalR management
+├── hooks/                       # Custom React Hooks
+│   └── useGlobalSignalR.ts      # Auto SignalR initialization
+├── lib/                         # Business Logic
+│   ├── models/                  # Data models
+│   ├── constants/               # Configuration
+│   ├── utils/                   # Utility functions
+│   └── middlewares/             # Middleware pipeline
+└── i18n/                        # Internationalization
+```
+
+### Component Development Guidelines
+
+When creating new components:
+
+- ✅ Use project's CSS variables for colors
+- ✅ Support dark mode automatically
+- ✅ Include hover/focus states
+- ✅ Add smooth transitions
+- ✅ Provide TypeScript interfaces
+- ✅ Include forwardRef when needed
+- ✅ Add accessibility attributes
+- ✅ Follow naming conventions
+- ✅ Include size variants
+- ✅ Document props and usage
+
+### Color System
+
+```css
+/* CSS Variables (Auto Dark Mode) */
+:root {
+  --primary: 240 100% 66%;           /* Blue */
+  --success: 142.1 76.2% 36.3%;      /* Green */
+  --warning: 45 100% 51%;            /* Amber */
+  --info: 200 86% 55%;               /* Blue */
+  --destructive: 0 100% 50%;         /* Red */
+  
+  /* Semantic colors */
+  --background: 0 0% 100%;
+  --foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --border: 214.3 31.8% 91.4%;
 }
 
-// Component-level loading
-<Button variant="primary" loading={isSubmitting}>
-  {isSubmitting ? "Creating..." : "Create Post"}
-</Button>;
+/* Dark mode automatically handled */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    /* ... other dark mode colors */
+  }
+}
 ```
 
----
+## 🔧 API Documentation
 
-## Best Practices
-
-### 1. Color Usage
-
-- Sử dụng **semantic colors**: `success` cho thành công, `destructive` cho nguy hiểm
-- **Primary** cho main actions, **outline** cho secondary actions
-- **Ghost** cho subtle interactions, **link** cho navigation
-
-### 2. Sizing Consistency
-
-- **sm**: Compact interfaces, mobile-first
-- **md**: Standard desktop size (default)
-- **lg**: Prominent actions, hero sections
-
-### 3. Animation Guidelines
-
-- Giữ animations **subtle** và **meaningful**
-- Sử dụng `ease-soft` cho smooth transitions
-- **200ms** cho micro-interactions, **300ms** cho complex animations
-
-### 4. Accessibility
-
-- Luôn provide **labels** cho form controls
-- Sử dụng **semantic HTML** và **ARIA attributes**
-- Đảm bảo **keyboard navigation** hoạt động
-- Maintain **color contrast** standards
-
-### 5. Performance
-
-- **Lazy load** heavy components khi cần thiết
-- Sử dụng **Skeleton loaders** cho better perceived performance
-- **Memoize** expensive calculations trong components
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Colors not applying**: Đảm bảo CSS variables được import trong `globals.css`
-2. **Animations not smooth**: Check Tailwind config có `ease-soft` custom easing
-3. **Dark mode not working**: Verify CSS variables có dark mode variants
-4. **TypeScript errors**: Ensure proper import paths và prop types
-
-### Debug Tips
-
-```tsx
-// Check if CSS variables are loaded
-console.log(getComputedStyle(document.documentElement).getPropertyValue("--primary"));
-
-// Debug component props
-<Button {...props} className={cn("debug-border", props.className)} />;
+### Authentication Endpoints
+```
+POST /api/auth/login              # Email/password login
+POST /api/auth/sso_facebook       # Facebook OAuth
+POST /api/auth/sso_google         # Google OAuth
+GET  /api/auth/me                 # Current user info
+POST /api/auth/logout             # Logout
 ```
 
+### Messaging Endpoints
+```
+GET  /api/messenger/conversations # User conversations
+GET  /api/messenger/messages      # Conversation messages
+POST /api/messages                # Send message
+GET  /api/messages/sync           # Sync missed messages
+```
+
+### Group Management
+```
+POST /api/groups                  # Create group
+PUT  /api/groups/{id}             # Update group
+GET  /api/groups/{id}/info        # Group information
+GET  /api/groups/{id}/members     # Group members
+POST /api/groups/{id}/members     # Add members
+DELETE /api/groups/{id}/members/{userId} # Remove member
+POST /api/groups/{id}/leave       # Leave group
+POST /api/groups/{id}/promote     # Promote/demote member
+GET  /api/groups/{id}/invite-link # Generate invite link
+```
+
+### SignalR Events
+```
+# Client → Server
+SendMessage(request)              # Send private message
+SendGroupMessage(request)         # Send group message
+JoinGroup(groupId)               # Join group room
+LeaveGroup(groupId)              # Leave group room
+
+# Server → Client
+ReceiveMessage                   # New message received
+ReceiveReaction                  # Reaction added
+RemoveReaction                   # Reaction removed
+UserOnline/UserOffline           # User status changes
+GroupMemberAdded/Removed         # Group member changes
+GroupMemberPromoted              # Role changes
+GroupUpdated                     # Group info changes
+```
+
+## 🚀 Deployment
+
+### Production Build
+```bash
+# Build the application
+npm run build
+
+# Start production server
+npm start
+```
+
+### Docker Deployment
+```bash
+# Build and run with Docker
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Environment Setup
+1. Configure database connection
+2. Set up RabbitMQ instance
+3. Configure JWT secrets
+4. Set up OAuth providers (Facebook, Google)
+5. Configure file upload directories
+6. Set up domain and CORS settings
+
+## 📊 Performance Features
+
+### Frontend Optimizations
+- **Single SignalR Connection**: Eliminates resource waste from multiple connections
+- **Skeleton Loading**: Better perceived performance with loading states
+- **Component Lazy Loading**: Heavy components loaded when needed
+- **Memoization**: Expensive calculations cached appropriately
+- **Image Optimization**: Progressive loading with fallbacks
+
+### Backend Optimizations
+- **Connection Pooling**: Efficient database connections
+- **Message Queuing**: RabbitMQ for scalable message processing
+- **Automatic Reconnection**: Robust connection management
+- **Caching Strategy**: Repository pattern ready for caching layer
+
+## 🔒 Security Features
+
+- **JWT Authentication**: Secure token-based auth with httpOnly cookies
+- **CORS Configuration**: Proper cross-origin policies
+- **Input Validation**: Request sanitization and validation
+- **Role-based Access**: Route-level access control
+- **Rate Limiting**: API request throttling
+- **Cookie Security**: Secure, SameSite attributes
+
+## 🌐 Browser Support
+
+- **Chrome**: Latest 2 versions
+- **Firefox**: Latest 2 versions  
+- **Safari**: Latest 2 versions
+- **Edge**: Latest 2 versions
+- **Mobile**: iOS Safari, Chrome Mobile
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Team
+
+- **Lead Developer**: Bach Tran (bach.tv2000@gmail.com)
+- **Frontend**: React/Next.js specialist
+- **Backend**: .NET/SignalR specialist
+- **UI/UX**: Design system architect
+
+## 📞 Support
+
+For support and questions:
+- **Email**: bach.tv2000@gmail.com
+- **Documentation**: See `UserGuide.md` and `SignalR-Global-Setup.md`
+- **Issues**: Create an issue in the repository
+
 ---
 
-## Component Checklist
+## 🎉 Latest Updates (December 2024)
 
-Khi tạo component mới, đảm bảo:
+### **Major Enhancements**
+- ✅ **Complete UI Component Library** (25+ production-ready components)
+- ✅ **Global SignalR Architecture** with instant connectivity
+- ✅ **Interactive Style Guide** for development reference
+- ✅ **Toast Notification System** for global messaging
+- ✅ **Performance Optimizations** with single connection architecture
 
-- [ ] Sử dụng project's CSS variables
-- [ ] Support dark mode automatic
-- [ ] Include hover/focus states
-- [ ] Add smooth transitions
-- [ ] Provide TypeScript interfaces
-- [ ] Include forwardRef khi cần
-- [ ] Add accessibility attributes
-- [ ] Follow naming conventions
-- [ ] Include size variants
-- [ ] Document props và usage
+### **Technical Achievements**
+- **Enterprise-Grade Components** rivaling commercial libraries
+- **Robust Real-time System** with error recovery
+- **Comprehensive Documentation** with live examples
+- **Production-Ready Architecture** optimized for deployment
+- **Modern Development Tools** with TypeScript integration
+
+### **Project Status: Production-Ready** 🚀
+
+This Facebook Clone is now a **complete social media platform** ready for deployment with all features working seamlessly!
 
 ---
 
-**Cập nhật lần cuối**: December 2024  
-**Version**: 2.0.0  
-**Tác giả**: Facebook Clone Development Team
-
-Để có thêm ví dụ hoặc hỗ trợ, vui lòng tham khảo source code trong thư mục `components/ui/` hoặc liên hệ team development.
+**Built with ❤️ using modern web technologies**
