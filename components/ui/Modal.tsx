@@ -17,11 +17,11 @@ interface ModalProps {
 }
 
 const sizeClasses = {
-  sm: "max-w-sm",
-  md: "max-w-md", 
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-  full: "max-w-full mx-4"
+  sm: "w-full h-full md:w-auto md:h-auto md:max-w-sm md:mx-4",
+  md: "w-full h-full md:w-auto md:h-auto md:max-w-md md:mx-4", 
+  lg: "w-full h-full md:w-auto md:h-auto md:max-w-lg md:mx-4",
+  xl: "w-full h-full md:w-auto md:h-auto md:max-w-xl md:mx-4",
+  full: "w-full h-full md:max-w-full md:mx-4"
 };
 
 export const Modal: React.FC<ModalProps> = ({
@@ -58,7 +58,7 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center md:p-4">
       {/* Backdrop */}
       <div 
         className={cn(
@@ -71,7 +71,7 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Modal Content */}
       <div
         className={cn(
-          "relative w-full rounded-xl border bg-card text-card-foreground shadow-lg transition-all duration-300 ease-soft",
+          "relative rounded-none md:rounded-xl border-0 md:border bg-card text-card-foreground shadow-lg transition-all duration-300 ease-soft",
           "backdrop-blur-sm bg-white/95 dark:bg-neutral-900/95",
           "border-gray-200/60 dark:border-gray-800/60",
           "animate-in fade-in-0 zoom-in-95 duration-300",
@@ -82,9 +82,9 @@ export const Modal: React.FC<ModalProps> = ({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-border">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-border">
             {title && (
-              <h2 className="text-lg font-semibold leading-none tracking-tight">
+              <h2 className="text-lg md:text-xl font-semibold leading-none tracking-tight">
                 {title}
               </h2>
             )}
@@ -92,19 +92,20 @@ export const Modal: React.FC<ModalProps> = ({
               <button
                 onClick={onClose}
                 className={cn(
-                  "rounded-md p-2 hover:bg-accent hover:text-accent-foreground",
-                  "transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  "rounded-md p-2 md:p-1.5 hover:bg-accent hover:text-accent-foreground",
+                  "transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50",
+                  "min-h-11 min-w-11 md:min-h-auto md:min-w-auto" // Touch-friendly on mobile
                 )}
                 aria-label="Close modal"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5 md:h-4 md:w-4" />
               </button>
             )}
           </div>
         )}
         
         {/* Body */}
-        <div className="p-6">
+        <div className="p-4 md:p-6 overflow-auto max-h-[calc(100vh-8rem)] md:max-h-none">
           {children}
         </div>
       </div>

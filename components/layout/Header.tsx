@@ -104,16 +104,18 @@ export default function Header() {
       {/* Render open conversation windows with dynamic positioning */}
       {openConversations.map((conversation, index) => {
         // Calculate the right offset for each window
-        // Assuming each window has a width of 320px and a gap of ~16px (right-4, and we can add more if needed)
-        const rightOffset = 16 + index * (320 + 16); // 16px from right + index * (width + gap)
+        // This will only affect desktop due to responsive classes in MessengerContainer
+        const rightOffset = 16 + index * (336); // 16px base + index * (320px width + 16px gap)
 
         return (
           <MessengerContainer
             key={conversation.conversation_id}
             conversation={conversation}
             onClose={handleCloseConversation}
-            // Pass a style prop for positioning
-            style={{ right: `${rightOffset}px` }}
+            // Pass a style prop for positioning - only used on desktop
+            style={{ 
+              right: `${rightOffset}px`
+            }}
           />
         );
       })}

@@ -56,12 +56,12 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
   };
 
   return (
-    <div className="border-t bg-card p-3">
+    <div className="border-t bg-card p-3 md:p-4 flex-shrink-0">
       {/* Reply Preview */}
       {replyingTo && (
         <div className="mb-3 p-3 bg-muted rounded-lg border-l-4 border-primary">
           <div className="flex items-center justify-between">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-primary">Đang trả lời:</p>
               <p className="text-sm truncate">{replyingTo.content || "File attachment"}</p>
             </div>
@@ -70,7 +70,7 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
               size="icon"
               variant="ghost"
               onClick={() => setReplyingTo(null)}
-              className="h-6 w-6"
+              className="h-8 w-8 md:h-6 md:w-6 flex-shrink-0"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -80,12 +80,12 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
       
       {/* Hiển thị files đã chọn */}
       {selectedFiles.length > 0 && (
-        <div className="mb-3 space-y-2">
+        <div className="mb-3 space-y-2 max-h-32 overflow-y-auto">
           {selectedFiles.map((file, index) => (
             <div key={index} className="flex items-center gap-2 rounded-lg bg-muted p-2">
               {getFileIcon(file.type)}
-              <div className="flex-1">
-                <p className="text-sm font-medium">{file.name}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{file.name}</p>
                 <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
               </div>
               <Button
@@ -93,7 +93,7 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
                 size="icon"
                 variant="ghost"
                 onClick={() => removeFile(index)}
-                className="h-6 w-6"
+                className="h-8 w-8 md:h-6 md:w-6 flex-shrink-0"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -108,10 +108,10 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
           type="button" 
           size="icon" 
           variant="ghost" 
-          className="flex-shrink-0"
+          className="flex-shrink-0 w-10 h-10 md:w-8 md:h-8"
           onClick={() => fileInputRef.current?.click()}
         >
-          <Paperclip className="h-5 w-5 text-muted-foreground" />
+          <Paperclip className="h-5 w-5 md:h-4 md:w-4 text-muted-foreground" />
         </Button>
         
         {/* Hidden file input */}
@@ -124,14 +124,14 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
           accept="image/*,application/pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.mp4,.mp3,.wav,.avi,.mov,.wmv,.flv,.webm,.ogg"
         />
 
-        {/* Bọc Input trong một div để tạo hiệu ứng bo tròn */}
-        <div className="relative w-full">
+        {/* Input container with responsive sizing */}
+        <div className="relative flex-1 min-w-0">
           <Input
             ref={ref}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Nhập tin nhắn..."
-            className="w-full rounded-full border bg-muted py-2 pl-4 pr-10 focus-visible:ring-1 focus-visible:ring-ring"
+            className="w-full rounded-full border bg-muted py-2 pl-4 pr-4 text-base md:text-sm focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
 
@@ -140,10 +140,10 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
           type="submit" 
           size="icon" 
           variant="ghost" 
-          className="flex-shrink-0" 
+          className="flex-shrink-0 w-10 h-10 md:w-8 md:h-8" 
           disabled={(!input.trim() && selectedFiles.length === 0) || isUploading}
         >
-          <SendHorizontal className={`h-5 w-5 transition-colors ${(input.trim() || selectedFiles.length > 0) && !isUploading ? "text-primary" : "text-muted-foreground"}`} />
+          <SendHorizontal className={`h-5 w-5 md:h-4 md:w-4 transition-colors ${(input.trim() || selectedFiles.length > 0) && !isUploading ? "text-primary" : "text-muted-foreground"}`} />
         </Button>
       </form>
     </div>
