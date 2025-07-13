@@ -11,6 +11,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 ## 🚀 Features
 
 ### **Frontend Features**
+
 - ✅ **Complete UI Component Library** (25+ production-ready components)
 - ✅ **Global Real-time Messaging** with instant connectivity after login
 - ✅ **Group Chat System** with roles, permissions, and member management
@@ -21,6 +22,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 - ✅ **Responsive Design** mobile-first approach
 
 ### **Real-time Features**
+
 - ✅ **Global SignalR Connection** - instant messaging everywhere in the app
 - ✅ **Private Messaging** with file attachments and reactions
 - ✅ **Group Chat** with admin/moderator/member roles
@@ -31,6 +33,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 - ✅ **Message Reactions** and replies
 
 ### **Backend Features (.NET 9)**
+
 - ✅ **SignalR Hub** for real-time communication
 - ✅ **RabbitMQ** message queue system
 - ✅ **PostgreSQL** database with comprehensive schema
@@ -42,6 +45,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 ## 🏗️ Tech Stack
 
 ### **Frontend**
+
 - **Framework**: Next.js 15.3.1 (App Router)
 - **Language**: TypeScript 5
 - **Styling**: TailwindCSS 4.1.7 with custom design system
@@ -51,6 +55,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 - **Internationalization**: next-intl
 
 ### **Backend**
+
 - **Framework**: .NET 9
 - **Real-time**: SignalR
 - **Message Queue**: RabbitMQ
@@ -59,6 +64,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 - **Authentication**: JWT Bearer tokens
 
 ### **Development & Deployment**
+
 - **Containerization**: Docker (multi-environment)
 - **CI/CD**: Jenkins pipeline
 - **Environment**: Development, Staging, Production configs
@@ -66,6 +72,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ and npm/yarn
 - .NET 9 SDK
 - PostgreSQL
@@ -76,7 +83,7 @@ A comprehensive Facebook clone built with modern technologies, featuring real-ti
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/faker6996/facebook.git
 cd facebook
 
 # Install dependencies
@@ -93,7 +100,7 @@ npm run dev
 ### Backend Setup
 
 ```bash
-# Navigate to chat server directory
+git clone https://github.com/faker6996/chat-server.git
 cd chat-server
 
 # Restore packages
@@ -137,6 +144,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
 Our Facebook Clone includes a comprehensive UI component library with 25+ production-ready components:
 
 ### **Form Controls**
+
 - **Button**: 8 variants with loading states and icons
 - **Input**: Advanced validation, focus animations, internationalized errors
 - **Textarea**: 3 variants (default, filled, outlined) with size options
@@ -145,6 +153,7 @@ Our Facebook Clone includes a comprehensive UI component library with 25+ produc
 - **RadioGroup**: Traditional, card variant, and button group styles
 
 ### **Data Display**
+
 - **Card**: Hoverable and clickable variants with backdrop blur
 - **Badge**: Count badges, dot indicators, notification badges
 - **Alert**: 5 variants with icons and backdrop effects
@@ -152,6 +161,7 @@ Our Facebook Clone includes a comprehensive UI component library with 25+ produc
 - **Skeleton**: Multiple layouts for posts, messages, lists, tables
 
 ### **Navigation & Interaction**
+
 - **Modal**: Full-featured with escape/overlay close, multiple sizes
 - **DropdownMenu**: With icons, separators, destructive actions
 - **Toast**: 4 types with positioning, actions, auto-dismiss
@@ -160,6 +170,7 @@ Our Facebook Clone includes a comprehensive UI component library with 25+ produc
 - **Pagination**: Navigation controls
 
 ### **Design System Features**
+
 - **CSS Variables**: Complete color system with semantic naming
 - **Dark Mode**: Automatic support across all components
 - **Backdrop Blur**: Modern glass morphism effects
@@ -167,7 +178,9 @@ Our Facebook Clone includes a comprehensive UI component library with 25+ produc
 - **Accessibility**: ARIA support, keyboard navigation, WCAG compliance
 
 ### **Interactive Style Guide**
+
 Access the live component playground:
+
 ```tsx
 import UserGuide from "@/components/UserGuide";
 
@@ -180,21 +193,25 @@ export default function StyleGuidePage() {
 ## 🔄 Global SignalR System
 
 ### **Architecture**
+
 Our SignalR system has been redesigned for optimal performance:
 
 **Before (Per-Component Connection):**
+
 ```
-Login → Navigate to Messenger → Click Conversation → 
+Login → Navigate to Messenger → Click Conversation →
 Mount MessengerContainer → Initialize SignalR → Receive Messages
 ```
 
 **After (Global Connection):**
+
 ```
-Login → Auto-Initialize Global SignalR → 
+Login → Auto-Initialize Global SignalR →
 Receive Messages Everywhere Instantly! 🚀
 ```
 
 ### **Global Context Usage**
+
 ```tsx
 import { useSignalR } from "@/contexts/SignalRContext";
 
@@ -202,13 +219,15 @@ const { connection, isConnected, joinGroup, leaveGroup } = useSignalR();
 ```
 
 ### **Connection Status Monitoring**
+
 ```tsx
 import { SignalRStatus } from "@/components/common/SignalRStatus";
 
-<SignalRStatus />  // Shows: 🟢 Online | 5 users online
+<SignalRStatus />; // Shows: 🟢 Online | 5 users online
 ```
 
 ### **Real-time Features**
+
 - **Global Toast Messages**: New messages display toast notifications anywhere in the app
 - **Group Event Notifications**: Member additions, role changes, group updates
 - **Connection Status**: Visual indicators for connection state
@@ -218,6 +237,7 @@ import { SignalRStatus } from "@/components/common/SignalRStatus";
 ## 💬 Messaging System
 
 ### **Private Messaging**
+
 - One-on-one conversations
 - File attachments (images, documents)
 - Message reactions with emoji
@@ -226,6 +246,7 @@ import { SignalRStatus } from "@/components/common/SignalRStatus";
 - Online/offline indicators
 
 ### **Group Chat**
+
 - Create and manage groups with metadata
 - Role-based permissions (Admin, Moderator, Member)
 - Join request system for private groups
@@ -235,6 +256,7 @@ import { SignalRStatus } from "@/components/common/SignalRStatus";
 - Real-time group events
 
 ### **Message Features**
+
 - Rich text content
 - File attachments (max 10MB)
 - Emoji reactions
@@ -246,6 +268,7 @@ import { SignalRStatus } from "@/components/common/SignalRStatus";
 ## 🎨 Component Examples
 
 ### Basic Button Usage
+
 ```tsx
 import Button from "@/components/ui/Button";
 
@@ -266,6 +289,7 @@ import Button from "@/components/ui/Button";
 ```
 
 ### Toast Notifications
+
 ```tsx
 import { useToast } from "@/components/ui/Toast";
 
@@ -276,7 +300,7 @@ addToast({
   type: "success",
   title: "Post Created",
   message: "Your post has been published successfully!",
-  duration: 3000
+  duration: 3000,
 });
 
 // Error with retry action
@@ -286,28 +310,21 @@ addToast({
   message: "Failed to upload image. Please try again.",
   action: {
     label: "Retry",
-    onClick: () => retryUpload()
-  }
+    onClick: () => retryUpload(),
+  },
 });
 ```
 
 ### Modal Implementation
+
 ```tsx
 import Modal from "@/components/ui/Modal";
 
 const [isOpen, setIsOpen] = useState(false);
 
-<Modal
-  isOpen={isOpen}
-  onClose={() => setIsOpen(false)}
-  title="Create New Post"
-  size="lg"
->
+<Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Create New Post" size="lg">
   <div className="space-y-4">
-    <Textarea
-      placeholder="What's on your mind?"
-      rows={3}
-    />
+    <Textarea placeholder="What's on your mind?" rows={3} />
     <div className="flex justify-between">
       <div className="flex gap-2">
         <Button variant="ghost" size="sm" icon={ImageIcon}>
@@ -320,27 +337,28 @@ const [isOpen, setIsOpen] = useState(false);
       <Button variant="primary">Post</Button>
     </div>
   </div>
-</Modal>
+</Modal>;
 ```
 
 ### Progress Components
+
 ```tsx
 import { Progress, CircularProgress, StepProgress } from "@/components/ui/Progress";
 
 // Linear progress
-<Progress 
-  value={uploadProgress} 
-  label="Uploading..." 
-  showValue 
-  animated 
+<Progress
+  value={uploadProgress}
+  label="Uploading..."
+  showValue
+  animated
 />
 
 // Circular progress
-<CircularProgress 
-  value={75} 
-  size={64} 
-  variant="success" 
-  showValue 
+<CircularProgress
+  value={75}
+  size={64}
+  variant="success"
+  showValue
 />
 
 // Step progress
@@ -416,12 +434,12 @@ When creating new components:
 ```css
 /* CSS Variables (Auto Dark Mode) */
 :root {
-  --primary: 240 100% 66%;           /* Blue */
-  --success: 142.1 76.2% 36.3%;      /* Green */
-  --warning: 45 100% 51%;            /* Amber */
-  --info: 200 86% 55%;               /* Blue */
-  --destructive: 0 100% 50%;         /* Red */
-  
+  --primary: 240 100% 66%; /* Blue */
+  --success: 142.1 76.2% 36.3%; /* Green */
+  --warning: 45 100% 51%; /* Amber */
+  --info: 200 86% 55%; /* Blue */
+  --destructive: 0 100% 50%; /* Red */
+
   /* Semantic colors */
   --background: 0 0% 100%;
   --foreground: 222.2 47.4% 11.2%;
@@ -442,6 +460,7 @@ When creating new components:
 ## 🔧 API Documentation
 
 ### Authentication Endpoints
+
 ```
 POST /api/auth/login              # Email/password login
 POST /api/auth/sso_facebook       # Facebook OAuth
@@ -451,6 +470,7 @@ POST /api/auth/logout             # Logout
 ```
 
 ### Messaging Endpoints
+
 ```
 GET  /api/messenger/conversations # User conversations
 GET  /api/messenger/messages      # Conversation messages
@@ -459,6 +479,7 @@ GET  /api/messages/sync           # Sync missed messages
 ```
 
 ### Group Management
+
 ```
 POST /api/groups                  # Create group
 PUT  /api/groups/{id}             # Update group
@@ -472,6 +493,7 @@ GET  /api/groups/{id}/invite-link # Generate invite link
 ```
 
 ### SignalR Events
+
 ```
 # Client → Server
 SendMessage(request)              # Send private message
@@ -492,6 +514,7 @@ GroupUpdated                     # Group info changes
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 # Build the application
 npm run build
@@ -501,12 +524,14 @@ npm start
 ```
 
 ### Docker Deployment
+
 ```bash
 # Build and run with Docker
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Environment Setup
+
 1. Configure database connection
 2. Set up RabbitMQ instance
 3. Configure JWT secrets
@@ -517,6 +542,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ## 📊 Performance Features
 
 ### Frontend Optimizations
+
 - **Single SignalR Connection**: Eliminates resource waste from multiple connections
 - **Skeleton Loading**: Better perceived performance with loading states
 - **Component Lazy Loading**: Heavy components loaded when needed
@@ -524,6 +550,7 @@ docker-compose -f docker-compose.prod.yml up -d
 - **Image Optimization**: Progressive loading with fallbacks
 
 ### Backend Optimizations
+
 - **Connection Pooling**: Efficient database connections
 - **Message Queuing**: RabbitMQ for scalable message processing
 - **Automatic Reconnection**: Robust connection management
@@ -541,7 +568,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ## 🌐 Browser Support
 
 - **Chrome**: Latest 2 versions
-- **Firefox**: Latest 2 versions  
+- **Firefox**: Latest 2 versions
 - **Safari**: Latest 2 versions
 - **Edge**: Latest 2 versions
 - **Mobile**: iOS Safari, Chrome Mobile
@@ -568,6 +595,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support and questions:
+
 - **Email**: bach.tv2000@gmail.com
 - **Documentation**: See `UserGuide.md` and `SignalR-Global-Setup.md`
 - **Issues**: Create an issue in the repository
@@ -577,6 +605,7 @@ For support and questions:
 ## 🎉 Latest Updates (December 2024)
 
 ### **Major Enhancements**
+
 - ✅ **Complete UI Component Library** (25+ production-ready components)
 - ✅ **Global SignalR Architecture** with instant connectivity
 - ✅ **Interactive Style Guide** for development reference
@@ -584,6 +613,7 @@ For support and questions:
 - ✅ **Performance Optimizations** with single connection architecture
 
 ### **Technical Achievements**
+
 - **Enterprise-Grade Components** rivaling commercial libraries
 - **Robust Real-time System** with error recovery
 - **Comprehensive Documentation** with live examples
