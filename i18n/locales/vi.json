@@ -47,5 +47,32 @@
     "sending": "Đang gửi...",
     "sentSuccess": "Hướng dẫn đặt lại mật khẩu đã được gửi về email.",
     "errorDefault": "Gửi thất bại."
+  },
+
+  "CreateGroup": {
+    "title": "Tạo nhóm mới",
+    "addMembers": "Thêm thành viên",
+    "groupName": "Tên nhóm",
+    "groupNamePlaceholder": "Nhập tên nhóm (tối thiểu 3 ký tự)",
+    "groupDescription": "Mô tả nhóm",
+    "groupDescriptionPlaceholder": "Mô tả về nhóm của bạn...",
+    "groupSettings": "Cài đặt nhóm",
+    "publicGroup": "Nhóm công khai",
+    "publicGroupDescription": "Mọi người có thể tìm thấy và tham gia nhóm",
+    "requireApproval": "Yêu cầu duyệt",
+    "requireApprovalDescription": "Admin phê duyệt yêu cầu tham gia",
+    "maxMembers": "Số thành viên tối đa",
+    "maxMembersRange": "Từ 5 đến 500 thành viên",
+    "searchPlaceholder": "Tìm kiếm bạn bè... (nhấn Enter để tìm)",
+    "selected": "Đã chọn",
+    "searching": "Đang tìm kiếm...",
+    "noUsersFound": "Không tìm thấy người dùng nào",
+    "enterToSearch": "Nhập tên để tìm kiếm bạn bè",
+    "cancel": "Hủy",
+    "next": "Tiếp theo",
+    "back": "Quay lại",
+    "create": "Tạo nhóm",
+    "creating": "Đang tạo...",
+    "charactersCount": "ký tự"
   }
 }

@@ -4,7 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 // Local Imports
-import { X } from "lucide-react";
+import { X, Info, Settings, Users } from "lucide-react";
 import MessageList from "@/components/messenger/MessageList";
 import MessageInput from "@/components/messenger/MessageInput";
 import { useSignalRConnection } from "@/components/messenger/useSignalRConnection";
@@ -15,6 +15,7 @@ import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
 import { Message, SendMessageRequest, AddReactionRequest, RemoveReactionRequest } from "@/lib/models/message";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
+import { GroupMember } from "@/lib/models/group";
 import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
@@ -41,17 +42,42 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
   const [isOtherUserOnline, setIsOtherUserOnline] = useState(conversation.other_is_online);
 
+  // Group-specific state
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [currentUserRole, setCurrentUserRole] = useState<string>("member");
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
+
+  const isGroup = conversation.is_group === true;
+
   // SignalR Connection
   useSignalRConnection({
     sender,
     conversation,
     messages,
     setMessages,
-    setIsOtherUserOnline
+    setIsOtherUserOnline,
+    // Group-specific props
+    isGroup,
+    groupMembers,
+    setGroupMembers,
+    onGroupEvent: (eventType, data) => {
+      switch (eventType) {
+        case "member_added":
+          setGroupMembers((prev) => [...prev, data.member]);
+          break;
+        case "member_removed":
+          setGroupMembers((prev) => prev.filter((m) => m.user_id !== data.userId));
+          break;
+        case "group_updated":
+          // Update conversation info if needed
+          break;
+      }
+    },
   });
 
   // ----- useEffect Hooks -----
-  // Load tin nhắn ban đầu
+  // Load tin nhắn ban đầu và group data
   useEffect(() => {
     if (!conversation?.conversation_id) return;
     const currentUser = loadFromLocalStorage("user", User);
@@ -60,31 +86,55 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     let isMounted = true;
     (async () => {
       try {
-        console.log('🔥 Loading messages for conversation:', conversation.conversation_id);
+        console.log("🔥 Loading messages for conversation:", conversation.conversation_id);
         const response = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversation.conversation_id ?? 0), HTTP_METHOD_ENUM.GET);
-        console.log('✅ Raw API Response:', response);
-        console.log('✅ Messages loaded successfully:', response?.length);
-        
+        console.log("✅ Raw API Response:", response);
+        console.log("✅ Messages loaded successfully:", response?.length);
+
         if (isMounted) {
-          console.log('🔄 Mapping response to Message objects...');
-          const mappedMessages = response?.map((m, index) => {
-            console.log(`📝 Processing message ${index}:`, m);
-            try {
-              return new Message(m);
-            } catch (err) {
-              console.error(`❌ Error processing message ${index}:`, err, m);
-              return null;
-            }
-          }).filter((m): m is Message => m !== null) ?? [];
-          
-          console.log('🎯 Final mapped messages:', mappedMessages.length);
+          console.log("🔄 Mapping response to Message objects...");
+          const mappedMessages =
+            response
+              ?.map((m, index) => {
+                console.log(`📝 Processing message ${index}:`, m);
+                try {
+                  return new Message(m);
+                } catch (err) {
+                  console.error(`❌ Error processing message ${index}:`, err, m);
+                  return null;
+                }
+              })
+              .filter((m): m is Message => m !== null) ?? [];
+
+          console.log("🎯 Final mapped messages:", mappedMessages.length);
           setMessages(mappedMessages);
+        }
+
+        // Load group data if it's a group
+        if (isGroup && isMounted) {
+          try {
+            console.log(`🔍 Loading group members for conversation ${conversation.conversation_id}`);
+            console.log(`📊 Expected member count from conversation list: ${conversation.member_count}`);
+            
+            const members = await callApi<GroupMember[]>(API_ROUTES.CHAT_SERVER.GROUP_MEMBERS(conversation.conversation_id!), HTTP_METHOD_ENUM.GET);
+            console.log(`📊 Actual members retrieved: ${members?.length || 0}`);
+            console.log(`👥 Members:`, members?.map(m => ({ user_id: m.user_id, name: m.name })));
+            
+            setGroupMembers(members || []);
+
+            const currentMember = members?.find((m) => m.user_id === currentUser?.id);
+            if (currentMember) {
+              setCurrentUserRole(currentMember.role);
+            }
+          } catch (error) {
+            console.error("Failed to load group data:", error);
+          }
         }
       } catch (err) {
         console.error("❌ Lỗi tải tin nhắn:", err);
         console.error("❌ Error details:", {
           conversationId: conversation.conversation_id,
-          error: err
+          error: err,
         });
       }
     })();
@@ -95,8 +145,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     return () => {
       isMounted = false;
     };
-  }, [conversation]);
-
+  }, [conversation, isGroup]);
 
   // Cuộn xuống cuối
   useEffect(() => {
@@ -108,23 +157,23 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     const uploadPromises = files.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
-      
+
       try {
         const response = await fetch(API_ROUTES.CHAT_SERVER.UPLOAD_FILE, {
           method: "POST",
           body: formData,
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Upload error:', response.status, errorText);
+          console.error("Upload error:", response.status, errorText);
           throw new Error(`Failed to upload ${file.name}: ${response.status}`);
         }
-        
+
         const result = await response.json();
-        console.log('Upload response:', result);
-        console.log('Upload response data:', result.data);
-        
+        console.log("Upload response:", result);
+        console.log("Upload response data:", result.data);
+
         // Xử lý format response từ chat server
         return {
           file_name: result.data?.file_name || result.file_name || result.name || file.name,
@@ -133,46 +182,54 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           file_size: result.data?.file_size || result.file_size || result.size || file.size,
         };
       } catch (error) {
-        console.error('Upload file error:', error);
+        console.error("Upload file error:", error);
         throw error;
       }
     });
-    
+
     return Promise.all(uploadPromises);
   };
 
   // Gửi tin nhắn
-  const performSendMessage = async (content: string, tempId: string, attachments?: any[], contentType?: "text" | "image" | "file", replyToMessageId?: number) => {
+  const performSendMessage = async (
+    content: string,
+    tempId: string,
+    attachments?: any[],
+    contentType?: "text" | "image" | "file",
+    replyToMessageId?: number
+  ) => {
     const body: SendMessageRequest = {
       sender_id: sender.id!,
       content,
       conversation_id: conversation.conversation_id!,
-      message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
+      message_type: isGroup ? MESSAGE_TYPE.GROUP : MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
       content_type: contentType || "text", // Loại nội dung (text/image/file)
-      target_id: conversation.other_user_id,
+      target_id: isGroup ? undefined : conversation.other_user_id,
       reply_to_message_id: replyToMessageId,
       attachments,
     };
 
-    console.log('Sending message:', body);
-    console.log('Attachments detail:', JSON.stringify(attachments, null, 2));
+    console.log("Sending message:", body);
+    console.log("Attachments detail:", JSON.stringify(attachments, null, 2));
 
     try {
       const res = await callApi<Message>(API_ROUTES.CHAT_SERVER.SENT_MESSAGE, HTTP_METHOD_ENUM.POST, body);
-      console.log('✅ Message sent successfully:', res);
-      
-      setMessages((prev) => prev.map((m) => {
-        if (m.id === tempId) {
-          // Preserve replied_message from optimistic if server doesn't return it
-          const serverMessage = new Message(res);
-          if (!serverMessage.replied_message && m.replied_message) {
-            console.log('📨 Preserving replied_message from optimistic update');
-            serverMessage.replied_message = m.replied_message;
+      console.log("✅ Message sent successfully:", res);
+
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id === tempId) {
+            // Preserve replied_message from optimistic if server doesn't return it
+            const serverMessage = new Message(res);
+            if (!serverMessage.replied_message && m.replied_message) {
+              console.log("📨 Preserving replied_message from optimistic update");
+              serverMessage.replied_message = m.replied_message;
+            }
+            return serverMessage;
           }
-          return serverMessage;
-        }
-        return m;
-      }));
+          return m;
+        })
+      );
     } catch (err) {
       console.error("Send message error:", err);
       console.error("Request body was:", body);
@@ -187,7 +244,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     setIsUploading(true);
     const tempId = `temp_${Date.now()}`;
     const content = input.trim();
-    
+
     let attachments: any[] = [];
     if (selectedFiles.length > 0) {
       try {
@@ -201,11 +258,11 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
     // Xác định content_type dựa trên input gửi đi
     let contentType: "text" | "image" | "file" = "text";
-    
+
     if (attachments && attachments.length > 0) {
       // Nếu có attachment, check loại file
       const firstAttachment = attachments[0];
-      if (firstAttachment.file_type?.startsWith('image/')) {
+      if (firstAttachment.file_type?.startsWith("image/")) {
         contentType = "image";
       } else {
         contentType = "file";
@@ -218,19 +275,21 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       sender_id: sender.id,
       target_id: conversation.other_user_id,
       content,
-      message_type: MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
+      message_type: isGroup ? MESSAGE_TYPE.GROUP : MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
       content_type: contentType, // Loại nội dung (text/image/file)
-      reply_to_message_id: typeof replyingTo?.id === 'number' ? replyingTo.id : undefined,
-      replied_message: replyingTo ? {
-        id: replyingTo.id,
-        content: replyingTo.content,
-        sender_id: replyingTo.sender_id,
-        content_type: replyingTo.content_type,
-        created_at: replyingTo.created_at
-      } : undefined,
+      reply_to_message_id: typeof replyingTo?.id === "number" ? replyingTo.id : undefined,
+      replied_message: replyingTo
+        ? {
+            id: replyingTo.id,
+            content: replyingTo.content,
+            sender_id: replyingTo.sender_id,
+            content_type: replyingTo.content_type,
+            created_at: replyingTo.created_at,
+          }
+        : undefined,
       created_at: new Date().toISOString(),
       status: "Sending",
-      attachments: attachments.map(att => ({ ...att, id: Math.random() })),
+      attachments: attachments.map((att) => ({ ...att, id: Math.random() })),
     });
 
     setMessages((prev) => [...prev, optimistic]);
@@ -238,7 +297,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     setSelectedFiles([]);
     setReplyingTo(null);
     setIsUploading(false);
-    performSendMessage(content, tempId, attachments, contentType, typeof replyingTo?.id === 'number' ? replyingTo.id : undefined);
+    performSendMessage(content, tempId, attachments, contentType, typeof replyingTo?.id === "number" ? replyingTo.id : undefined);
   };
 
   const handleRetrySend = (failed: Message) => {
@@ -265,105 +324,108 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
   const handleAddReaction = async (messageId: number, emoji: string) => {
     if (!sender.id) return;
-    
-    // Optimistic update for immediate UI feedback
-    setMessages((prev) => prev.map(msg => {
-      if (msg.id === messageId) {
-        const newReactions = [...(msg.reactions || [])];
-        
-        // Check if user already reacted with this emoji
-        const existingIndex = newReactions.findIndex(r => 
-          r.user_id === sender.id && r.emoji === emoji
-        );
-        
-        if (existingIndex === -1) {
-          // Add new reaction optimistically
-          newReactions.push({
-            id: Math.random(), // temporary ID
-            message_id: messageId,
-            user_id: sender.id!,
-            emoji,
-            reacted_at: new Date().toISOString()
-          });
-        }
-        
-        return new Message({ ...msg, reactions: newReactions });
-      }
-      return msg;
-    }));
-    
-    const body: AddReactionRequest = {
-      message_id: messageId,
-      user_id: sender.id,
-      emoji
-    };
 
-    try {
-      console.log('🎭 Adding reaction:', body);
-      await callApi(`${API_ROUTES.CHAT_SERVER.ADD_REACTION}`, HTTP_METHOD_ENUM.POST, body);
-      // Chat server sẽ broadcast ReceiveReaction event
-    } catch (error) {
-      console.error('❌ Add reaction error:', error);
-      // Revert optimistic update on error
-      setMessages((prev) => prev.map(msg => {
+    // Optimistic update for immediate UI feedback
+    setMessages((prev) =>
+      prev.map((msg) => {
         if (msg.id === messageId) {
-          const newReactions = (msg.reactions || []).filter(r => 
-            !(r.user_id === sender.id && r.emoji === emoji)
-          );
+          const newReactions = [...(msg.reactions || [])];
+
+          // Check if user already reacted with this emoji
+          const existingIndex = newReactions.findIndex((r) => r.user_id === sender.id && r.emoji === emoji);
+
+          if (existingIndex === -1) {
+            // Add new reaction optimistically
+            newReactions.push({
+              id: Math.random(), // temporary ID
+              message_id: messageId,
+              user_id: sender.id!,
+              emoji,
+              reacted_at: new Date().toISOString(),
+            });
+          }
+
           return new Message({ ...msg, reactions: newReactions });
         }
         return msg;
-      }));
+      })
+    );
+
+    const body: AddReactionRequest = {
+      message_id: messageId,
+      user_id: sender.id,
+      emoji,
+    };
+
+    try {
+      console.log("🎭 Adding reaction:", body);
+      await callApi(`${API_ROUTES.CHAT_SERVER.ADD_REACTION}`, HTTP_METHOD_ENUM.POST, body);
+      // Chat server sẽ broadcast ReceiveReaction event
+    } catch (error) {
+      console.error("❌ Add reaction error:", error);
+      // Revert optimistic update on error
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.id === messageId) {
+            const newReactions = (msg.reactions || []).filter((r) => !(r.user_id === sender.id && r.emoji === emoji));
+            return new Message({ ...msg, reactions: newReactions });
+          }
+          return msg;
+        })
+      );
     }
   };
 
   const handleRemoveReaction = async (messageId: number, emoji: string) => {
     if (!sender.id) return;
-    
+
     // Store the removed reaction for potential rollback
     let removedReaction: any = null;
-    
+
     // Optimistic update for immediate UI feedback
-    setMessages((prev) => prev.map(msg => {
-      if (msg.id === messageId) {
-        const newReactions = (msg.reactions || []).filter(r => {
-          const shouldRemove = r.user_id === sender.id && r.emoji === emoji;
-          if (shouldRemove) {
-            removedReaction = r; // Store for rollback
-          }
-          return !shouldRemove;
-        });
-        
-        return new Message({ ...msg, reactions: newReactions });
-      }
-      return msg;
-    }));
-    
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id === messageId) {
+          const newReactions = (msg.reactions || []).filter((r) => {
+            const shouldRemove = r.user_id === sender.id && r.emoji === emoji;
+            if (shouldRemove) {
+              removedReaction = r; // Store for rollback
+            }
+            return !shouldRemove;
+          });
+
+          return new Message({ ...msg, reactions: newReactions });
+        }
+        return msg;
+      })
+    );
+
     const body: RemoveReactionRequest = {
       message_id: messageId,
       user_id: sender.id,
-      emoji
+      emoji,
     };
 
     try {
-      console.log('🎭 Removing reaction:', body);
+      console.log("🎭 Removing reaction:", body);
       await callApi(`${API_ROUTES.CHAT_SERVER.REMOVE_REACTION}`, HTTP_METHOD_ENUM.POST, body);
       // Chat server sẽ broadcast RemoveReaction event
     } catch (error) {
-      console.error('❌ Remove reaction error:', error);
+      console.error("❌ Remove reaction error:", error);
       // Revert optimistic update on error
       if (removedReaction) {
-        setMessages((prev) => prev.map(msg => {
-          if (msg.id === messageId) {
-            const newReactions = [...(msg.reactions || []), removedReaction];
-            return new Message({ ...msg, reactions: newReactions });
-          }
-          return msg;
-        }));
+        setMessages((prev) =>
+          prev.map((msg) => {
+            if (msg.id === messageId) {
+              const newReactions = [...(msg.reactions || []), removedReaction];
+              return new Message({ ...msg, reactions: newReactions });
+            }
+            return msg;
+          })
+        );
       }
     }
   };
-
 
   // ----- JSX Render -----
   return (
@@ -373,42 +435,72 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         className="fixed bottom-4 right-4 z-40 flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl transition-all duration-300 ease-soft max-h-[500px]"
         style={style}
       >
-        {/* Header: Thêm padding và làm cho avatar nổi bật hơn */}
+        {/* Header - Enhanced for groups */}
         <div className="flex items-center justify-between gap-3 border-b bg-card p-3">
           <div className="flex items-center gap-3">
             {/* Avatar với chỉ báo trạng thái hoạt động */}
             <div className="relative flex-shrink-0">
-              <Avatar src={conversation.avatar_url ?? "/avatar.png"} size="md" />
-              {/* CẬP NHẬT: Đổi màu chấm trạng thái dựa trên state */}
-              <span
-                className={cn(
-                  "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
-                  isOtherUserOnline ? "bg-success" : "bg-gray-400"
-                )}
+              <Avatar
+                src={isGroup ? conversation.group_avatar_url : conversation.avatar_url ?? "/avatar.png"}
+                size="md"
+                className={isGroup ? "rounded-lg" : "rounded-full"} // Different style for groups
               />
+              {!isGroup && (
+                <span
+                  className={cn(
+                    "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-card",
+                    isOtherUserOnline ? "bg-success" : "bg-gray-400"
+                  )}
+                />
+              )}
             </div>
             <div>
-              <p className="font-semibold">{conversation.other_user_name}</p>
-              <p className="text-xs text-muted-foreground">{isOtherUserOnline ? "Online" : "Offline"}</p>
+              <p className="font-semibold">{isGroup ? conversation.name : conversation.other_user_name}</p>
+              <p className="text-xs text-muted-foreground">
+                {isGroup
+                  ? `${groupMembers.length} thành viên • ${groupMembers.filter((m) => m.is_online).length} đang online`
+                  : isOtherUserOnline
+                  ? "Online"
+                  : "Offline"}
+              </p>
             </div>
           </div>
-          <div className="flex items-center">
-            {/* Có thể thêm các nút khác ở đây trong tương lai, ví dụ: gọi điện, thông tin */}
+          <div className="flex items-center gap-1">
+            {isGroup && (
+              <>
+                <Button size="icon" variant="ghost" onClick={() => setShowGroupInfo(true)} title="Thông tin nhóm">
+                  <Info className="h-4 w-4" />
+                </Button>
+                {(currentUserRole === "admin" || currentUserRole === "moderator") && (
+                  <Button size="icon" variant="ghost" onClick={() => setShowGroupSettings(true)} title="Cài đặt nhóm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
+            )}
             <Button size="icon" variant="ghost" onClick={() => onClose(conversation.conversation_id!)}>
               <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
-        {/* Message list: Giảm khoảng cách giữa các tin nhắn xuống space-y-2 */}
+        {/* Message list - Enhanced for groups */}
         <ScrollArea className="flex-1 space-y-2 bg-background/50 p-4">
-          <MessageList 
-            messages={messages} 
-            senderId={sender.id} 
-            onRetrySend={handleRetrySend} 
+          <MessageList
+            messages={messages}
+            senderId={sender.id}
+            onRetrySend={handleRetrySend}
             onReplyMessage={handleReplyMessage}
             onAddReaction={handleAddReaction}
             onRemoveReaction={handleRemoveReaction}
+            // Group-specific props
+            isGroup={isGroup}
+            getSenderName={(senderId: number) => {
+              if (!isGroup) return "";
+              const member = groupMembers.find((m) => m.user_id === senderId);
+              return member?.name || "Unknown User";
+            }}
+            groupMembers={groupMembers}
           />
           <div ref={bottomRef} />
         </ScrollArea>
@@ -426,6 +518,33 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           onSendMessage={sendMessage}
         />
       </div>
+
+      {/* Group Modals - Placeholder for now */}
+      {isGroup && showGroupInfo && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowGroupInfo(false)}>
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4">Thông tin nhóm</h3>
+            <p className="text-sm text-gray-600 mb-2">Tên: {conversation.name}</p>
+            <p className="text-sm text-gray-600 mb-2">Thành viên: {groupMembers.length}</p>
+            <p className="text-sm text-gray-600 mb-4">Online: {groupMembers.filter((m) => m.is_online).length}</p>
+            <Button onClick={() => setShowGroupInfo(false)} className="w-full">
+              Đóng
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isGroup && showGroupSettings && (currentUserRole === "admin" || currentUserRole === "moderator") && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowGroupSettings(false)}>
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4">Cài đặt nhóm</h3>
+            <p className="text-sm text-gray-600 mb-4">Bạn là {currentUserRole === "admin" ? "Quản trị viên" : "Điều hành viên"}</p>
+            <Button onClick={() => setShowGroupSettings(false)} className="w-full">
+              Đóng
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

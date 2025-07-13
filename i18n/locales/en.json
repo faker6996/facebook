@@ -29,5 +29,32 @@
     "stepMismatch": "Invalid step value",
     "badInput": "Enter a number",
     "invalid": "Invalid value"
+  },
+
+  "CreateGroup": {
+    "title": "Create New Group",
+    "addMembers": "Add Members",
+    "groupName": "Group Name",
+    "groupNamePlaceholder": "Enter group name (minimum 3 characters)",
+    "groupDescription": "Group Description",
+    "groupDescriptionPlaceholder": "Describe your group...",
+    "groupSettings": "Group Settings",
+    "publicGroup": "Public Group",
+    "publicGroupDescription": "Anyone can find and join this group",
+    "requireApproval": "Require Approval",
+    "requireApprovalDescription": "Admin approval required to join",
+    "maxMembers": "Maximum Members",
+    "maxMembersRange": "From 5 to 500 members",
+    "searchPlaceholder": "Search friends... (press Enter to search)",
+    "selected": "Selected",
+    "searching": "Searching...",
+    "noUsersFound": "No users found",
+    "enterToSearch": "Enter name to search friends",
+    "cancel": "Cancel",
+    "next": "Next",
+    "back": "Back",
+    "create": "Create Group",
+    "creating": "Creating...",
+    "charactersCount": "characters"
   }
 }
