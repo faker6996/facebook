@@ -16,7 +16,7 @@ const config: Config = {
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))", // fix typo: "secondaryå" => "secondary"
+          DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
@@ -64,6 +64,21 @@ const config: Config = {
       },
       transitionTimingFunction: {
         soft: "cubic-bezier(0.25, 1, 0.5, 1)", // giống smooth slide của iOS
+      },
+      animation: {
+        shimmer: "shimmer 2s linear infinite",
+        "fade-in": "fadeIn 0.2s ease-soft",
+        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+      keyframes: {
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        fadeIn: {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
       },
     },
   },
