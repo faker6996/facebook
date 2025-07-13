@@ -1,5 +1,6 @@
 // components/Header.tsx
 import { useEffect, useState } from "react";
+import { Menu, X, Search } from "lucide-react";
 import BsMessengerIcon from "../icons/BsMessengerIcon";
 import FaBellIcon from "../icons/FaBellIcon";
 import FaThIcon from "../icons/FaThIcon";
@@ -18,14 +19,19 @@ import { User } from "@/lib/models/user";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 import AvatarMenuItemContainer from "@/components/AvatarMenuItem/AvatarMenuItemContainer";
 import { MessengerPreview } from "@/lib/models/messenger_review";
+import { useResponsive } from "@/lib/utils/responsive";
+import { cn } from "@/lib/utils/cn";
 
 const MAX_MESSENGER_WINDOWS = 3; // Define the maximum number of chat windows
 
 export default function Header() {
   const [showMessenger, setShowMessenger] = useState(false);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [user, setUser] = useState(new User());
   const [openConversations, setOpenConversations] = useState<MessengerPreview[]>([]);
+  const { isMobile, isHydrated } = useResponsive();
 
   useEffect(() => {
     setUser(loadFromLocalStorage("user", User));
@@ -67,39 +73,170 @@ export default function Header() {
 
   return (
     <>
+      {/* Main Header */}
       <header className="fixed top-0 z-50 w-full h-16 flex items-center justify-between px-4 py-2 bg-card text-card-foreground shadow-md">
-        {/* Left: Logo + Search */}
-        <div className="flex items-center gap-2">
-          <FacebookIcon className="w-10 h-10" />
-          <div className="relative w-64">
-            <Input type="text" placeholder="Tìm kiếm trên Facebook" />
-          </div>
-        </div>
+        {/* Mobile Layout */}
+        {isHydrated && isMobile ? (
+          <div className="flex items-center justify-between w-full">
+            {/* Mobile Left: Logo + Search + Hamburger */}
+            <div className="flex items-center gap-2 flex-1">
+              <FacebookIcon className="w-8 h-8 flex-shrink-0" />
+              <div className="flex-1 max-w-xs">
+                <Input 
+                  type="text" 
+                  placeholder="Tìm kiếm" 
+                  className="h-9 text-sm"
+                />
+              </div>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="w-9 h-9 flex-shrink-0"
+              >
+                {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+            </div>
 
-        {/* Center: Navigation Icons */}
-        <div className="flex gap-6 text-2xl">
-          <Button icon={HomeIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
-          <Button icon={TvIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
-          <Button icon={StoreIcon} variant="ghost"></Button>
-          <Button icon={UsersIcon} variant="ghost"></Button>
-          <Button icon={GamepadIcon} variant="ghost"></Button>
-        </div>
+            {/* Mobile Right: Messenger + Avatar */}
+            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+              <div className="relative">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setShowMessenger(!showMessenger)}
+                  className="w-9 h-9"
+                >
+                  <BsMessengerIcon className="w-5 h-5" />
+                </Button>
+                {showMessenger && (
+                  <MessengerDropdown
+                    onClose={() => setShowMessenger(false)}
+                    onOpenConversation={handleOpenConversation}
+                  />
+                )}
+              </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-3">
-          <Button icon={FaThIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
-          <div className="relative">
-            <Button icon={BsMessengerIcon} size="icon" className="bg-muted hover:bg-accent" onClick={toggleMessenger} />
-            {showMessenger && <MessengerDropdown onCloseDropdown={() => setShowMessenger(false)} onOpenConversation={handleOpenConversation} />}
+              <div className="relative">
+                <Avatar
+                  src={user?.avatar_url ?? "/avatar.png"}
+                  size="sm"
+                  className="cursor-pointer w-8 h-8"
+                  onClick={() => setShowAvatarMenu(!showAvatarMenu)}
+                />
+                {showAvatarMenu && (
+                  <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />
+                )}
+              </div>
+            </div>
           </div>
-          <Button icon={FaBellIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
+        ) : (
+          /* Desktop Layout */
+          <>
+            {/* Desktop Left: Logo + Search */}
+            <div className="flex items-center gap-2">
+              <FacebookIcon className="w-10 h-10" />
+              <div className="relative w-64">
+                <Input type="text" placeholder="Tìm kiếm trên Facebook" />
+              </div>
+            </div>
 
-          <div className="relative">
-            <Avatar onClick={() => handleClickAvatar()} className="cursor-pointer" src={user.avatar_url} size="md"></Avatar>
-            {showAvatarMenu && <AvatarMenuItemContainer />}
-          </div>
-        </div>
+            {/* Desktop Center: Navigation Icons */}
+            <div className="flex gap-6 text-2xl">
+              <Button icon={HomeIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
+              <Button icon={TvIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
+              <Button icon={StoreIcon} variant="ghost"></Button>
+              <Button icon={UsersIcon} variant="ghost"></Button>
+              <Button icon={GamepadIcon} variant="ghost"></Button>
+            </div>
+
+            {/* Desktop Right: Actions */}
+            <div className="flex items-center gap-3">
+              <Button icon={FaThIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
+              <div className="relative">
+                <Button 
+                  icon={BsMessengerIcon} 
+                  size="icon" 
+                  className="bg-muted hover:bg-accent" 
+                  onClick={() => setShowMessenger(!showMessenger)} 
+                />
+                {showMessenger && (
+                  <MessengerDropdown 
+                    onClose={() => setShowMessenger(false)} 
+                    onOpenConversation={handleOpenConversation} 
+                  />
+                )}
+              </div>
+              <Button icon={FaBellIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
+
+              <div className="relative">
+                <Avatar 
+                  onClick={() => setShowAvatarMenu(!showAvatarMenu)} 
+                  className="cursor-pointer" 
+                  src={user.avatar_url} 
+                  size="md"
+                />
+                {showAvatarMenu && (
+                  <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </header>
+
+
+      {/* Mobile Navigation Menu */}
+      {isHydrated && isMobile && showMobileMenu && (
+        <div className="fixed top-16 left-0 right-0 bottom-0 z-40 bg-card">
+          <div className="p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                icon={HomeIcon} 
+                variant="ghost" 
+                className="h-16 flex-col gap-2 text-center"
+              >
+                Trang chủ
+              </Button>
+              <Button 
+                icon={TvIcon} 
+                variant="ghost" 
+                className="h-16 flex-col gap-2 text-center"
+              >
+                Video
+              </Button>
+              <Button 
+                icon={StoreIcon} 
+                variant="ghost" 
+                className="h-16 flex-col gap-2 text-center"
+              >
+                Marketplace
+              </Button>
+              <Button 
+                icon={UsersIcon} 
+                variant="ghost" 
+                className="h-16 flex-col gap-2 text-center"
+              >
+                Bạn bè
+              </Button>
+              <Button 
+                icon={GamepadIcon} 
+                variant="ghost" 
+                className="h-16 flex-col gap-2 text-center"
+              >
+                Gaming
+              </Button>
+              <Button 
+                icon={FaBellIcon} 
+                variant="ghost" 
+                className="h-16 flex-col gap-2 text-center"
+              >
+                Thông báo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Render open conversation windows with dynamic positioning */}
       {openConversations.map((conversation, index) => {

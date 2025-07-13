@@ -15,14 +15,15 @@ import { Users, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface MessengerDropdownProps {
-  onCloseDropdown: () => void;
+  onClose: () => void;
   onOpenConversation: (conversation: MessengerPreview) => void; // New prop
 }
 
-export default function MessengerDropdown({ onCloseDropdown, onOpenConversation }: MessengerDropdownProps) {
+export default function MessengerDropdown({ onClose, onOpenConversation }: MessengerDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [searchUser, setSearchUser] = useState<string>("");
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
+  const [searchResults, setSearchResults] = useState<MessengerPreview[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
@@ -65,7 +66,7 @@ export default function MessengerDropdown({ onCloseDropdown, onOpenConversation 
         (target as Element)?.closest('[data-modal="true"]');
 
       if (!isModalClick) {
-        onCloseDropdown();
+        onClose();
       }
     };
 
@@ -73,14 +74,18 @@ export default function MessengerDropdown({ onCloseDropdown, onOpenConversation 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [onCloseDropdown]);
+  }, [onClose]);
 
   const handleSearchUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!searchUser.trim()) {
+      setSearchResults(null);
+      return;
+    }
     setLoading(true);
     try {
       const res = await callApi<MessengerPreview[]>(API_ROUTES.SEARCH.USER_NAME(searchUser), HTTP_METHOD_ENUM.GET);
-      setConversations(res);
+      setSearchResults(res);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm người dùng:", err);
     } finally {
@@ -108,8 +113,10 @@ export default function MessengerDropdown({ onCloseDropdown, onOpenConversation 
     }
   };
 
+  const listToDisplay = searchResults !== null ? searchResults : conversations;
+
   // Filter conversations based on selected filter
-  const filteredConversations = conversations.filter((conv) => {
+  const filteredConversations = listToDisplay.filter((conv) => {
     if (filter === "private") return !conv.is_group;
     if (filter === "groups") return conv.is_group;
     return true; // 'all'
@@ -159,66 +166,79 @@ export default function MessengerDropdown({ onCloseDropdown, onOpenConversation 
           </button>
         </div>
 
+        {/* Search Form - Moved outside conditional rendering */}
+        <form onSubmit={handleSearchUser} className="flex gap-2 border-t border-border bg-muted/30 p-4 mb-4">
+          <Input
+            value={searchUser}
+            onChange={(e) => {
+              setSearchUser(e.target.value);
+              if (e.target.value === "") setSearchResults(null);
+            }}
+            placeholder="Nhập tên bạn bè..."
+          />
+          <Button type="submit" disabled={!searchUser.trim()}>
+            Tìm
+          </Button>
+        </form>
+
         {loading ? (
           <div className="text-muted-foreground">Đang tải...</div>
         ) : filteredConversations.length === 0 ? (
-          <div className="text-muted-foreground">
-            {filter === "groups" ? "Không có nhóm nào" : filter === "private" ? "Không có tin nhắn riêng tư nào" : "Không có cuộc trò chuyện nào"}
-          </div>
+          searchResults !== null ? (
+            <div className="text-muted-foreground text-center py-4">Không tìm thấy kết quả nào.</div>
+          ) : (
+            <div className="text-muted-foreground text-center py-4">
+              {filter === "groups" ? "Không có nhóm nào" : filter === "private" ? "Không có tin nhắn riêng tư nào" : "Không có cuộc trò chuyện nào"}
+            </div>
+          )
         ) : (
-          <div>
-            <form onSubmit={handleSearchUser} className="flex gap-2 border-t border-border bg-muted/30 p-4 mb-4">
-              <Input value={searchUser} onChange={(e) => setSearchUser(e.target.value)} placeholder="Nhập tên bạn bè..." />
-              <Button type="submit">Tìm</Button>
-            </form>
-            <ul className="space-y-1">
-              {filteredConversations.map((item) => {
-                const isUnread = !item.last_seen_at || !item.last_message_at || new Date(item.last_message_at) > new Date(item.last_seen_at);
+          <ul className="space-y-1">
+            {filteredConversations.map((item) => {
+              const isUnread = !item.last_seen_at || !item.last_message_at || new Date(item.last_message_at) > new Date(item.last_seen_at);
 
-                return (
-                  <li
-                    key={item.conversation_id}
-                    onClick={() => handleClickConversation(item)} // Use the new handler
-                    className="flex items-center gap-3 py-3 hover:bg-muted/50 cursor-pointer px-3 rounded-lg transition duration-150"
-                  >
-                    <div className={cn("w-12 h-12 overflow-hidden bg-muted flex-shrink-0", item.is_group ? "rounded-lg" : "rounded-full")}>
-                      <Image
-                        src={item.is_group ? item.group_avatar_url || "/avatar.png" : item.avatar_url || "/avatar.png"}
-                        alt={item.is_group ? item.name ?? "Group Avatar" : item.other_user_name ?? "Avatar"}
-                        width={48}
-                        height={48}
-                        className="object-cover w-full h-full"
-                      />
+              return (
+                <li
+                  key={item.conversation_id}
+                  onClick={() => handleClickConversation(item)} // Use the new handler
+                  className="flex items-center gap-3 py-3 hover:bg-muted/50 cursor-pointer px-3 rounded-lg transition duration-150"
+                >
+                  <div className={cn("w-12 h-12 overflow-hidden bg-muted flex-shrink-0", item.is_group ? "rounded-lg" : "rounded-full")}>
+                    <Image
+                      src={item.is_group ? item.group_avatar_url || "/avatar.png" : item.avatar_url || "/avatar.png"}
+                      alt={item.is_group ? item.name ?? "Group Avatar" : item.other_user_name ?? "Avatar"}
+                      width={48}
+                      height={48}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className={`font-semibold ${isUnread ? "text-foreground" : "text-muted-foreground"}`}>
+                        {item.is_group ? item.name : item.other_user_name}
+                      </div>
+                      {item.is_group && <Users className="h-3 w-3 text-muted-foreground" />}
                     </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`font-semibold ${isUnread ? "text-foreground" : "text-muted-foreground"}`}>
-                          {item.is_group ? item.name : item.other_user_name}
-                        </div>
-                        {item.is_group && <Users className="h-3 w-3 text-muted-foreground" />}
-                      </div>
-                      <div className={`text-sm truncate ${isUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                        {item.is_group && item.last_message_sender ? (
-                          <span>
-                            {item.last_message_sender}: {item.last_message_content || item.last_message}
-                          </span>
-                        ) : (
-                          item.last_message
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
-                        {item.is_group && item.member_count && <div className="text-xs text-muted-foreground">{item.member_count} thành viên</div>}
-                      </div>
+                    <div className={`text-sm truncate ${isUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                      {item.is_group && item.last_message_sender ? (
+                        <span>
+                          {item.last_message_sender}: {item.last_message_content || item.last_message}
+                        </span>
+                      ) : (
+                        item.last_message
+                      )}
                     </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
+                      {item.is_group && item.member_count && <div className="text-xs text-muted-foreground">{item.member_count} thành viên</div>}
+                    </div>
+                  </div>
 
-                    {isUnread && <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                  {isUnread && <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
 
