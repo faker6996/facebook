@@ -30,10 +30,9 @@ const Card = ({
       className={cn(
         "rounded-xl border bg-card text-card-foreground transition-all duration-300 ease-soft",
         "shadow-sm hover:shadow-lg",
-        hoverable && "hover:-translate-y-1 hover:shadow-xl",
-        clickable && "cursor-pointer active:scale-[0.98]",
-        "backdrop-blur-sm bg-white/80 dark:bg-neutral-900/80",
-        "border-gray-200/60 dark:border-gray-800/60",
+        hoverable && "hover:-translate-y-1 hover:shadow-xl hover:border-primary/20",
+        clickable && "cursor-pointer active:scale-[0.98] hover:bg-accent/5",
+        "backdrop-blur-sm border-border",
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -75,7 +74,7 @@ const Card = ({
         )}
         
         {footer && (
-          <div className="relative flex items-center p-6 pt-0 border-t border-gray-100 dark:border-gray-800 mt-4">
+          <div className="relative flex items-center p-6 pt-0 border-t border-border mt-4">
             {footer}
           </div>
         )}

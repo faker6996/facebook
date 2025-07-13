@@ -8,11 +8,11 @@ import { VARIANT_STYLES_ALERT } from "@/lib/constants/constants-ui/alert";
 type AlertVariant = "default" | "info" | "success" | "warning" | "error";
 
 const variantIcons: Record<AlertVariant, ReactNode> = {
-  default: <InfoIcon className="h-4 w-4" />,
-  info: <InfoIcon className="h-4 w-4 text-blue-500" />,
-  success: <CheckCircleIcon className="h-4 w-4 text-green-500" />,
-  warning: <WarningIcon className="h-4 w-4 text-yellow-500" />,
-  error: <ErrorIcon className="h-4 w-4 text-red-500" />,
+  default: <InfoIcon className="h-4 w-4 text-muted-foreground" />,
+  info: <InfoIcon className="h-4 w-4 text-info" />,
+  success: <CheckCircleIcon className="h-4 w-4 text-success" />,
+  warning: <WarningIcon className="h-4 w-4 text-warning" />,
+  error: <ErrorIcon className="h-4 w-4 text-destructive" />,
 };
 
 interface AlertProps {
