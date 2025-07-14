@@ -1,5 +1,5 @@
 // components/Header.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Menu, X, Search } from "lucide-react";
 import BsMessengerIcon from "../icons/BsMessengerIcon";
 import FaBellIcon from "../icons/FaBellIcon";
@@ -26,6 +26,7 @@ const MAX_MESSENGER_WINDOWS = 3; // Define the maximum number of chat windows
 
 export default function Header() {
   const [showMessenger, setShowMessenger] = useState(false);
+  const messengerButtonRef = useRef<HTMLButtonElement>(null);
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -82,18 +83,9 @@ export default function Header() {
             <div className="flex items-center gap-2 flex-1">
               <FacebookIcon className="w-8 h-8 flex-shrink-0" />
               <div className="flex-1 max-w-xs">
-                <Input 
-                  type="text" 
-                  placeholder="Tìm kiếm" 
-                  className="h-9 text-sm"
-                />
+                <Input type="text" placeholder="Tìm kiếm" className="h-9 text-sm" />
               </div>
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="w-9 h-9 flex-shrink-0"
-              >
+              <Button size="icon" variant="ghost" onClick={() => setShowMobileMenu(!showMobileMenu)} className="w-9 h-9 flex-shrink-0">
                 {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
             </div>
@@ -101,18 +93,14 @@ export default function Header() {
             {/* Mobile Right: Messenger + Avatar */}
             <div className="flex items-center gap-2 flex-shrink-0 ml-2">
               <div className="relative">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setShowMessenger(!showMessenger)}
-                  className="w-9 h-9"
-                >
+                <Button size="icon" variant="ghost" onClick={() => setShowMessenger(!showMessenger)} className="w-9 h-9">
                   <BsMessengerIcon className="w-5 h-5" />
                 </Button>
                 {showMessenger && (
                   <MessengerDropdown
                     onClose={() => setShowMessenger(false)}
                     onOpenConversation={handleOpenConversation}
+                    triggerRef={messengerButtonRef}
                   />
                 )}
               </div>
@@ -124,9 +112,7 @@ export default function Header() {
                   className="cursor-pointer w-8 h-8"
                   onClick={() => setShowAvatarMenu(!showAvatarMenu)}
                 />
-                {showAvatarMenu && (
-                  <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />
-                )}
+                {showAvatarMenu && <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />}
               </div>
             </div>
           </div>
@@ -154,83 +140,54 @@ export default function Header() {
             <div className="flex items-center gap-3">
               <Button icon={FaThIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
               <div className="relative">
-                <Button 
-                  icon={BsMessengerIcon} 
-                  size="icon" 
-                  className="bg-muted hover:bg-accent" 
-                  onClick={() => setShowMessenger(!showMessenger)} 
+                <Button
+                  ref={messengerButtonRef}
+                  data-messenger-toggle="true"
+                  icon={BsMessengerIcon}
+                  size="icon"
+                  className="bg-muted hover:bg-accent"
+                  onClick={() => setShowMessenger(!showMessenger)}
                 />
                 {showMessenger && (
-                  <MessengerDropdown 
-                    onClose={() => setShowMessenger(false)} 
-                    onOpenConversation={handleOpenConversation} 
+                  <MessengerDropdown
+                    onClose={() => setShowMessenger(false)}
+                    onOpenConversation={handleOpenConversation}
+                    triggerRef={messengerButtonRef}
                   />
                 )}
               </div>
               <Button icon={FaBellIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
 
               <div className="relative">
-                <Avatar 
-                  onClick={() => setShowAvatarMenu(!showAvatarMenu)} 
-                  className="cursor-pointer" 
-                  src={user.avatar_url} 
-                  size="md"
-                />
-                {showAvatarMenu && (
-                  <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />
-                )}
+                <Avatar onClick={() => setShowAvatarMenu(!showAvatarMenu)} className="cursor-pointer" src={user.avatar_url} size="md" />
+                {showAvatarMenu && <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />}
               </div>
             </div>
           </>
         )}
       </header>
 
-
       {/* Mobile Navigation Menu */}
       {isHydrated && isMobile && showMobileMenu && (
         <div className="fixed top-16 left-0 right-0 bottom-0 z-40 bg-card">
           <div className="p-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Button 
-                icon={HomeIcon} 
-                variant="ghost" 
-                className="h-16 flex-col gap-2 text-center"
-              >
+              <Button icon={HomeIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Trang chủ
               </Button>
-              <Button 
-                icon={TvIcon} 
-                variant="ghost" 
-                className="h-16 flex-col gap-2 text-center"
-              >
+              <Button icon={TvIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Video
               </Button>
-              <Button 
-                icon={StoreIcon} 
-                variant="ghost" 
-                className="h-16 flex-col gap-2 text-center"
-              >
+              <Button icon={StoreIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Marketplace
               </Button>
-              <Button 
-                icon={UsersIcon} 
-                variant="ghost" 
-                className="h-16 flex-col gap-2 text-center"
-              >
+              <Button icon={UsersIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Bạn bè
               </Button>
-              <Button 
-                icon={GamepadIcon} 
-                variant="ghost" 
-                className="h-16 flex-col gap-2 text-center"
-              >
+              <Button icon={GamepadIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Gaming
               </Button>
-              <Button 
-                icon={FaBellIcon} 
-                variant="ghost" 
-                className="h-16 flex-col gap-2 text-center"
-              >
+              <Button icon={FaBellIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Thông báo
               </Button>
             </div>
@@ -242,7 +199,7 @@ export default function Header() {
       {openConversations.map((conversation, index) => {
         // Calculate the right offset for each window
         // This will only affect desktop due to responsive classes in MessengerContainer
-        const rightOffset = 16 + index * (336); // 16px base + index * (320px width + 16px gap)
+        const rightOffset = 16 + index * 336; // 16px base + index * (320px width + 16px gap)
 
         return (
           <MessengerContainer
@@ -250,8 +207,8 @@ export default function Header() {
             conversation={conversation}
             onClose={handleCloseConversation}
             // Pass a style prop for positioning - only used on desktop
-            style={{ 
-              right: `${rightOffset}px`
+            style={{
+              right: `${rightOffset}px`,
             }}
           />
         );

@@ -15,11 +15,9 @@ export class MessageStatus {
   } as const;
 
   constructor(data: Partial<MessageStatus> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.message_id = data.message_id;
-    this.user_id = data.user_id;
-    this.status = data.status;
-    this.updated_at = data.updated_at;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

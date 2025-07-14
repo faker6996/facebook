@@ -17,12 +17,9 @@ export class Conversation {
   } as const;
 
   constructor(data: Partial<Conversation> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.is_group = data.is_group;
-    this.name = data.name;
-    this.avatar_url = data.avatar_url;
-    this.created_by = data.created_by;
-    this.created_at = data.created_at;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

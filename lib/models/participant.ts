@@ -15,11 +15,9 @@ export class Participant {
   } as const;
 
   constructor(data: Partial<Participant> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.user_id = data.user_id;
-    this.conversation_id = data.conversation_id;
-    this.joined_at = data.joined_at;
-    this.role = data.role;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

@@ -33,21 +33,10 @@ export class User {
   } as const;
 
   constructor(data: Partial<User> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.name = data.name;
-    this.user_name = data.user_name;
-    this.password = data.password;
-    this.email = data.email;
-    this.avatar_url = data.avatar_url;
-    this.phone_number = data.phone_number;
-    this.address = data.address;
-    this.created_at = data.created_at;
-    this.updated_at = data.updated_at;
-    this.is_sso = data.is_sso;
-    this.is_active = data.is_active;
-    this.sub = data.sub;
-    this.last_seen = data.last_seen;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }
 
