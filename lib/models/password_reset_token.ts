@@ -13,10 +13,9 @@ export class ResetPasswordToken {
   } as const;
 
   constructor(data: Partial<ResetPasswordToken> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.user_id = data.user_id;
-    this.token = data.token;
-    this.expires_at = data.expires_at;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

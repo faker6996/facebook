@@ -15,11 +15,9 @@ export class PinnedMessage {
   } as const;
 
   constructor(data: Partial<PinnedMessage> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.conversation_id = data.conversation_id;
-    this.message_id = data.message_id;
-    this.pinned_by = data.pinned_by;
-    this.pinned_at = data.pinned_at;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

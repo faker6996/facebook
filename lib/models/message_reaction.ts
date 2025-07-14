@@ -15,11 +15,9 @@ export class MessageReaction {
   } as const;
 
   constructor(data: Partial<MessageReaction> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.message_id = data.message_id;
-    this.user_id = data.user_id;
-    this.emoji = data.emoji;
-    this.reacted_at = data.reacted_at;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

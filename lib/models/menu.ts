@@ -20,13 +20,10 @@ export class Menu {
   } as const;
 
   constructor(data: Partial<Menu> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.icon = data.icon;
-    this.slug = data.slug;
-    this.order_index = data.order_index;
-    this.is_active = data.is_active;
-    this.parent_id = data.parent_id;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }
 
@@ -45,9 +42,9 @@ export class MenuTranslation {
   };
 
   constructor(data: Partial<MenuTranslation> = {}) {
-    this.id = data.id;
-    this.menu_id = data.menu_id;
-    this.locale = data.locale;
-    this.name = data.name;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

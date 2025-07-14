@@ -16,10 +16,11 @@ import { cn } from "@/lib/utils/cn";
 
 interface MessengerDropdownProps {
   onClose: () => void;
-  onOpenConversation: (conversation: MessengerPreview) => void; // New prop
+  onOpenConversation: (conversation: MessengerPreview) => void;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-export default function MessengerDropdown({ onClose, onOpenConversation }: MessengerDropdownProps) {
+export default function MessengerDropdown({ onClose, onOpenConversation, triggerRef }: MessengerDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [searchUser, setSearchUser] = useState<string>("");
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
@@ -33,9 +34,9 @@ export default function MessengerDropdown({ onClose, onOpenConversation }: Messe
     const fetchData = async () => {
       try {
         const user = loadFromLocalStorage("user", User);
-        if (!user?.id) return;
+        setUser(user); // Set user state regardless of whether it has ID
 
-        setUser(user);
+        if (!user?.id) return;
 
         const res = await callApi<MessengerPreview[]>(API_ROUTES.MESSENGER.RECENT(user.id), HTTP_METHOD_ENUM.GET);
 
@@ -65,6 +66,11 @@ export default function MessengerDropdown({ onClose, onOpenConversation }: Messe
         (target as Element)?.closest('[class*="modal"]') ||
         (target as Element)?.closest('[data-modal="true"]');
 
+      // Don't close if clicking on trigger button - let Header handle the toggle
+      if (triggerRef.current && triggerRef.current.contains(target)) {
+        return;
+      }
+
       if (!isModalClick) {
         onClose();
       }
@@ -74,7 +80,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation }: Messe
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [onClose]);
+  }, [onClose, triggerRef]);
 
   const handleSearchUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +134,11 @@ export default function MessengerDropdown({ onClose, onOpenConversation }: Messe
         {/* Header with Create Group Button */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-foreground">Tin nhắn gần đây</h3>
-          <Button size="sm" onClick={() => setShowCreateGroupModal(true)} className="flex items-center gap-2">
+          <Button 
+            size="sm" 
+            onClick={() => setShowCreateGroupModal(true)} 
+            className="flex items-center gap-2"
+          >
             <Plus className="h-4 w-4" />
             Tạo nhóm
           </Button>

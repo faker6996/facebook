@@ -19,13 +19,9 @@ export class Attachment {
   } as const;
 
   constructor(data: Partial<Attachment> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.message_id = data.message_id;
-    this.file_name = data.file_name;
-    this.file_url = data.file_url;
-    this.file_type = data.file_type;
-    this.file_size = data.file_size;
-    this.created_at = data.created_at;
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+    }
   }
 }

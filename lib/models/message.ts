@@ -31,20 +31,14 @@ export class Message {
   } as const;
 
   constructor(data: Partial<Message> = {}) {
-    Object.assign(this, data);
-    this.id = data.id;
-    this.conversation_id = data.conversation_id;
-    this.sender_id = data.sender_id;
-    this.target_id = data.target_id;
-    this.content = data.content;
-    this.message_type = data.message_type;
-    this.content_type = data.content_type;
-    this.reply_to_message_id = data.reply_to_message_id;
-    this.created_at = data.created_at;
-    this.status = data.status ?? "Sent";
-    this.attachments = data.attachments ?? [];
-    this.replied_message = data.replied_message;
-    this.reactions = data.reactions ?? [];
+    // Chỉ assign nếu data không null/undefined
+    if (data && typeof data === 'object') {
+      Object.assign(this, data);
+      // Set default values for important fields
+      this.status = data.status ?? "Sent";
+      this.attachments = data.attachments ?? [];
+      this.reactions = data.reactions ?? [];
+    }
   }
 }
 

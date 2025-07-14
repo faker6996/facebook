@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Users, Plus, Check, Search } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Button from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import Input from "@/components/ui/Input";
@@ -33,7 +32,36 @@ export default function CreateGroupModal({
   onGroupCreated, 
   currentUser 
 }: CreateGroupModalProps) {
-  const t = useTranslations("CreateGroup");
+  // Create simple translations object to avoid dependency issues
+  const t = (key: string) => {
+    const translations: Record<string, string> = {
+      'title': 'Tạo nhóm mới',
+      'addMembers': 'Thêm thành viên',
+      'groupName': 'Tên nhóm',
+      'groupNamePlaceholder': 'Nhập tên nhóm...',
+      'groupDescription': 'Mô tả nhóm',
+      'groupDescriptionPlaceholder': 'Nhập mô tả nhóm...',
+      'groupSettings': 'Cài đặt nhóm',
+      'publicGroup': 'Nhóm công khai',
+      'publicGroupDescription': 'Mọi người có thể tìm và tham gia nhóm',
+      'requireApproval': 'Yêu cầu phê duyệt',
+      'requireApprovalDescription': 'Quản trị viên phải duyệt thành viên mới',
+      'maxMembers': 'Số thành viên tối đa',
+      'maxMembersRange': 'Từ 5 đến 500 thành viên',
+      'searchPlaceholder': 'Tìm kiếm bạn bè...',
+      'selected': 'Đã chọn',
+      'searching': 'Đang tìm kiếm...',
+      'noUsersFound': 'Không tìm thấy người dùng nào',
+      'enterToSearch': 'Nhập tên để tìm kiếm',
+      'cancel': 'Hủy',
+      'next': 'Tiếp theo',
+      'back': 'Quay lại',
+      'create': 'Tạo nhóm',
+      'creating': 'Đang tạo...',
+      'charactersCount': 'ký tự'
+    };
+    return translations[key] || key;
+  };
   
   const [step, setStep] = useState<'details' | 'members'>('details');
   const [groupName, setGroupName] = useState('');

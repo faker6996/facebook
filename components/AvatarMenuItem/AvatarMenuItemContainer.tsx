@@ -71,27 +71,30 @@ const menu: MenuItem[] = [
   },
 ];
 
-export default function AvatarMenuItemContainer() {
-  const [open, setOpen] = useState(true);
+interface Props {
+  onClose: () => void;
+}
+
+export default function AvatarMenuItemContainer({ onClose }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const locale = pathname.split("/")[1] || LOCALE.VI; // Lấy locale từ URL
+  const locale = pathname.split("/")[1] || LOCALE.VI;
   const [user, setUser] = useState(new User());
+
   useEffect(() => {
     setUser(loadFromLocalStorage("user", User));
   }, []);
+
   const handleLogout = async () => {
     try {
       await callApi<void>(API_ROUTES.AUTH.LOGOUT, HTTP_METHOD_ENUM.POST, {});
-
       removeFromLocalStorage("user");
+      onClose(); // Đóng menu trước khi chuyển trang
       router.push(`/${locale}/login`);
     } catch (err) {
       console.error(err);
     }
   };
-
-  if (!open) return null;
 
   return (
     <aside className="absolute top-14 right-0 z-50 w-96 bg-card text-card-foreground rounded-md shadow-lg border border-border">
