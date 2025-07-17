@@ -1,7 +1,7 @@
 "use client";
 
 // ----- Imports -----
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 
 // Local Imports
 import { X, Info, Settings } from "lucide-react";
@@ -19,6 +19,9 @@ import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 import { cn } from "@/lib/utils/cn";
+import { VideoCallIcon, PhoneIcon } from "@/components/icons/VideoCallIcons";
+import VideoCall from "@/components/video-call/VideoCall";
+import useVideoCall from "@/hooks/useVideoCall";
 
 // ----- Props Interface -----
 interface Props {
@@ -48,6 +51,38 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [showGroupSettings, setShowGroupSettings] = useState(false);
 
   const isGroup = conversation.is_group === true;
+  
+  // Debug video call buttons (only once per conversation)
+  useEffect(() => {
+    console.log('🔍 Video call debug:', {
+      isGroup,
+      conversation_id: conversation.conversation_id,
+      other_user_id: conversation.other_user_id,
+      isOtherUserOnline,
+      showVideoCallButtons: !isGroup
+    });
+  }, [isGroup, conversation.conversation_id, conversation.other_user_id, isOtherUserOnline]);
+
+  // Video call integration
+  const videoCallEvents = useMemo(() => ({
+    onIncomingCall: (callerId: string, callerName: string) => {
+      console.log('📞 Incoming call from:', callerName);
+      // The VideoCall component will handle the incoming call UI
+    },
+    onCallAccepted: (callerId: string) => {
+      console.log('📞 Call accepted by:', callerId);
+    },
+    onCallDeclined: (callerId: string) => {
+      console.log('📞 Call declined by:', callerId);
+    },
+    onCallEnded: (callerId: string) => {
+      console.log('📞 Call ended by:', callerId);
+    }
+  }), []);
+
+  const videoCall = useVideoCall(videoCallEvents);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Global SignalR Connection
   useGlobalSignalRConnection({
@@ -426,6 +461,56 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     }
   };
 
+  // Video call handlers
+  const handleStartVideoCall = () => {
+    if (!isGroup && conversation.other_user_id) {
+      console.log('📞 Starting video call to user ID:', conversation.other_user_id);
+      console.log('📞 Current sender ID:', sender.id);
+      console.log('📞 Conversation details:', {
+        conversation_id: conversation.conversation_id,
+        other_user_id: conversation.other_user_id,
+        other_user_name: conversation.other_user_name
+      });
+      videoCall.startCall(conversation.other_user_id.toString(), true);
+    } else {
+      console.log('📞 Cannot start video call:', { isGroup, other_user_id: conversation.other_user_id });
+    }
+  };
+
+  const handleStartVoiceCall = () => {
+    if (!isGroup && conversation.other_user_id) {
+      console.log('📞 Starting voice call to user ID:', conversation.other_user_id);
+      console.log('📞 Current sender ID:', sender.id);
+      videoCall.startCall(conversation.other_user_id.toString(), false);
+    } else {
+      console.log('📞 Cannot start voice call:', { isGroup, other_user_id: conversation.other_user_id });
+    }
+  };
+
+  const handleAcceptCall = () => {
+    videoCall.acceptCall();
+  };
+
+  const handleDeclineCall = () => {
+    videoCall.declineCall();
+  };
+
+  const handleEndCall = () => {
+    videoCall.endCall();
+  };
+
+  const handleToggleVideo = () => {
+    videoCall.toggleVideo();
+  };
+
+  const handleToggleAudio = () => {
+    videoCall.toggleAudio();
+  };
+
+  const handleToggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   // ----- JSX Render -----
   return (
     <>
@@ -476,6 +561,30 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
             </div>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Video Call Buttons - Only for private conversations */}
+            {!isGroup && (
+              <>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={handleStartVoiceCall} 
+                  title="Gọi thoại"
+                  className="w-10 h-10 md:w-8 md:h-8"
+                >
+                  <PhoneIcon className="h-5 w-5 md:h-4 md:w-4" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={handleStartVideoCall} 
+                  title="Gọi video"
+                  className="w-10 h-10 md:w-8 md:h-8"
+                >
+                  <VideoCallIcon className="h-5 w-5 md:h-4 md:w-4" />
+                </Button>
+              </>
+            )}
+            
             {isGroup && (
               <>
                 <Button size="icon" variant="ghost" onClick={() => setShowGroupInfo(true)} title="Thông tin nhóm"
@@ -578,6 +687,26 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           </div>
         </div>
       )}
+
+      {/* Video Call Component */}
+      <VideoCall
+        isActive={videoCall.callState.isCallActive}
+        isIncoming={videoCall.callState.isIncomingCall}
+        isOutgoing={videoCall.callState.isOutgoingCall}
+        callerName={videoCall.callState.callerName || conversation.other_user_name || 'Unknown'}
+        callerAvatar={videoCall.callState.callerAvatar || conversation.avatar_url}
+        onAccept={handleAcceptCall}
+        onDecline={handleDeclineCall}
+        onEnd={handleEndCall}
+        onToggleVideo={handleToggleVideo}
+        onToggleAudio={handleToggleAudio}
+        onToggleFullscreen={handleToggleFullscreen}
+        isVideoEnabled={videoCall.callState.isVideoEnabled}
+        isAudioEnabled={videoCall.callState.isAudioEnabled}
+        isFullscreen={isFullscreen}
+        localStream={videoCall.localStream || undefined}
+        remoteStream={videoCall.remoteStream || undefined}
+      />
     </>
   );
 }
