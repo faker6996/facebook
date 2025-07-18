@@ -1046,3 +1046,200 @@ Dự án Facebook Clone giờ đây là một **complete social media platform**
 - **Production-Grade Architecture** sẵn sàng cho deployment
 
 **Ready for deployment với tất cả features hoạt động seamlessly!** 🚀
+
+---
+
+## 🎥 **Video Call System - Latest Update (January 2025)** ⭐ **MỚI**
+
+### **Complete WebRTC Video Call Implementation**
+
+Dự án giờ đây đã có **full-featured video calling system** tích hợp hoàn toàn với SignalR và chat server!
+
+#### **✅ Video Call Features Implemented:**
+
+**🎯 Core Features:**
+- **Video Calling** - P2P video calls với WebRTC
+- **Voice Calling** - Audio-only calls
+- **Real-time Signaling** - Sử dụng SignalR cho connection setup
+- **TURN Server Integration** - NAT traversal support
+- **Call Controls** - Camera, microphone, fullscreen toggles
+- **Call States** - Incoming, outgoing, active call management
+
+**📱 UI/UX Features:**
+- **Responsive Video Interface** - Fullscreen video call UI
+- **Call Controls Panel** - Bottom control bar với animations
+- **Incoming Call Screen** - Accept/decline interface
+- **Call Duration Timer** - Real-time call timer
+- **Auto-hide Controls** - Controls tự động ẩn sau 3 giây
+- **Avatar Fallback** - Hiển thị avatar khi không có video
+
+**🔧 Technical Implementation:**
+- **WebRTC Integration** - Native browser WebRTC APIs
+- **SignalR Signaling** - Real-time offer/answer/ICE candidate exchange
+- **Custom Hooks** - `useWebRTC`, `useVideoCall` for state management
+- **TypeScript Support** - Full type safety
+- **Error Handling** - Comprehensive error recovery
+- **Connection Management** - Auto-reconnection và cleanup
+
+#### **🏗️ Architecture Overview:**
+
+**Frontend Components:**
+```
+components/
+├── video-call/
+│   └── VideoCall.tsx              # Main video call interface
+├── icons/
+│   └── VideoCallIcons.tsx         # Video call UI icons
+└── messenger/
+    └── MessengerContainer.tsx     # Video call buttons integration
+```
+
+**Custom Hooks:**
+```
+hooks/
+├── useWebRTC.ts                   # WebRTC connection management
+└── useVideoCall.ts                # SignalR + WebRTC integration
+```
+
+**API Integration:**
+```
+app/api/
+└── turn-cred/
+    └── route.ts                   # TURN server credentials
+```
+
+#### **🔗 SignalR Events Integration:**
+
+**Client → Server Methods:**
+- `SendCallOffer(targetUserId, offer)` - Initiate video call
+- `SendCallAnswer(targetUserId, answer)` - Accept incoming call
+- `SendIceCandidate(targetUserId, candidate)` - Exchange ICE candidates
+- `EndCall(targetUserId)` - Terminate call
+
+**Server → Client Events:**
+- `ReceiveCallOffer(callerId, offer)` - Incoming call notification
+- `ReceiveCallAnswer(calleeId, answer)` - Call accepted notification
+- `ReceiveIceCandidate(senderId, candidate)` - ICE candidate received
+- `CallEnded(endingUserId)` - Call terminated notification
+
+#### **🌐 TURN Server Configuration:**
+
+**ICE Servers Setup:**
+- **STUN Servers** - Multiple Google STUN servers for NAT detection
+- **TURN Server** - Production TURN server: `bachtv.ydns.eu:3478`
+- **Dynamic Loading** - ICE servers loaded from API endpoint
+- **Fallback Support** - Graceful fallback to STUN-only mode
+
+#### **📋 User Journey:**
+
+1. **Starting a Call:**
+   - User clicks video/voice call button in messenger
+   - WebRTC creates offer and sends via SignalR
+   - Outgoing call screen shows while waiting
+
+2. **Receiving a Call:**
+   - Incoming call screen appears immediately
+   - User can accept or decline
+   - Camera/microphone permissions requested on accept
+
+3. **During Call:**
+   - Full-screen video interface
+   - Controls: camera toggle, mic toggle, fullscreen, end call
+   - Real-time duration timer
+   - Auto-hide controls after 3 seconds
+
+4. **Ending Call:**
+   - Either user can end call
+   - Cleanup connections and media streams
+   - Return to normal chat interface
+
+#### **🔐 Security & Performance:**
+
+**Security Features:**
+- **HTTPS Required** - WebRTC requires secure context
+- **Authentication** - All SignalR calls require user authentication
+- **TURN Authentication** - Secure TURN server credentials
+- **No Data Persistence** - Video streams are not recorded
+
+**Performance Optimizations:**
+- **P2P Connection** - Direct peer-to-peer video streaming
+- **Efficient Signaling** - Minimal SignalR message overhead
+- **Resource Cleanup** - Proper cleanup of media streams và connections
+- **Error Recovery** - Automatic reconnection và fallback mechanisms
+
+#### **🧪 Testing & Debugging:**
+
+**Comprehensive Logging:**
+- **Connection States** - SignalR connection status tracking
+- **WebRTC Events** - Offer/answer/ICE candidate logging
+- **Media Streams** - Camera/microphone access logging
+- **Error Tracking** - Detailed error reporting
+
+**Browser Compatibility:**
+- **Chrome** - Full support
+- **Firefox** - Full support
+- **Safari** - WebRTC support
+- **Edge** - Full support
+
+#### **🚀 Integration Points:**
+
+**Messenger Integration:**
+- **Call Buttons** - Video/voice call buttons in private chats
+- **Online Status** - Calls chỉ hiển thị khi user online
+- **Group Chat** - Currently disabled for group conversations
+- **UI Consistency** - Matches existing messenger design
+
+**Global SignalR System:**
+- **Shared Connection** - Sử dụng global SignalR connection
+- **Event Handlers** - Automatic video call event registration
+- **Connection Management** - Integrated với existing SignalR lifecycle
+
+#### **📱 Mobile Responsive:**
+
+**Mobile Optimizations:**
+- **Touch Controls** - Touch-friendly call controls
+- **Responsive UI** - Adapts to mobile screen sizes
+- **Performance** - Optimized for mobile bandwidth
+- **Battery Aware** - Efficient resource usage
+
+#### **🔮 Future Enhancements:**
+
+**Planned Features:**
+- **Screen Sharing** - Share screen during calls
+- **Call Recording** - Optional call recording
+- **Group Video Calls** - Multi-party video conferencing
+- **Call History** - Track call duration và history
+- **Push Notifications** - Background call notifications
+- **Call Quality Metrics** - Connection quality indicators
+
+**Technical Improvements:**
+- **Adaptive Bitrate** - Dynamic quality adjustment
+- **Background Blur** - Virtual background effects
+- **Noise Cancellation** - Audio enhancement
+- **Network Resilience** - Better handling of poor connections
+
+---
+
+### **📊 Updated Project Status:**
+
+Dự án Facebook Clone giờ đây là một **complete social media platform** với:
+- **Advanced UI Component Library** (25+ components)
+- **Global Real-time Messaging System** với instant connectivity
+- **Comprehensive Group Chat Functionality** với roles và permissions
+- **🎥 Full WebRTC Video Calling System** với P2P video/voice calls ⭐ **MỚI**
+- **Modern Design System** với accessibility support
+- **Interactive Documentation** và **Developer Tools**
+- **Production-Grade Architecture** sẵn sàng cho deployment
+
+### **🎉 Major Milestone Achieved:**
+
+**Video Calling System is NOW LIVE!** 📹
+
+- ✅ **P2P Video Calls** - Direct browser-to-browser communication
+- ✅ **Real-time Signaling** - Instant call setup via SignalR
+- ✅ **Production Ready** - Complete error handling và recovery
+- ✅ **Mobile Responsive** - Works on all devices
+- ✅ **Secure & Private** - No server-side video processing
+- ✅ **Integrated Experience** - Seamless với existing chat system
+
+**The Facebook Clone now rivals commercial social media platforms with its comprehensive feature set!** 🚀
