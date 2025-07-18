@@ -136,7 +136,7 @@ export default function VideoCall({
               <div className="text-center">
                 <Avatar
                   src={callerAvatar || '/avatar.png'}
-                  size="xl"
+                  size="lg"
                   className="w-32 h-32 mx-auto mb-4"
                 />
                 <h2 className="text-2xl font-semibold text-white mb-2">{callerName}</h2>
