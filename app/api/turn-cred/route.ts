@@ -4,14 +4,33 @@ import { NextRequest, NextResponse } from 'next/server';
 // This provides ICE servers configuration for WebRTC
 export async function GET(request: NextRequest) {
   try {
-    // TURN server credentials (static for this implementation)
-    const credentials = {
-      username: "adoria",
-      password: "adoria@2025",
-      ttl: 86400, // 24 hours
-    };
+    // Get TURN credentials from environment variables
+    const turnUsername = process.env.TURN_USERNAME;
+    const turnPassword = process.env.TURN_PASSWORD;
+    
+    if (!turnUsername || !turnPassword) {
+      console.error('TURN credentials not configured in environment variables');
+      // Fallback to STUN only if TURN not configured
+      const iceServers = [
+        // Public STUN servers
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+      ];
+      
+      return NextResponse.json({
+        success: true,
+        message: "ICE servers retrieved successfully (STUN only)",
+        data: {
+          iceServers,
+          iceTransportPolicy: 'all'
+        }
+      });
+    }
 
-    // Complete ICE servers configuration
+    // Complete ICE servers configuration with Metered TURN
     const iceServers = [
       // Public STUN servers
       { urls: 'stun:stun.l.google.com:19302' },
@@ -20,16 +39,26 @@ export async function GET(request: NextRequest) {
       { urls: 'stun:stun3.l.google.com:19302' },
       { urls: 'stun:stun4.l.google.com:19302' },
       
-      // Production TURN server
+      // Metered TURN servers (HTTPS compatible)
       {
-        urls: 'turn:bachtv.ydns.eu:3478',
-        username: credentials.username,
-        credential: credentials.password
+        urls: 'turn:global.relay.metered.ca:80',
+        username: turnUsername,
+        credential: turnPassword
       },
       {
-        urls: 'turns:bachtv.ydns.eu:5349',
-        username: credentials.username,
-        credential: credentials.password
+        urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+        username: turnUsername,
+        credential: turnPassword
+      },
+      {
+        urls: 'turn:global.relay.metered.ca:443',
+        username: turnUsername,
+        credential: turnPassword
+      },
+      {
+        urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+        username: turnUsername,
+        credential: turnPassword
       }
     ];
 
@@ -39,7 +68,11 @@ export async function GET(request: NextRequest) {
       data: {
         iceServers,
         iceTransportPolicy: 'all', // 'relay' for TURN only, 'all' for STUN + TURN
-        credentials // Legacy support
+        credentials: {
+          username: turnUsername,
+          password: turnPassword,
+          ttl: 86400 // 24 hours
+        }
       }
     });
   } catch (error) {
