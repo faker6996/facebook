@@ -35,7 +35,7 @@ export default function GlobalVideoCallManager() {
       let displayName = callerName;
       if (!displayName && callerId) {
         try {
-          const userResponse = await callApi<any>(`${API_ROUTES.USERS}?id=${callerId}`, HTTP_METHOD_ENUM.GET);
+          const userResponse = await callApi<any>(`${API_ROUTES.USER.LIST}?id=${callerId}`, HTTP_METHOD_ENUM.GET);
           displayName = userResponse?.name || userResponse?.user_name || userResponse?.email || 'Unknown User';
         } catch (error) {
           console.error('Failed to get caller info:', error);
@@ -87,10 +87,6 @@ export default function GlobalVideoCallManager() {
     endCall, 
     toggleAudio, 
     toggleVideo, 
-    isMuted, 
-    isVideoOff,
-    localVideoRef,
-    remoteVideoRef,
     callState: webRTCCallState,
     localStream,
     remoteStream
@@ -145,10 +141,10 @@ export default function GlobalVideoCallManager() {
       onEnd={endCall}
       onToggleVideo={toggleVideo}
       onToggleAudio={toggleAudio}
-      isVideoEnabled={!isVideoOff}
-      isAudioEnabled={!isMuted}
-      localStream={localStream}
-      remoteStream={remoteStream}
+      isVideoEnabled={webRTCCallState.isVideoEnabled}
+      isAudioEnabled={webRTCCallState.isAudioEnabled}
+      localStream={localStream || undefined}
+      remoteStream={remoteStream || undefined}
     />
   );
 }
