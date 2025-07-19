@@ -324,6 +324,7 @@ npm run docker:*     # Docker operations cho các environments
 ### **Component Collection (25+ Components)**
 
 **Form Controls:**
+
 - **Button**: 8 variants (primary, success, danger, warning, info, outline, ghost, link) với loading states
 - **Input**: Advanced validation, focus animations, error handling, i18n support
 - **Textarea**: 3 variants (default, filled, outlined) với size options
@@ -332,6 +333,7 @@ npm run docker:*     # Docker operations cho các environments
 - **RadioGroup**: Traditional, card variant, button group styles
 
 **Data Display:**
+
 - **Card**: Hoverable, clickable variants với backdrop blur
 - **Badge**: Count badges, dot indicators, notification badges với positioning
 - **Alert**: 5 variants với icons và backdrop effects
@@ -339,6 +341,7 @@ npm run docker:*     # Docker operations cho các environments
 - **Skeleton**: Multiple layouts (posts, messages, lists, tables)
 
 **Navigation & Interaction:**
+
 - **Modal**: Full-featured với escape/overlay close, multiple sizes
 - **DropdownMenu**: With icons, separators, destructive actions
 - **Toast**: 4 types với positioning, actions, auto-dismiss
@@ -347,6 +350,7 @@ npm run docker:*     # Docker operations cho các environments
 - **Pagination**: Navigation controls
 
 **Advanced Components:**
+
 - **Popover**: Click-outside handling với positioning
 - **Sheet**: Slide-out panels
 - **ScrollArea**: Custom scrollbar styling
@@ -359,6 +363,7 @@ npm run docker:*     # Docker operations cho các environments
 ### **Design System Features**
 
 **Consistent Theming:**
+
 - **CSS Variables**: Complete color system với semantic naming
 - **Dark Mode**: Automatic support across all components
 - **Backdrop Blur**: Modern glass morphism effects
@@ -366,12 +371,14 @@ npm run docker:*     # Docker operations cho các environments
 - **Typography**: Consistent font scales và weights
 
 **Interactive States:**
+
 - **Hover Effects**: Scale transforms, color transitions, shadow enhancements
 - **Focus Management**: Primary color indicators, ring effects
 - **Loading States**: Spinners, skeletons, progress indicators
 - **Error Handling**: Validation states với color coding
 
 **Accessibility Features:**
+
 - **ARIA Support**: Proper attributes cho screen readers
 - **Keyboard Navigation**: Full keyboard accessibility
 - **Focus Management**: Logical tab ordering
@@ -380,6 +387,7 @@ npm run docker:*     # Docker operations cho các environments
 ### **Style Guide Integration**
 
 **UserGuide.tsx**: Interactive component playground với:
+
 - **Live Demonstrations**: All components working với real state
 - **Interactive Controls**: Buttons để test different states
 - **Code Examples**: Ready-to-copy implementation snippets
@@ -391,20 +399,23 @@ npm run docker:*     # Docker operations cho các environments
 ### **Architecture Redesign**
 
 **Before (Per-Component Connection):**
+
 ```
-Login → Navigate to Messenger → Click Conversation → 
+Login → Navigate to Messenger → Click Conversation →
 Mount MessengerContainer → Initialize SignalR → Receive Messages
 ```
 
 **After (Global Connection):**
+
 ```
-Login → Auto-Initialize Global SignalR → 
+Login → Auto-Initialize Global SignalR →
 Receive Messages Everywhere Instantly! 🚀
 ```
 
 ### **Global Context Management**
 
 **SignalRContext.tsx:**
+
 - **Single Connection**: Shared across entire application
 - **Auto-Reconnection**: Với progressive retry logic
 - **Global Event Handling**: Message, reaction, group events
@@ -412,6 +423,7 @@ Receive Messages Everywhere Instantly! 🚀
 - **Online Users Tracking**: Real-time presence management
 
 **SignalRInit.tsx:**
+
 - **Auto-Detection**: Tự động detect user login state
 - **Auth Integration**: Listen cho login/logout events
 - **Connection Lifecycle**: Proper setup/teardown management
@@ -419,18 +431,21 @@ Receive Messages Everywhere Instantly! 🚀
 ### **Enhanced Features**
 
 **Real-time Notifications:**
+
 - **Global Toast Messages**: Tin nhắn mới hiển thị toast ở bất kỳ đâu
 - **Group Event Notifications**: Member additions, role changes, group updates
 - **Connection Status**: Visual indicators cho connection state
 - **Online Presence**: Real-time user online/offline tracking
 
 **Performance Improvements:**
+
 - **Single Connection**: Thay vì multiple connections per conversation
 - **Resource Optimization**: Reduced memory và network usage
 - **Better Reliability**: Centralized error handling và reconnection
 - **Faster Message Delivery**: Direct global event distribution
 
 **Integration Points:**
+
 - **Layout Integration**: AppProviders trong root layout
 - **Login Integration**: Automatic SignalR initialization sau login
 - **Messenger Update**: useGlobalSignalRConnection thay thế local connections
@@ -439,37 +454,43 @@ Receive Messages Everywhere Instantly! 🚀
 ### **Developer Experience**
 
 **Global Access:**
+
 ```tsx
 const { connection, isConnected, joinGroup, leaveGroup } = useSignalR();
 ```
 
 **Connection Monitoring:**
+
 ```tsx
-<SignalRStatus />  // Shows: 🟢 Online | 5 users online
+<SignalRStatus /> // Shows: 🟢 Online | 5 users online
 ```
 
 **Event Handling:**
+
 ```tsx
 // Automatic message notifications
-// Group event notifications  
+// Group event notifications
 // Connection status updates
 ```
 
 ### **Migration Benefits**
 
 **User Experience:**
+
 - ✅ **Instant Connectivity**: No need to enter messenger để online
 - ✅ **Real-time Everywhere**: Messages received instantly across app
 - ✅ **Visual Feedback**: Connection status và online users visible
 - ✅ **Seamless Experience**: No connection delays hoặc setup time
 
 **Performance:**
+
 - ✅ **Reduced Resource Usage**: Single connection vs multiple
 - ✅ **Better Stability**: Centralized connection management
 - ✅ **Faster Delivery**: Direct event routing
 - ✅ **Improved Reliability**: Enhanced error recovery
 
 **Development:**
+
 - ✅ **Centralized Management**: Single source of truth cho connections
 - ✅ **Easier Debugging**: Comprehensive logging và monitoring
 - ✅ **Better Architecture**: Clean separation of concerns
@@ -504,23 +525,60 @@ const { connection, isConnected, joinGroup, leaveGroup } = useSignalR();
 - RabbitMQ.Client (7.1.2)
 ```
 
-## Kiến Trúc Hệ Thống
+## Kiến Trúc Hệ Thống - Clean Architecture
+
+### Layered Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Presentation Layer                       │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │   Controllers   │  │   SignalR Hubs  │  │  Middleware │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                   Infrastructure Layer                      │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │   Repositories  │  │    Services     │  │  Background │ │
+│  │    (Data        │  │  (Application   │  │   Services  │ │
+│  │    Access)      │  │    Logic)       │  │             │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                      Core Layer                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │     Models      │  │   Constants     │  │   Configs   │ │
+│  │   (Entities     │  │    (Enums)      │  │ (Settings)  │ │
+│  │    & DTOs)      │  │                 │  │             │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### Message Flow Architecture
 
 ```
-Client → HTTP POST → MessagesController
+Client → HTTP POST → MessagesController (Presentation)
                     ↓
-                MessageService (Business Logic)
+                MessageService (Infrastructure/Services)
                     ↓
                 MessagePublisher → RabbitMQ Exchange
                                         ↓
                             RabbitMQ Queue (durable)
                                         ↓
-                RabbitMQConsumerService ← Background Consumer
+                RabbitMQConsumerService ← Background Consumer (Infrastructure)
                     ↓
-            SignalR Hub → Connected Clients (Real-time)
+            SignalR Hub (Presentation) → Connected Clients (Real-time)
 ```
+
+### Clean Architecture Benefits
+
+- **Dependency Inversion**: Core không phụ thuộc vào Infrastructure
+- **Separation of Concerns**: Mỗi layer có trách nhiệm riêng biệt
+- **Testability**: Dễ dàng unit test với dependency injection
+- **Maintainability**: Code dễ bảo trì và mở rộng
+- **SOLID Principles**: Tuân thủ các nguyên tắc SOLID
 
 ### Database Schema
 
@@ -540,39 +598,78 @@ Client → HTTP POST → MessagesController
 - **group_join_requests** - Join request workflow
 - **pinned_messages** - Pinned messages trong groups
 
-## Cấu Trúc Thư Mục
+## Cấu Trúc Thư Mục - Clean Architecture
 
 ```
 chat-server/
-├── Applications/           # Application Services
-│   ├── IChatClientNotifier.cs
-│   ├── MessageService/     # Core business logic
-│   └── MessagePublisher/   # RabbitMQ publishing
-├── Controllers/            # HTTP API Endpoints
-│   ├── BaseApiController.cs
-│   ├── MessagesController.cs
-│   ├── ReactionsController.cs
-│   ├── UploadController.cs
-│   ├── GroupsController.cs        # Group management
-│   └── GroupJoinRequestsController.cs  # Join request workflow
-├── Models/                 # Data models & DTOs
-│   ├── Entity Models/      # User, Message, Attachment, MessageReaction, Conversation, GroupJoinRequest
-│   ├── Request DTOs/       # SendMessageRequest, ReactionRequest, CreateGroupRequest, UpdateGroupRequest
-│   └── Response DTOs/      # MessageResponse, ApiResponse<T>, GroupInfoResponse, GroupMemberResponse
-├── Repositories/           # Data Access Layer
-│   ├── Base/              # Generic repository pattern
-│   ├── Messenger/         # Message data access
-│   ├── Attachment/        # File attachment data
-│   ├── Reaction/          # Reaction data access
-│   ├── User/              # User data access
-│   └── Group/             # Group management data access
-├── SignalR/               # Real-time communication
-│   ├── Hubs/              # ChatHub với video calling
-│   └── Client notification services
-├── Services/              # Background services
-│   └── RabbitMQConsumerService.cs
-├── Configs/               # Configuration classes
-└── Constants/             # Enums và constants
+├── Core/                           # Core Domain Layer
+│   ├── Models/                     # Domain Entities & DTOs
+│   │   ├── Entity Models/          # User, Message, Attachment, MessageReaction, Conversation, GroupJoinRequest
+│   │   ├── Request DTOs/           # SendMessageRequest, ReactionRequest, CreateGroupRequest, UpdateGroupRequest
+│   │   └── Response DTOs/          # MessageResponse, ApiResponse<T>, GroupInfoResponse, GroupMemberResponse
+│   ├── Constants/                  # Domain constants
+│   │   └── MessageType.cs         # Message type enums
+│   └── Configs/                   # Configuration models
+│       └── RabbitMQOptions.cs     # RabbitMQ configuration
+├── Infrastructure/                 # Infrastructure Layer
+│   ├── Repositories/              # Data Access Layer
+│   │   ├── Base/                  # Generic repository pattern
+│   │   │   ├── BaseRepository.cs  # Generic CRUD operations
+│   │   │   └── IBaseRepository.cs # Repository interface
+│   │   ├── Attributes/            # ORM mapping attributes
+│   │   │   ├── TableAttribute.cs  # Table mapping
+│   │   │   ├── KeyAttribute.cs    # Primary key mapping
+│   │   │   └── NotMappedAttribute.cs # Ignore property mapping
+│   │   ├── Messenger/             # Message data access
+│   │   │   ├── MessageRepo.cs     # Message repository implementation
+│   │   │   └── IMessageRepo.cs    # Message repository interface
+│   │   ├── Attachment/            # File attachment data
+│   │   │   ├── AttachmentRepo.cs  # Attachment repository
+│   │   │   └── IAttachmentRepo.cs # Attachment interface
+│   │   ├── Reaction/              # Reaction data access
+│   │   │   ├── ReactionRepo.cs    # Reaction repository
+│   │   │   └── IReactionRepo.cs   # Reaction interface
+│   │   ├── User/                  # User data access
+│   │   │   ├── UserRepo.cs        # User repository
+│   │   │   └── IUserRepo.cs       # User interface
+│   │   ├── Group/                 # Group management data access
+│   │   │   ├── GroupRepository.cs # Group repository
+│   │   │   └── IGroupRepository.cs # Group interface
+│   │   └── MessagePublisher.cs    # RabbitMQ message publisher
+│   ├── Services/                  # Application Services
+│   │   ├── MessageService/        # Core business logic
+│   │   │   ├── MessageService.cs  # Message service implementation
+│   │   │   └── IMessageService.cs # Message service interface
+│   │   ├── MessagePublisher/      # RabbitMQ publishing
+│   │   │   └── IMessagePublisher.cs # Publisher interface
+│   │   └── IChatClientNotifier.cs # Client notification service
+│   └── BackgroundServices/        # Background services
+│       └── RabbitMQConsumerService.cs # RabbitMQ consumer
+├── Presentation/                  # Presentation Layer
+│   ├── Controllers/               # HTTP API Endpoints
+│   │   ├── BaseApiController.cs   # Base controller
+│   │   ├── MessagesController.cs  # Message endpoints
+│   │   ├── ReactionsController.cs # Reaction endpoints
+│   │   ├── UploadController.cs    # File upload endpoints
+│   │   ├── GroupsController.cs    # Group management endpoints
+│   │   └── GroupJoinRequestsController.cs # Join request workflow
+│   └── SignalR/                   # Real-time communication
+│       ├── Hubs/                  # SignalR hubs
+│       │   ├── ChatHub.cs         # Main chat hub với video calling
+│       │   ├── IChatHub.cs        # Hub interface
+│       │   └── IHubClient.cs      # Client interface
+│       ├── NameUserIdProvider.cs  # Custom user ID provider
+│       └── SignalRChatClientNotifier.cs # SignalR notification service
+├── Extensions/                    # Dependency Injection Extensions
+│   ├── ServiceCollectionExtensions.cs # Service registration
+│   └── WebApplicationExtensions.cs    # Application configuration
+├── Middleware/                    # Custom middleware
+│   └── GlobalExceptionHandlerMiddleware.cs # Global exception handling
+├── Validators/                    # Input validation
+│   ├── CreateGroupRequestValidator.cs # Group creation validation
+│   └── SendMessageRequestValidator.cs # Message validation
+├── uploads/                       # Static file storage
+└── Program.cs                     # Application entry point
 ```
 
 ## Tính Năng Chính
@@ -760,7 +857,27 @@ chat-server/
 3. **Reliability**: Durable queues, message acknowledgment
 4. **Scalability**: Multiple consumer instances supported
 
-## Repository Pattern Implementation
+## Repository Pattern Implementation - Clean Architecture
+
+### Clean Architecture Layers Implementation
+
+**Core Layer (Domain)**:
+
+- **Models**: Entities và DTOs không phụ thuộc vào database
+- **Constants**: Business constants và enums
+- **Configs**: Configuration models
+
+**Infrastructure Layer**:
+
+- **Repositories**: Data access implementation với interfaces
+- **Services**: Application business logic
+- **BackgroundServices**: Message queue consumers
+
+**Presentation Layer**:
+
+- **Controllers**: HTTP API endpoints
+- **SignalR Hubs**: Real-time communication
+- **Middleware**: Cross-cutting concerns
 
 ### Base Repository Features
 
@@ -769,13 +886,22 @@ chat-server/
 - **Snake_case Conversion**: PostgreSQL naming convention
 - **Async Operations**: Non-blocking database calls
 - **Partial Updates**: Efficient field-level updates
+- **Dependency Injection**: Interface-based repository pattern
+- **Clean Separation**: Repository interfaces trong Core, implementations trong Infrastructure
 
 ### Specialized Repositories
 
-- **MessageRepo**: Complex queries cho conversations
-- **AttachmentRepo**: File metadata management
-- **ReactionRepo**: Duplicate checking, reaction management
-- **UserRepo**: Online status và last_seen tracking
+- **MessageRepo** (Infrastructure/Repositories/Messenger/): Complex queries cho conversations
+- **AttachmentRepo** (Infrastructure/Repositories/Attachment/): File metadata management
+- **ReactionRepo** (Infrastructure/Repositories/Reaction/): Duplicate checking, reaction management
+- **UserRepo** (Infrastructure/Repositories/User/): Online status và last_seen tracking
+- **GroupRepository** (Infrastructure/Repositories/Group/): Group management với role-based permissions
+
+### Dependency Injection Pattern
+
+- **ServiceCollectionExtensions**: Central service registration
+- **Interface Segregation**: Separate interfaces cho mỗi repository
+- **Lifetime Management**: Scoped lifetimes cho database connections
 
 ## SignalR Implementation
 
@@ -945,11 +1071,26 @@ docker run -p 5000:80 chat-server   # Run container
 - **Project**: Chat Server Backend với Full Group Chat Support
 - **Framework**: .NET 9 + SignalR + RabbitMQ
 - **Database**: PostgreSQL với Group Chat schema
-- **Architecture**: Clean Architecture với Repository Pattern
+- **Architecture**: Clean Architecture với layered structure
+  - **Core Layer**: Domain models, constants, configurations
+  - **Infrastructure Layer**: Repositories, services, background services
+  - **Presentation Layer**: Controllers, SignalR hubs, middleware
+- **Design Patterns**: Repository Pattern, Dependency Injection, SOLID Principles
 - **Deployment**: Docker-ready với production configuration
-- **Latest Update**: Complete Group Chat implementation với role-based permissions, join requests, invite links, và real-time events
+- **Latest Update**: Restructured to Clean Architecture + Complete Group Chat implementation với role-based permissions, join requests, invite links, và real-time events
 
-## 🆕 **New Group Chat Features (Latest Update)**
+## 🆕 **Latest Updates**
+
+### **Clean Architecture Restructuring** 🏗️
+
+✅ **Layered Architecture** - Separated into Core, Infrastructure, và Presentation layers  
+✅ **Dependency Inversion** - Core không phụ thuộc vào Infrastructure  
+✅ **SOLID Principles** - Interface segregation và dependency injection  
+✅ **Better Organization** - Clear separation of concerns  
+✅ **Enhanced Testability** - Dễ dàng unit testing với mocked dependencies  
+✅ **Improved Maintainability** - Modular structure cho easy maintenance
+
+### **Group Chat Features** 💬
 
 ✅ **Group Management** - Create, update, delete groups  
 ✅ **Role-based Permissions** - Admin, Moderator, Member roles  
@@ -960,286 +1101,4 @@ docker run -p 5000:80 chat-server   # Run container
 ✅ **Member Presence** - Online/offline tracking trong groups  
 ✅ **Group Statistics** - Member counts, activity analytics
 
-**All features are production-ready với comprehensive API documentation và real-time SignalR events!**
-
----
-
-## 🚀 Latest Updates Summary (December 2024)
-
-### **Major Enhancements Added:**
-
-#### 1. **Complete UI Component Library** ⭐
-- ✅ **25+ Production-Ready Components** với consistent design system
-- ✅ **Interactive Style Guide** (`UserGuide.tsx`) cho development reference
-- ✅ **Modern Design System** với CSS variables, dark mode, animations
-- ✅ **Accessibility Features** WCAG compliant với keyboard navigation
-- ✅ **Enhanced User Experience** với micro-interactions và smooth transitions
-
-#### 2. **Global SignalR Architecture** ⭐
-- ✅ **Instant Connectivity** - SignalR khởi tạo ngay sau login
-- ✅ **Global Real-time Messaging** - nhận tin nhắn ở bất kỳ đâu trong app
-- ✅ **Performance Optimization** - single connection thay vì multiple
-- ✅ **Toast Notification System** - global notifications cho messages và events
-- ✅ **Connection Status Monitoring** - visual indicators và online user tracking
-
-#### 3. **Developer Experience Improvements** ⭐
-- ✅ **Comprehensive Documentation** - UserGuide.md và SignalR-Global-Setup.md
-- ✅ **Live Component Playground** - interactive testing environment
-- ✅ **TypeScript Integration** - full type safety across all components
-- ✅ **Modular Architecture** - clean separation với reusable components
-- ✅ **Easy Integration** - simple APIs và clear usage patterns
-
-### **Technical Achievements:**
-
-**Frontend Architecture:**
-- **25+ UI Components** với production-quality implementations
-- **Global State Management** cho SignalR connections
-- **Provider Pattern** cho centralized service management
-- **Hook-based Architecture** cho reusable logic
-- **Modern React Patterns** với TypeScript safety
-
-**Real-time System:**
-- **Single Global Connection** eliminating resource waste
-- **Automatic Reconnection** với progressive retry logic
-- **Event-driven Architecture** cho scalable messaging
-- **Toast Integration** cho seamless user notifications
-- **Connection Lifecycle Management** từ login đến logout
-
-**Design System:**
-- **CSS Variables Foundation** cho consistent theming
-- **Dark Mode Support** automatic across all components
-- **Animation System** với smooth transitions
-- **Interactive States** với hover, focus, loading effects
-- **Accessibility Compliance** với ARIA support
-
-### **Impact & Benefits:**
-
-**User Experience:**
-- 🚀 **Instant Messaging** - no delay để receive messages
-- 📱 **Global Notifications** - aware of activity across app
-- 🎨 **Modern Interface** - polished components với professional feel
-- ♿ **Accessibility** - inclusive design cho all users
-- ⚡ **Performance** - optimized resources và faster interactions
-
-**Developer Productivity:**
-- 📚 **Rich Documentation** - complete guides và examples
-- 🧩 **Reusable Components** - consistent building blocks
-- 🔧 **Developer Tools** - style guide và testing utilities
-- 🏗️ **Scalable Architecture** - easy to extend và maintain
-- 🎯 **Type Safety** - fewer bugs với TypeScript integration
-
-**Production Readiness:**
-- ✅ **Enterprise-Grade Components** rivaling commercial libraries
-- ✅ **Robust Real-time System** với error recovery
-- ✅ **Comprehensive Testing Environment** với live demos
-- ✅ **Documentation Coverage** cho easy onboarding
-- ✅ **Performance Optimized** cho production deployment
-
-### **Project Status: Production-Ready** 🎉
-
-Dự án Facebook Clone giờ đây là một **complete social media platform** với:
-- **Advanced UI Component Library** (25+ components)
-- **Global Real-time Messaging System** với instant connectivity
-- **Comprehensive Group Chat Functionality** với roles và permissions  
-- **Modern Design System** với accessibility support
-- **Interactive Documentation** và **Developer Tools**
-- **Production-Grade Architecture** sẵn sàng cho deployment
-
-**Ready for deployment với tất cả features hoạt động seamlessly!** 🚀
-
----
-
-## 🎥 **Video Call System - Latest Update (January 2025)** ⭐ **MỚI**
-
-### **Complete WebRTC Video Call Implementation**
-
-Dự án giờ đây đã có **full-featured video calling system** tích hợp hoàn toàn với SignalR và chat server!
-
-#### **✅ Video Call Features Implemented:**
-
-**🎯 Core Features:**
-- **Video Calling** - P2P video calls với WebRTC
-- **Voice Calling** - Audio-only calls
-- **Real-time Signaling** - Sử dụng SignalR cho connection setup
-- **TURN Server Integration** - NAT traversal support
-- **Call Controls** - Camera, microphone, fullscreen toggles
-- **Call States** - Incoming, outgoing, active call management
-
-**📱 UI/UX Features:**
-- **Responsive Video Interface** - Fullscreen video call UI
-- **Call Controls Panel** - Bottom control bar với animations
-- **Incoming Call Screen** - Accept/decline interface
-- **Call Duration Timer** - Real-time call timer
-- **Auto-hide Controls** - Controls tự động ẩn sau 3 giây
-- **Avatar Fallback** - Hiển thị avatar khi không có video
-
-**🔧 Technical Implementation:**
-- **WebRTC Integration** - Native browser WebRTC APIs
-- **SignalR Signaling** - Real-time offer/answer/ICE candidate exchange
-- **Custom Hooks** - `useWebRTC`, `useVideoCall` for state management
-- **TypeScript Support** - Full type safety
-- **Error Handling** - Comprehensive error recovery
-- **Connection Management** - Auto-reconnection và cleanup
-
-#### **🏗️ Architecture Overview:**
-
-**Frontend Components:**
-```
-components/
-├── video-call/
-│   └── VideoCall.tsx              # Main video call interface
-├── icons/
-│   └── VideoCallIcons.tsx         # Video call UI icons
-└── messenger/
-    └── MessengerContainer.tsx     # Video call buttons integration
-```
-
-**Custom Hooks:**
-```
-hooks/
-├── useWebRTC.ts                   # WebRTC connection management
-└── useVideoCall.ts                # SignalR + WebRTC integration
-```
-
-**API Integration:**
-```
-app/api/
-└── turn-cred/
-    └── route.ts                   # TURN server credentials
-```
-
-#### **🔗 SignalR Events Integration:**
-
-**Client → Server Methods:**
-- `SendCallOffer(targetUserId, offer)` - Initiate video call
-- `SendCallAnswer(targetUserId, answer)` - Accept incoming call
-- `SendIceCandidate(targetUserId, candidate)` - Exchange ICE candidates
-- `EndCall(targetUserId)` - Terminate call
-
-**Server → Client Events:**
-- `ReceiveCallOffer(callerId, offer)` - Incoming call notification
-- `ReceiveCallAnswer(calleeId, answer)` - Call accepted notification
-- `ReceiveIceCandidate(senderId, candidate)` - ICE candidate received
-- `CallEnded(endingUserId)` - Call terminated notification
-
-#### **🌐 TURN Server Configuration:**
-
-**ICE Servers Setup:**
-- **STUN Servers** - Multiple Google STUN servers for NAT detection
-- **TURN Server** - Production TURN server: `bachtv.ydns.eu:3478`
-- **Dynamic Loading** - ICE servers loaded from API endpoint
-- **Fallback Support** - Graceful fallback to STUN-only mode
-
-#### **📋 User Journey:**
-
-1. **Starting a Call:**
-   - User clicks video/voice call button in messenger
-   - WebRTC creates offer and sends via SignalR
-   - Outgoing call screen shows while waiting
-
-2. **Receiving a Call:**
-   - Incoming call screen appears immediately
-   - User can accept or decline
-   - Camera/microphone permissions requested on accept
-
-3. **During Call:**
-   - Full-screen video interface
-   - Controls: camera toggle, mic toggle, fullscreen, end call
-   - Real-time duration timer
-   - Auto-hide controls after 3 seconds
-
-4. **Ending Call:**
-   - Either user can end call
-   - Cleanup connections and media streams
-   - Return to normal chat interface
-
-#### **🔐 Security & Performance:**
-
-**Security Features:**
-- **HTTPS Required** - WebRTC requires secure context
-- **Authentication** - All SignalR calls require user authentication
-- **TURN Authentication** - Secure TURN server credentials
-- **No Data Persistence** - Video streams are not recorded
-
-**Performance Optimizations:**
-- **P2P Connection** - Direct peer-to-peer video streaming
-- **Efficient Signaling** - Minimal SignalR message overhead
-- **Resource Cleanup** - Proper cleanup of media streams và connections
-- **Error Recovery** - Automatic reconnection và fallback mechanisms
-
-#### **🧪 Testing & Debugging:**
-
-**Comprehensive Logging:**
-- **Connection States** - SignalR connection status tracking
-- **WebRTC Events** - Offer/answer/ICE candidate logging
-- **Media Streams** - Camera/microphone access logging
-- **Error Tracking** - Detailed error reporting
-
-**Browser Compatibility:**
-- **Chrome** - Full support
-- **Firefox** - Full support
-- **Safari** - WebRTC support
-- **Edge** - Full support
-
-#### **🚀 Integration Points:**
-
-**Messenger Integration:**
-- **Call Buttons** - Video/voice call buttons in private chats
-- **Online Status** - Calls chỉ hiển thị khi user online
-- **Group Chat** - Currently disabled for group conversations
-- **UI Consistency** - Matches existing messenger design
-
-**Global SignalR System:**
-- **Shared Connection** - Sử dụng global SignalR connection
-- **Event Handlers** - Automatic video call event registration
-- **Connection Management** - Integrated với existing SignalR lifecycle
-
-#### **📱 Mobile Responsive:**
-
-**Mobile Optimizations:**
-- **Touch Controls** - Touch-friendly call controls
-- **Responsive UI** - Adapts to mobile screen sizes
-- **Performance** - Optimized for mobile bandwidth
-- **Battery Aware** - Efficient resource usage
-
-#### **🔮 Future Enhancements:**
-
-**Planned Features:**
-- **Screen Sharing** - Share screen during calls
-- **Call Recording** - Optional call recording
-- **Group Video Calls** - Multi-party video conferencing
-- **Call History** - Track call duration và history
-- **Push Notifications** - Background call notifications
-- **Call Quality Metrics** - Connection quality indicators
-
-**Technical Improvements:**
-- **Adaptive Bitrate** - Dynamic quality adjustment
-- **Background Blur** - Virtual background effects
-- **Noise Cancellation** - Audio enhancement
-- **Network Resilience** - Better handling of poor connections
-
----
-
-### **📊 Updated Project Status:**
-
-Dự án Facebook Clone giờ đây là một **complete social media platform** với:
-- **Advanced UI Component Library** (25+ components)
-- **Global Real-time Messaging System** với instant connectivity
-- **Comprehensive Group Chat Functionality** với roles và permissions
-- **🎥 Full WebRTC Video Calling System** với P2P video/voice calls ⭐ **MỚI**
-- **Modern Design System** với accessibility support
-- **Interactive Documentation** và **Developer Tools**
-- **Production-Grade Architecture** sẵn sàng cho deployment
-
-### **🎉 Major Milestone Achieved:**
-
-**Video Calling System is NOW LIVE!** 📹
-
-- ✅ **P2P Video Calls** - Direct browser-to-browser communication
-- ✅ **Real-time Signaling** - Instant call setup via SignalR
-- ✅ **Production Ready** - Complete error handling và recovery
-- ✅ **Mobile Responsive** - Works on all devices
-- ✅ **Secure & Private** - No server-side video processing
-- ✅ **Integrated Experience** - Seamless với existing chat system
-
-**The Facebook Clone now rivals commercial social media platforms with its comprehensive feature set!** 🚀
+**All features are production-ready với comprehensive API documentation, real-time SignalR events, và Clean Architecture implementation!**

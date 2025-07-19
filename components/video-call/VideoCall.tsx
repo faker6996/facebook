@@ -112,13 +112,24 @@ export default function VideoCall({
 
   if (!isActive) return null;
 
+  console.log('📺 VideoCall rendering with props:', {
+    isActive,
+    isIncoming,
+    isOutgoing,
+    callerName,
+    callerAvatar,
+    hasLocalStream: !!localStream,
+    hasRemoteStream: !!remoteStream
+  });
+
   return (
     <div 
       className={cn(
-        "fixed inset-0 z-50 bg-black flex flex-col",
-        isFullscreen ? "z-[100]" : "z-50"
+        "fixed inset-0 bg-black flex flex-col",
+        isFullscreen ? "z-[9999]" : "z-[9998]"
       )}
       onMouseMove={handleMouseMove}
+      style={{ zIndex: 9999 }}
     >
       {/* Video Container */}
       <div className="flex-1 relative">
@@ -132,22 +143,26 @@ export default function VideoCall({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center">
-              <div className="text-center">
-                <Avatar
-                  src={callerAvatar || '/avatar.png'}
-                  size="lg"
-                  className="w-32 h-32 mx-auto mb-4"
-                />
-                <h2 className="text-2xl font-semibold text-white mb-2">{callerName}</h2>
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%)',
+                minHeight: '100vh'
+              }}
+            >
+              <div className="text-center text-white">
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-gray-300 flex items-center justify-center text-4xl font-bold text-gray-600">
+                  {callerName ? callerName.charAt(0).toUpperCase() : '?'}
+                </div>
+                <h2 className="text-2xl font-semibold mb-2">{callerName}</h2>
                 {isIncoming && (
-                  <p className="text-white/80">Đang gọi bạn...</p>
+                  <p className="text-white/80 text-lg">Đang gọi bạn...</p>
                 )}
                 {isOutgoing && (
-                  <p className="text-white/80">Đang kết nối...</p>
+                  <p className="text-white/80 text-lg">Đang kết nối...</p>
                 )}
                 {!isIncoming && !isOutgoing && (
-                  <p className="text-white/80">{formatDuration(callDuration)}</p>
+                  <p className="text-white/80 text-lg">{formatDuration(callDuration)}</p>
                 )}
               </div>
             </div>

@@ -16,6 +16,11 @@ const PUBLIC_ROUTES = [
 export async function withAuth(req: NextRequest, res: NextResponse): Promise<NextResponse> {
   const pathname = req.nextUrl.pathname;
 
+  // Skip auth check for API routes - let them handle their own auth
+  if (pathname.startsWith('/api')) {
+    return res;
+  }
+
   // Lấy locale từ URL (vd: /vi/login → locale = 'vi')
   const segments = pathname.split("/");
   const locale = segments[1] || "vi"; // fallback locale mặc định

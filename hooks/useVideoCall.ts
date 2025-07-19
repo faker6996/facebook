@@ -13,7 +13,7 @@ export interface VideoCallEvents {
   onCallEnded?: (callerId: string) => void;
 }
 
-export default function useVideoCall(events?: VideoCallEvents) {
+export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean = false) {
   const { connection, isConnected } = useSignalR();
   const [iceServers, setIceServers] = useState<RTCIceServer[]>([
     { urls: 'stun:stun.l.google.com:19302' },
@@ -123,7 +123,8 @@ export default function useVideoCall(events?: VideoCallEvents) {
       return;
     }
 
-    console.log('📞 Setting up SignalR video call listeners...');
+    const listenerPrefix = isGlobal ? 'Global' : 'Local';
+    console.log(`📞 Setting up ${listenerPrefix} SignalR video call listeners...`);
 
     // Handle incoming call offer
     const handleCallOffer = async (callerId: string, offer: string) => {
@@ -135,9 +136,18 @@ export default function useVideoCall(events?: VideoCallEvents) {
         const offerObj = JSON.parse(offer) as RTCSessionDescriptionInit;
         console.log('📞 Parsed offer:', offerObj);
         
-        // For now, use callerId as name since server doesn't send name
-        await webRTC.handleOffer(offerObj, callerId, callerId, undefined);
-        events?.onIncomingCall?.(callerId, callerId, undefined);
+        // Fetch caller info to get real name
+        let callerName = callerId; // fallback
+        try {
+          const userResponse = await callApi<any>(`/api/users?id=${callerId}`, HTTP_METHOD_ENUM.GET);
+          callerName = userResponse?.name || userResponse?.user_name || userResponse?.email || callerId;
+          console.log('📞 Fetched caller name:', callerName);
+        } catch (error) {
+          console.warn('Failed to fetch caller info:', error);
+        }
+        
+        await webRTC.handleOffer(offerObj, callerId, callerName, undefined);
+        events?.onIncomingCall?.(callerId, callerName, undefined);
       } catch (error) {
         console.error('Error handling call offer:', error);
       }
@@ -190,13 +200,17 @@ export default function useVideoCall(events?: VideoCallEvents) {
       events?.onCallDeclined?.(callerId);
     };
 
-    // Register SignalR event handlers
-    console.log('📞 Registering SignalR event handlers...');
-    connection.on('ReceiveCallOffer', handleCallOffer);
+    // Register SignalR event handlers with namespace to avoid conflicts
+    console.log(`📞 Registering ${listenerPrefix} SignalR event handlers...`);
+    
+    // Only global handler should receive initial call offers
+    if (isGlobal) {
+      connection.on('ReceiveCallOffer', handleCallOffer);
+    }
+    
     connection.on('ReceiveCallAnswer', handleCallAnswer);
     connection.on('ReceiveIceCandidate', handleIceCandidate);
     connection.on('CallEnded', handleCallEnd);
-    // Note: CallDeclined might not be supported by server yet
     connection.on('CallDeclined', handleCallDeclined);
 
     // Test if events are registered
@@ -210,8 +224,10 @@ export default function useVideoCall(events?: VideoCallEvents) {
 
     // Cleanup
     return () => {
-      console.log('📞 Cleaning up SignalR event handlers...');
-      connection.off('ReceiveCallOffer', handleCallOffer);
+      console.log(`📞 Cleaning up ${listenerPrefix} SignalR event handlers...`);
+      if (isGlobal) {
+        connection.off('ReceiveCallOffer', handleCallOffer);
+      }
       connection.off('ReceiveCallAnswer', handleCallAnswer);
       connection.off('ReceiveIceCandidate', handleIceCandidate);
       connection.off('CallEnded', handleCallEnd);
@@ -236,11 +252,13 @@ export default function useVideoCall(events?: VideoCallEvents) {
     try {
       console.log('📞 Accepting call...');
       await webRTC.acceptCall();
+      // Trigger local onCallAccepted event for the receiver
+      events?.onCallAccepted?.('local');
     } catch (error) {
       console.error('Error accepting call:', error);
       throw error;
     }
-  }, [webRTC]);
+  }, [webRTC, events]);
 
   // Enhanced decline call
   const declineCall = useCallback(() => {
