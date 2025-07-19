@@ -53,4 +53,12 @@ export const userApp = {
 
     return await userRepo.searchByNameOrUsername(query.trim());
   },
+
+  async searchUsersForMessenger(currentUserId: number, query: string): Promise<any[]> {
+    if (!query || query.trim().length < 2) {
+      throw new ApiError("Search query must be at least 2 characters", 400);
+    }
+
+    return await userRepo.searchUsersWithConversation(currentUserId, query.trim());
+  },
 };

@@ -13,6 +13,7 @@ import Button from "@/components/ui/Button";
 import CreateGroupModal from "@/components/messenger/CreateGroupModal";
 import { Users, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import ClientOnly from "@/components/ui/ClientOnly";
 
 interface MessengerDropdownProps {
   onClose: () => void;
@@ -239,7 +240,9 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
                       )}
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
+                      <ClientOnly fallback={<div className="text-xs text-muted-foreground">--:--</div>}>
+                        <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
+                      </ClientOnly>
                       {item.is_group && item.member_count && <div className="text-xs text-muted-foreground">{item.member_count} thành viên</div>}
                     </div>
                   </div>

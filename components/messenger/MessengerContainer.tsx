@@ -113,9 +113,15 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   // ----- useEffect Hooks -----
   // Load tin nhắn ban đầu và group data
   useEffect(() => {
-    if (!conversation?.conversation_id) return;
     const currentUser = loadFromLocalStorage("user", User);
     setSender(currentUser ?? {});
+
+    // Nếu không có conversation_id, đây là conversation mới
+    if (!conversation?.conversation_id) {
+      console.log("🆕 New conversation - no messages to load");
+      setMessages([]);
+      return;
+    }
 
     let isMounted = true;
     (async () => {
@@ -235,13 +241,17 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     const body: SendMessageRequest = {
       sender_id: sender.id!,
       content,
-      conversation_id: conversation.conversation_id!,
       message_type: isGroup ? MESSAGE_TYPE.GROUP : MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
       content_type: contentType || "text", // Loại nội dung (text/image/file)
       target_id: isGroup ? undefined : conversation.other_user_id,
       reply_to_message_id: replyToMessageId,
       attachments,
     };
+
+    // Chỉ thêm conversation_id nếu có
+    if (conversation.conversation_id) {
+      body.conversation_id = conversation.conversation_id;
+    }
 
     console.log("Sending message:", body);
     console.log("Attachments detail:", JSON.stringify(attachments, null, 2));
@@ -276,7 +286,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     if ((!input.trim() && selectedFiles.length === 0) || !sender.id) return;
 
     setIsUploading(true);
-    const tempId = `temp_${Date.now()}`;
+    const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const content = input.trim();
 
     let attachments: any[] = [];
@@ -323,7 +333,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         : undefined,
       created_at: new Date().toISOString(),
       status: "Sending",
-      attachments: attachments.map((att) => ({ ...att, id: Math.random() })),
+      attachments: attachments.map((att, index) => ({ ...att, id: `att_${Date.now()}_${index}` })),
     });
 
     setMessages((prev) => [...prev, optimistic]);
@@ -337,7 +347,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const handleRetrySend = (failed: Message) => {
     if (!failed.content) return;
     setMessages((prev) => prev.filter((m) => m.id !== failed.id));
-    const tempId = `temp_${Date.now()}`;
+    const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const optimistic = new Message({
       ...failed,
       id: tempId,
@@ -371,7 +381,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           if (existingIndex === -1) {
             // Add new reaction optimistically
             newReactions.push({
-              id: Math.random(), // temporary ID
+              id: Date.now() + Math.floor(Math.random() * 1000), // temporary ID
               message_id: messageId,
               user_id: sender.id!,
               emoji,
