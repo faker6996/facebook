@@ -4,6 +4,8 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { SignalRProvider } from "@/contexts/SignalRContext";
 import { SignalRInit } from "./SignalRInit";
 import GlobalVideoCallManager from "./GlobalVideoCallManager";
+import { LoadingProvider } from "@/contexts/LoadingContext";
+import { GlobalLoading } from "@/components/ui/GlobalLoading";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -15,12 +17,15 @@ interface AppProvidersProps {
  */
 export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
-    <ToastProvider position="top-right" maxToasts={5}>
-      <SignalRProvider>
-        <SignalRInit />
-        <GlobalVideoCallManager />
-        {children}
-      </SignalRProvider>
-    </ToastProvider>
+    <LoadingProvider>
+      <ToastProvider position="top-right" maxToasts={5}>
+        <SignalRProvider>
+          <SignalRInit />
+          <GlobalVideoCallManager />
+          <GlobalLoading />
+          {children}
+        </SignalRProvider>
+      </ToastProvider>
+    </LoadingProvider>
   );
 };

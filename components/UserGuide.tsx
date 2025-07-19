@@ -17,6 +17,10 @@ import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, SelectDropdown }
 import { RadioGroup, RadioGroupItem, RadioGroupWithLabel, RadioButtonGroup } from "@/components/ui/RadioGroup";
 import { Skeleton, SkeletonAvatar, SkeletonText, SkeletonPost, SkeletonMessage } from "@/components/ui/Skeleton";
 import Alert from "@/components/ui/Alert";
+import { LoadingSpinner, InlineLoading } from "@/components/ui/Loading";
+import { GlobalLoading, ButtonLoading } from "@/components/ui/GlobalLoading";
+import { useLoading } from "@/contexts/LoadingContext";
+import { LOADING_KEYS } from "@/lib/utils/loading-manager";
 
 // Import icons
 import { Heart, MessageCircle, Share, Settings, User, Image, Video, Plus, Edit, Trash, Grid, List, Search, ChevronDown, ChevronRight, Users, Bell, Check, X, AlertTriangle, Info, Upload, Download, Play, Pause, SkipForward, Star } from "lucide-react";
@@ -121,6 +125,187 @@ const ResponsiveDemo = () => {
         </div>
       </div>
     </Card>
+  );
+};
+
+// ----- Loading System Demo Components -----
+const LoadingSystemDemo = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const { isKeyLoading } = useLoading();
+
+  const handleAutoSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    try {
+      // Simulate API call với auto loading
+      const results = await new Promise(resolve => {
+        setTimeout(() => {
+          resolve([
+            { id: 1, name: "Nguyễn Văn A", email: "a@example.com" },
+            { id: 2, name: "Trần Thị B", email: "b@example.com" }
+          ]);
+        }, 2000);
+      });
+      setSearchResults(results as any[]);
+    } catch (error) {
+      console.error("Search failed:", error);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <h4 className="font-medium">API Call với Auto Loading</h4>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Tìm kiếm người dùng..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="sm"
+          />
+          <Button 
+            size="sm" 
+            onClick={handleAutoSearch}
+            disabled={isKeyLoading(LOADING_KEYS.SEARCH_USERS)}
+          >
+            {isKeyLoading(LOADING_KEYS.SEARCH_USERS) ? "Đang tìm..." : "Tìm"}
+          </Button>
+        </div>
+      </div>
+
+      {isKeyLoading(LOADING_KEYS.SEARCH_USERS) && (
+        <InlineLoading />
+      )}
+
+      {searchResults.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Kết quả:</p>
+          {searchResults.map((user) => (
+            <div key={user.id} className="text-sm p-2 bg-muted/50 rounded">
+              {user.name} - {user.email}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="text-xs text-muted-foreground">
+        Loading tự động hiện khi gọi API
+      </div>
+    </div>
+  );
+};
+
+const ManualLoadingDemo = () => {
+  const { start, stop, isKeyLoading } = useLoading();
+  const [result, setResult] = useState<string>("");
+
+  const handleManualLoading = async () => {
+    const loadingKey = "manual_demo";
+    start(loadingKey);
+    
+    try {
+      // Simulate long operation
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      setResult("Hoàn thành!");
+    } catch (error) {
+      setResult("Có lỗi xảy ra");
+    } finally {
+      stop(loadingKey);
+    }
+  };
+
+  const clearResult = () => setResult("");
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <h4 className="font-medium">Manual Loading Control</h4>
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            onClick={handleManualLoading}
+            disabled={isKeyLoading("manual_demo")}
+          >
+            Bắt đầu
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={clearResult}
+          >
+            Xóa
+          </Button>
+        </div>
+      </div>
+
+      {isKeyLoading("manual_demo") && (
+        <div className="flex items-center gap-2">
+          <InlineLoading />
+          <span className="text-sm text-muted-foreground">Đang xử lý...</span>
+        </div>
+      )}
+
+      {result && (
+        <div className="text-sm p-2 bg-success/10 text-success rounded">
+          {result}
+        </div>
+      )}
+
+      <div className="text-xs text-muted-foreground">
+        Kiểm soát loading thủ công với start() / stop()
+      </div>
+    </div>
+  );
+};
+
+const LoadingUIDemo = () => {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <h4 className="font-medium">Loading Spinners</h4>
+        <div className="flex items-center gap-4">
+          <div className="text-center space-y-1">
+            <LoadingSpinner size="sm" />
+            <div className="text-xs text-muted-foreground">Small</div>
+          </div>
+          <div className="text-center space-y-1">
+            <LoadingSpinner size="md" />
+            <div className="text-xs text-muted-foreground">Medium</div>
+          </div>
+          <div className="text-center space-y-1">
+            <LoadingSpinner size="lg" />
+            <div className="text-xs text-muted-foreground">Large</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h4 className="font-medium">Inline Loading</h4>
+        <div className="space-y-2">
+          <InlineLoading />
+          <InlineLoading variant="dots" />
+          <InlineLoading size="sm" />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h4 className="font-medium">Loading với Buttons</h4>
+        <div className="flex gap-2">
+          <ButtonLoading isLoading={true} className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm">
+            Đang gửi...
+          </ButtonLoading>
+          <ButtonLoading isLoading={false} className="bg-success text-success-foreground px-3 py-1 rounded text-sm">
+            Hoàn thành
+          </ButtonLoading>
+        </div>
+      </div>
+
+      <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded">
+        💡 <strong>Best Practice:</strong> Sử dụng <code>callApi()</code> để có loading tự động cho tất cả API calls. 
+        Chỉ dùng manual loading cho các tác vụ không phải API.
+      </div>
+    </div>
   );
 };
 
@@ -518,6 +703,25 @@ const UserGuideContent: React.FC = () => {
             </div>
           </Card>
         </div>
+      </section>
+
+      {/* Global Loading System Section */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-semibold text-foreground">Global Loading System</h2>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card title="Auto Loading with API">
+            <LoadingSystemDemo />
+          </Card>
+
+          <Card title="Manual Loading Control">
+            <ManualLoadingDemo />
+          </Card>
+        </div>
+
+        <Card title="Loading UI Components">
+          <LoadingUIDemo />
+        </Card>
       </section>
 
       {/* Skeleton Loading Section */}
