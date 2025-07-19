@@ -56,5 +56,22 @@
     "create": "Create Group",
     "creating": "Creating...",
     "charactersCount": "characters"
+  },
+
+  "VideoCall": {
+    "incomingCall": "Incoming call...",
+    "outgoingCall": "Connecting...",
+    "callDuration": "Call duration",
+    "acceptCall": "Accept",
+    "declineCall": "Decline",
+    "endCall": "End call",
+    "toggleVideo": "Toggle camera",
+    "toggleAudio": "Toggle microphone",
+    "toggleFullscreen": "Fullscreen",
+    "minimize": "Minimize",
+    "connecting": "Connecting...",
+    "callEnded": "Call ended",
+    "callFailed": "Call failed",
+    "unknownCaller": "Unknown caller"
   }
 }

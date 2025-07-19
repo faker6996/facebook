@@ -40,6 +40,10 @@
 
   --info: 200 86% 55%; /* #3498db - Peter River */
   --info-foreground: 0 0% 100%; /* #ffffff */
+  
+  /* Video call specific colors */
+  --video-call-overlay: 0 0% 0% / 0.3;
+  --video-call-glass: 255 255 255 / 0.1;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -81,6 +85,10 @@
 
     --info: 200 86% 55%; /* Giữ nguyên */
     --info-foreground: 0 0% 100%;
+    
+    /* Video call specific colors for dark mode */
+    --video-call-overlay: 0 0% 0% / 0.5;
+    --video-call-glass: 255 255 255 / 0.05;
   }
 }
 
@@ -97,8 +105,65 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Video Call Enhanced Animations */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(1deg); }
+  66% { transform: translateY(5px) rotate(-0.5deg); }
+}
+
+@keyframes shimmer-call {
+  0% { opacity: 0; transform: translateX(-100%) skewX(-15deg); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(200%) skewX(-15deg); }
+}
+
+@keyframes ripple {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-shimmer-call {
+  animation: shimmer-call 2s ease-in-out infinite;
+}
+
+.animate-ripple {
+  animation: ripple 0.6s linear;
+}
+
 .dark {
   --background: 222.2 84% 4.9%; /* dark mode */
   --foreground: 210 40% 98%;
   --muted-foreground: 215.4 16.3% 70%;
+}
+
+/* Video Call Component Enhancements */
+.video-call-container {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.video-call-backdrop {
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+}
+
+/* Smooth interactions */
+.video-call-button {
+  transform-origin: center;
+  will-change: transform;
+}
+
+.video-call-button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-out;
 }

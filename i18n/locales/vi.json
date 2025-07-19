@@ -74,5 +74,22 @@
     "create": "Tạo nhóm",
     "creating": "Đang tạo...",
     "charactersCount": "ký tự"
+  },
+
+  "VideoCall": {
+    "incomingCall": "Đang gọi bạn...",
+    "outgoingCall": "Đang kết nối...",
+    "callDuration": "Thời gian gọi",
+    "acceptCall": "Nghe máy",
+    "declineCall": "Từ chối",
+    "endCall": "Kết thúc cuộc gọi",
+    "toggleVideo": "Bật/tắt camera",
+    "toggleAudio": "Bật/tắt mic",
+    "toggleFullscreen": "Toàn màn hình",
+    "minimize": "Thu nhỏ",
+    "connecting": "Đang kết nối...",
+    "callEnded": "Cuộc gọi đã kết thúc",
+    "callFailed": "Cuộc gọi thất bại",
+    "unknownCaller": "Người gọi không xác định"
   }
 }
