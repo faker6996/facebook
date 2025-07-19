@@ -7,10 +7,24 @@ import { withCors, withLogger, withAuth } from "./lib/middlewares";
 import { withRateLimit } from "./lib/middlewares/rate-limit";
 import { routing } from "@/i18n/routing";
 
-const intlMiddleware = createIntlMiddleware(routing);
+const intlMiddleware = createIntlMiddleware({
+  ...routing,
+  // Enhanced locale detection 
+  localeDetection: true,
+  alternateLinks: true
+});
 
 export async function middleware(req: NextRequest) {
   try {
+    // Skip i18n for API routes
+    if (req.nextUrl.pathname.startsWith('/api')) {
+      return await middlewarePipeline(req, [
+        withCors,
+        withLogger,
+        withAuth,
+      ]);
+    }
+
     const intlRes = intlMiddleware(req);
     if (intlRes?.redirected) return intlRes;
 
@@ -40,5 +54,15 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|trpc|_next|_vercel|.*\\..*).*)"],
+  matcher: [
+    // Enable a redirect to a matching locale at the root
+    '/',
+
+    // Set a cookie to remember the previous locale for
+    // all requests that have a locale prefix
+    '/(vi|en)/:path*',
+
+    // Enable redirects that add missing locales
+    // (e.g. `/pathnames` -> `/en/pathnames`)
+    '/((?!_next|_vercel|.*\\..*).*)']
 };

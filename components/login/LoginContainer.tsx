@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Button from "../ui/Button";
+import { useToast } from "../ui/Toast";
 
 interface SsoReq {
   redirectUrl: string;
@@ -20,6 +21,7 @@ export default function LoginContainer() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || LOCALE.VI;
   const t = useTranslations("LoginPage");
+  const { addToast } = useToast();
 
   const handleLoginWithFacebook = async () => {
     try {
@@ -27,7 +29,10 @@ export default function LoginContainer() {
       window.location.href = res?.redirectUrl!;
     } catch (err: any) {
       console.error("Facebook SSO error:", err);
-      throw new Error(`Facebook SSO failed: ${err?.message || "Unknown error"}`);
+      addToast({
+        type: "error",
+        message: err?.message || "Facebook đăng nhập thất bại"
+      });
     }
   };
 
@@ -37,7 +42,10 @@ export default function LoginContainer() {
       window.location.href = res?.redirectUrl!;
     } catch (err: any) {
       console.error("Google SSO error:", err);
-      throw new Error(`Facebook SSO failed: ${err?.message || "Unknown error"}`);
+      addToast({
+        type: "error",
+        message: err?.message || "Google đăng nhập thất bại"
+      });
     }
   };
   const handleEmailPasswordLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -54,8 +62,12 @@ export default function LoginContainer() {
       triggerAuthChange();
       
       router.push(`/${locale}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      addToast({
+        type: "error",
+        message: err?.message || "Đăng nhập thất bại"
+      });
     }
   };
 

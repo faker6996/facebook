@@ -3,7 +3,7 @@ import { VARIANT_STYLES_BTN, SIZE_STYLES_BTN } from "@/lib/constants/constants-u
 import { cn } from "@/lib/utils/cn";
 
 // Khai báo kiểu cho props
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   children?: React.ReactNode;
   type?: "button" | "submit" | "reset";
@@ -36,6 +36,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       loading = false,
       fullWidth = false,
       title,
+      ...rest
     },
     ref
   ) => {
@@ -64,6 +65,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={disabled || loading}
+        {...rest}
       >
         <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         {loading ? (

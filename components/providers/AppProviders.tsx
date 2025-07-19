@@ -3,6 +3,7 @@
 import { ToastProvider } from "@/components/ui/Toast";
 import { SignalRProvider } from "@/contexts/SignalRContext";
 import { SignalRInit } from "./SignalRInit";
+import GlobalVideoCallManager from "./GlobalVideoCallManager";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
     <ToastProvider position="top-right" maxToasts={5}>
       <SignalRProvider>
         <SignalRInit />
+        <GlobalVideoCallManager />
         {children}
       </SignalRProvider>
     </ToastProvider>
