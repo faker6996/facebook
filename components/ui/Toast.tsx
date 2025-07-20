@@ -49,7 +49,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((toast: Omit<Toast, "id">) => {
-    const id = Math.random().toString(36).substring(2);
+    const id = `toast-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const newToast = { ...toast, id };
     
     setToasts(prev => {

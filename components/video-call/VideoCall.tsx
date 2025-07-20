@@ -139,7 +139,7 @@ export default function VideoCall({
           const brightness = (r1 * 299 + g1 * 587 + b1 * 114) / 1000;
           const opacity = brightness > 128 ? '0.08' : '0.12';
           setBackgroundPattern(
-            `radial-gradient(circle at ${Math.random() * 100}% ${Math.random() * 100}%, rgba(255,255,255,${opacity}) 0%, transparent 50%)`
+            `radial-gradient(circle at 50% 50%, rgba(255,255,255,${opacity}) 0%, transparent 50%)`
           );
         }
       } catch (error) {

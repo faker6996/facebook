@@ -45,11 +45,11 @@ export class Message {
 export type MessageStatus = "Sending" | "Sent" | "Delivered" | "Read" | "Failed";
 export interface SendMessageRequest {
   sender_id: number;
-  conversation_id: number;
+  conversation_id?: number; // Optional - chat server sẽ tự tạo nếu không có
   content: string;
   message_type: MESSAGE_TYPE;
   content_type?: "text" | "image" | "file"; // Thêm content_type riêng
-  target_id?: number;
+  target_id?: number; // Bắt buộc khi không có conversation_id
   reply_to_message_id?: number; // Thêm reply support
   attachments?: {
     file_name: string;

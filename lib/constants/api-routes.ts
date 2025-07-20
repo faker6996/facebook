@@ -21,6 +21,8 @@ export const API_ROUTES = {
   MESSENGER: {
     RECENT: (id: number) => `/api/messenger/conversations?userId=${id}`,
     MESSAGES: (conversationId: number) => `/api/messenger/messages?conversationId=${conversationId}`,
+    MESSAGES_PAGINATED: (conversationId: number, page: number, limit: number = 30) => 
+      `/api/messenger/messages?conversationId=${conversationId}&page=${page}&limit=${limit}`,
     SYNC: `/api/messenger/messages_sync`,
   },
   SEARCH: {

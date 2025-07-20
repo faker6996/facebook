@@ -120,7 +120,27 @@ export const messengerRepo = {
     }));
   },
 
-  async getMessagesByConversationId(conversationId: number): Promise<any[]> {
+  async getMessagesByConversationId(
+    conversationId: number, 
+    page: number = 1, 
+    limit: number = 30
+  ): Promise<{
+    messages: any[];
+    hasMore: boolean;
+    totalCount: number;
+    currentPage: number;
+  }> {
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+    
+    // First get total count
+    const countSql = `
+      SELECT COUNT(*) as total_count
+      FROM messages m
+      WHERE m.conversation_id = $1
+    `;
+    
+    // Main query with pagination - ORDER BY DESC để lấy tin nhắn mới nhất trước, sau đó reverse
     const sql = `
      SELECT 
         m.id, 
@@ -162,21 +182,44 @@ export const messengerRepo = {
       LEFT JOIN message_reactions r ON m.id = r.message_id
       WHERE m.conversation_id = $1
       GROUP BY m.id, m.conversation_id, m.sender_id, m.content, m.created_at, m.status, m.content_type, m.message_type, m.reply_to_message_id
-      ORDER BY m.created_at ASC
+      ORDER BY m.created_at DESC
+      LIMIT $2 OFFSET $3
     `;
 
-    console.log("🔍 SQL Query (Simple):", sql);
-    console.log("🔍 Parameters:", [conversationId]);
+    console.log("🔍 SQL Pagination Query:", sql);
+    console.log("🔍 Count Query:", countSql);
+    console.log("🔍 Parameters:", { conversationId, limit, offset, page });
 
     try {
-      const messages = await safeQuery(sql, [conversationId]);
-      console.log("✅ Query result:", messages?.rows?.length, "messages");
+      // Get total count first
+      const countResult = await safeQuery(countSql, [conversationId]);
+      const totalCount = parseInt(countResult?.rows?.[0]?.total_count || '0');
+      
+      // Get paginated messages
+      const messages = await safeQuery(sql, [conversationId, limit, offset]);
+      console.log("✅ Query result:", {
+        messagesCount: messages?.rows?.length,
+        totalCount,
+        page,
+        limit,
+        offset
+      });
+      
       if (!messages || !messages.rows) {
-        return [];
+        return {
+          messages: [],
+          hasMore: false,
+          totalCount: 0,
+          currentPage: page
+        };
       }
+      
+      // Reverse messages để có thứ tự ASC (cũ nhất lên trên, mới nhất xuống dưới)
+      const reversedMessages = messages.rows.reverse();
+      
       // Lấy replied messages riêng để tránh JOIN phức tạp
       const messagesWithReplies = await Promise.all(
-        messages.rows.map(async (message) => {
+        reversedMessages.map(async (message) => {
           if (message.reply_to_message_id) {
             try {
               const repliedQuery = `
@@ -196,11 +239,19 @@ export const messengerRepo = {
         })
       );
       
-      return messagesWithReplies;
+      // Calculate if there are more messages
+      const hasMore = (page * limit) < totalCount;
+      
+      return {
+        messages: messagesWithReplies,
+        hasMore,
+        totalCount,
+        currentPage: page
+      };
     } catch (error) {
       console.error("❌ SQL Error in getMessagesByConversationId:", error);
       console.error("❌ SQL Query that failed:", sql);
-      console.error("❌ Parameters:", [conversationId]);
+      console.error("❌ Parameters:", { conversationId, limit, offset });
       throw error;
     }
   },

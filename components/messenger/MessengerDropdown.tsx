@@ -13,6 +13,10 @@ import Button from "@/components/ui/Button";
 import CreateGroupModal from "@/components/messenger/CreateGroupModal";
 import { Users, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import ClientOnly from "@/components/ui/ClientOnly";
+import { useLoading } from "@/contexts/LoadingContext";
+import { LOADING_KEYS } from "@/lib/utils/loading-manager";
+import { InlineLoading } from "@/components/ui/Loading";
 
 interface MessengerDropdownProps {
   onClose: () => void;
@@ -26,6 +30,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
   const [searchResults, setSearchResults] = useState<MessengerPreview[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isKeyLoading } = useLoading();
   const [user, setUser] = useState<User | null>(null);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [filter, setFilter] = useState<"all" | "private" | "groups">("all");
@@ -38,7 +43,12 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
 
         if (!user?.id) return;
 
-        const res = await callApi<MessengerPreview[]>(API_ROUTES.MESSENGER.RECENT(user.id), HTTP_METHOD_ENUM.GET);
+        const res = await callApi<MessengerPreview[]>(
+          API_ROUTES.MESSENGER.RECENT(user.id), 
+          HTTP_METHOD_ENUM.GET,
+          undefined,
+          { loadingKey: LOADING_KEYS.LOAD_CONVERSATIONS }
+        );
 
         setConversations(res);
       } catch (err) {
@@ -88,14 +98,16 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
       setSearchResults(null);
       return;
     }
-    setLoading(true);
     try {
-      const res = await callApi<MessengerPreview[]>(API_ROUTES.SEARCH.USER_NAME(searchUser), HTTP_METHOD_ENUM.GET);
+      const res = await callApi<MessengerPreview[]>(
+        API_ROUTES.SEARCH.USER_NAME(searchUser), 
+        HTTP_METHOD_ENUM.GET,
+        undefined,
+        { loadingKey: LOADING_KEYS.SEARCH_USERS }
+      );
       setSearchResults(res);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm người dùng:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -191,8 +203,14 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
           </Button>
         </form>
 
-        {loading ? (
-          <div className="text-muted-foreground">Đang tải...</div>
+        {(loading || isKeyLoading(LOADING_KEYS.LOAD_CONVERSATIONS) || isKeyLoading(LOADING_KEYS.SEARCH_USERS)) ? (
+          <div className="flex items-center justify-center py-8">
+            <InlineLoading 
+              message="" // Không hiển thị text
+              size="md"
+              variant="spinner"
+            />
+          </div>
         ) : filteredConversations.length === 0 ? (
           searchResults !== null ? (
             <div className="text-muted-foreground text-center py-4">Không tìm thấy kết quả nào.</div>
@@ -239,7 +257,9 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
                       )}
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
+                      <ClientOnly fallback={<div className="text-xs text-muted-foreground">--:--</div>}>
+                        <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
+                      </ClientOnly>
                       {item.is_group && item.member_count && <div className="text-xs text-muted-foreground">{item.member_count} thành viên</div>}
                     </div>
                   </div>

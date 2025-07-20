@@ -1,5 +1,6 @@
 // lib/utils/api-client.ts
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import { loadingManager, LOADING_KEYS } from "./loading-manager";
 
 const api = axios.create({
   baseURL: "", // process.env.NEXT_PUBLIC_API_URL (nếu có)
@@ -18,9 +19,21 @@ export async function callApi<T>(
   url: string,
   method: "GET" | "POST" | "PUT" | "DELETE",
   data?: any,
-  config?: AxiosRequestConfig & { silent?: boolean } // Add silent option
+  config?: AxiosRequestConfig & { 
+    silent?: boolean; // Add silent option
+    loadingKey?: string; // Add loading key option
+    loadingMessage?: string; // Add loading message option
+  }
 ): Promise<T> {
   console.log(`🔥 API Call: ${method} ${url}`, data);
+  
+  // Auto-generate loading key if not provided
+  const loadingKey = config?.loadingKey || `api_${method.toLowerCase()}_${url.replace(/[^\w]/g, '_')}`;
+  
+  // Start loading (không cần message)
+  if (!config?.silent) {
+    loadingManager.start(loadingKey);
+  }
   
   try {
     const res = await api.request({
@@ -59,5 +72,10 @@ export async function callApi<T>(
     console.error("Error status:", axiosErr.response?.status);
     
     throw new Error(msg);
+  } finally {
+    // Stop loading
+    if (!config?.silent) {
+      loadingManager.stop(loadingKey);
+    }
   }
 }

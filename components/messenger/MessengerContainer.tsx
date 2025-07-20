@@ -1,27 +1,29 @@
 "use client";
 
 // ----- Imports -----
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 // Local Imports
-import { X, Info, Settings } from "lucide-react";
-import MessageList from "@/components/messenger/MessageList";
 import MessageInput from "@/components/messenger/MessageInput";
+import { MessengerHeader } from "@/components/messenger/MessengerHeader";
+import { MessengerContent } from "@/components/messenger/MessengerContent";
 import { useGlobalSignalRConnection } from "@/components/messenger/useGlobalSignalRConnection";
-import { Avatar } from "@/components/ui/Avatar";
+import { useMessengerScroll } from "@/hooks/useMessengerScroll";
+import { useMessageHandler } from "@/hooks/useMessageHandler";
+import { useMessagePagination } from "@/hooks/useMessagePagination";
 import Button from "@/components/ui/Button";
 import { API_ROUTES } from "@/lib/constants/api-routes";
-import { HTTP_METHOD_ENUM, MESSAGE_TYPE } from "@/lib/constants/enum";
-import { Message, SendMessageRequest, AddReactionRequest, RemoveReactionRequest } from "@/lib/models/message";
+import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import type { MessengerPreview } from "@/lib/models/messenger_review";
 import { GroupMember } from "@/lib/models/group";
 import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 import { cn } from "@/lib/utils/cn";
-import { VideoCallIcon, PhoneIcon } from "@/components/icons/VideoCallIcons";
 import VideoCall from "@/components/video-call/VideoCall";
 import useVideoCall from "@/hooks/useVideoCall";
+
+
 
 // ----- Props Interface -----
 interface Props {
@@ -32,17 +34,67 @@ interface Props {
 
 // ----- Component Definition -----
 export default function MessengerContainer({ conversation, onClose, style }: Props) {
-  // ----- State cho Chat -----
+  // ----- Basic State -----
   const [sender, setSender] = useState<User>({});
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const messageInputRef = useRef<HTMLInputElement>(null);
-
   const [isOtherUserOnline, setIsOtherUserOnline] = useState(conversation.other_is_online);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+
+  // Refs
+  const messageInputRef = React.useRef<HTMLInputElement>(null);
+
+  // ----- Message Handler Hook -----
+  const {
+    messages,
+    setMessages,
+    replyingTo,
+    setReplyingTo,
+    sendMessage,
+    handleRetrySend,
+    handleReplyMessage,
+    handleAddReaction,
+    handleRemoveReaction
+  } = useMessageHandler({
+    conversation,
+    sender,
+    onScrollToBottom: (delay, reason) => {}, // Will be set later
+    onSetShouldAutoScroll: () => {} // Will be set later
+  });
+
+  // ----- Pagination Hook -----
+  const {
+    currentPage,
+    hasMoreMessages,
+    isLoadingMessages,
+    totalMessageCount,
+    isInitialLoad,
+    loadMessages,
+    loadMoreMessages,
+    resetPaginationState
+  } = useMessagePagination({
+    conversation,
+    onScrollToBottom: (delay, reason) => {}, // Will be set later
+    onSetMessages: setMessages
+  });
+
+  // ----- Scroll Hook -----
+  const {
+    bottomRef,
+    messagesContainerRef,
+    shouldAutoScroll,
+    setShouldAutoScroll,
+    scrollToBottom,
+    resetScrollState
+  } = useMessengerScroll({
+    messages,
+    isLoadingMessages,
+    isInitialLoad,
+    conversation,
+    onLoadMore: loadMoreMessages,
+    hasMoreMessages
+  });
 
   // Group-specific state
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
@@ -110,42 +162,25 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     },
   });
 
+
   // ----- useEffect Hooks -----
   // Load tin nhắn ban đầu và group data
   useEffect(() => {
-    if (!conversation?.conversation_id) return;
     const currentUser = loadFromLocalStorage("user", User);
     setSender(currentUser ?? {});
 
+    // Reset pagination state when conversation changes
+    resetPaginationState();
+    resetScrollState();
+    setIsUserScrolling(false);
+
     let isMounted = true;
     (async () => {
-      try {
-        console.log("🔥 Loading messages for conversation:", conversation.conversation_id);
-        const response = await callApi<Message[]>(API_ROUTES.MESSENGER.MESSAGES(conversation.conversation_id ?? 0), HTTP_METHOD_ENUM.GET);
-        console.log("✅ Raw API Response:", response);
-        console.log("✅ Messages loaded successfully:", response?.length);
-
-        if (isMounted) {
-          console.log("🔄 Mapping response to Message objects...");
-          const mappedMessages =
-            response
-              ?.map((m, index) => {
-                console.log(`📝 Processing message ${index}:`, m);
-                try {
-                  return new Message(m);
-                } catch (err) {
-                  console.error(`❌ Error processing message ${index}:`, err, m);
-                  return null;
-                }
-              })
-              .filter((m): m is Message => m !== null) ?? [];
-
-          console.log("🎯 Final mapped messages:", mappedMessages.length);
-          setMessages(mappedMessages);
-        }
+      if (isMounted) {
+        await loadMessages(1, false);
 
         // Load group data if it's a group
-        if (isGroup && isMounted) {
+        if (isGroup && conversation?.conversation_id && isMounted) {
           try {
             console.log(`🔍 Loading group members for conversation ${conversation.conversation_id}`);
             console.log(`📊 Expected member count from conversation list: ${conversation.member_count}`);
@@ -164,12 +199,6 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
             console.error("Failed to load group data:", error);
           }
         }
-      } catch (err) {
-        console.error("❌ Lỗi tải tin nhắn:", err);
-        console.error("❌ Error details:", {
-          conversationId: conversation.conversation_id,
-          error: err,
-        });
       }
     })();
 
@@ -181,285 +210,9 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     };
   }, [conversation, isGroup]);
 
-  // Cuộn xuống cuối
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
-  // Upload files
-  const uploadFiles = async (files: File[]) => {
-    const uploadPromises = files.map(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
 
-      try {
-        const response = await fetch(API_ROUTES.CHAT_SERVER.UPLOAD_FILE, {
-          method: "POST",
-          body: formData,
-        });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Upload error:", response.status, errorText);
-          throw new Error(`Failed to upload ${file.name}: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log("Upload response:", result);
-        console.log("Upload response data:", result.data);
-
-        // Xử lý format response từ chat server
-        return {
-          file_name: result.data?.file_name || result.file_name || result.name || file.name,
-          file_url: result.data?.file_url || result.file_url || result.url,
-          file_type: result.data?.file_type || result.file_type || result.type || file.type,
-          file_size: result.data?.file_size || result.file_size || result.size || file.size,
-        };
-      } catch (error) {
-        console.error("Upload file error:", error);
-        throw error;
-      }
-    });
-
-    return Promise.all(uploadPromises);
-  };
-
-  // Gửi tin nhắn
-  const performSendMessage = async (
-    content: string,
-    tempId: string,
-    attachments?: any[],
-    contentType?: "text" | "image" | "file",
-    replyToMessageId?: number
-  ) => {
-    const body: SendMessageRequest = {
-      sender_id: sender.id!,
-      content,
-      conversation_id: conversation.conversation_id!,
-      message_type: isGroup ? MESSAGE_TYPE.GROUP : MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
-      content_type: contentType || "text", // Loại nội dung (text/image/file)
-      target_id: isGroup ? undefined : conversation.other_user_id,
-      reply_to_message_id: replyToMessageId,
-      attachments,
-    };
-
-    console.log("Sending message:", body);
-    console.log("Attachments detail:", JSON.stringify(attachments, null, 2));
-
-    try {
-      const res = await callApi<Message>(API_ROUTES.CHAT_SERVER.SENT_MESSAGE, HTTP_METHOD_ENUM.POST, body);
-      console.log("✅ Message sent successfully:", res);
-
-      setMessages((prev) =>
-        prev.map((m) => {
-          if (m.id === tempId) {
-            // Preserve replied_message from optimistic if server doesn't return it
-            const serverMessage = new Message(res);
-            if (!serverMessage.replied_message && m.replied_message) {
-              console.log("📨 Preserving replied_message from optimistic update");
-              serverMessage.replied_message = m.replied_message;
-            }
-            return serverMessage;
-          }
-          return m;
-        })
-      );
-    } catch (err) {
-      console.error("Send message error:", err);
-      console.error("Request body was:", body);
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? new Message({ ...m, status: "Failed" }) : m)));
-    }
-  };
-
-  const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if ((!input.trim() && selectedFiles.length === 0) || !sender.id) return;
-
-    setIsUploading(true);
-    const tempId = `temp_${Date.now()}`;
-    const content = input.trim();
-
-    let attachments: any[] = [];
-    if (selectedFiles.length > 0) {
-      try {
-        attachments = await uploadFiles(selectedFiles);
-      } catch (error) {
-        console.error("File upload failed:", error);
-        setIsUploading(false);
-        return;
-      }
-    }
-
-    // Xác định content_type dựa trên input gửi đi
-    let contentType: "text" | "image" | "file" = "text";
-
-    if (attachments && attachments.length > 0) {
-      // Nếu có attachment, check loại file
-      const firstAttachment = attachments[0];
-      if (firstAttachment.file_type?.startsWith("image/")) {
-        contentType = "image";
-      } else {
-        contentType = "file";
-      }
-    }
-    // Nếu chỉ có text mà không có attachment thì vẫn là "text"
-
-    const optimistic = new Message({
-      id: tempId,
-      sender_id: sender.id,
-      target_id: conversation.other_user_id,
-      content,
-      message_type: isGroup ? MESSAGE_TYPE.GROUP : MESSAGE_TYPE.PRIVATE, // Loại tin nhắn (PRIVATE/PUBLIC/GROUP)
-      content_type: contentType, // Loại nội dung (text/image/file)
-      reply_to_message_id: typeof replyingTo?.id === "number" ? replyingTo.id : undefined,
-      replied_message: replyingTo
-        ? {
-            id: replyingTo.id,
-            content: replyingTo.content,
-            sender_id: replyingTo.sender_id,
-            content_type: replyingTo.content_type,
-            created_at: replyingTo.created_at,
-          }
-        : undefined,
-      created_at: new Date().toISOString(),
-      status: "Sending",
-      attachments: attachments.map((att) => ({ ...att, id: Math.random() })),
-    });
-
-    setMessages((prev) => [...prev, optimistic]);
-    setInput("");
-    setSelectedFiles([]);
-    setReplyingTo(null);
-    setIsUploading(false);
-    performSendMessage(content, tempId, attachments, contentType, typeof replyingTo?.id === "number" ? replyingTo.id : undefined);
-  };
-
-  const handleRetrySend = (failed: Message) => {
-    if (!failed.content) return;
-    setMessages((prev) => prev.filter((m) => m.id !== failed.id));
-    const tempId = `temp_${Date.now()}`;
-    const optimistic = new Message({
-      ...failed,
-      id: tempId,
-      status: "Sending",
-      created_at: new Date().toISOString(),
-    });
-    setMessages((prev) => [...prev, optimistic]);
-    performSendMessage(failed.content, tempId, failed.attachments, failed.content_type, failed.reply_to_message_id);
-  };
-
-  const handleReplyMessage = (message: Message) => {
-    setReplyingTo(message);
-    // Auto focus vào input khi reply
-    setTimeout(() => {
-      messageInputRef.current?.focus();
-    }, 100);
-  };
-
-  const handleAddReaction = async (messageId: number, emoji: string) => {
-    if (!sender.id) return;
-
-    // Optimistic update for immediate UI feedback
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id === messageId) {
-          const newReactions = [...(msg.reactions || [])];
-
-          // Check if user already reacted with this emoji
-          const existingIndex = newReactions.findIndex((r) => r.user_id === sender.id && r.emoji === emoji);
-
-          if (existingIndex === -1) {
-            // Add new reaction optimistically
-            newReactions.push({
-              id: Math.random(), // temporary ID
-              message_id: messageId,
-              user_id: sender.id!,
-              emoji,
-              reacted_at: new Date().toISOString(),
-            });
-          }
-
-          return new Message({ ...msg, reactions: newReactions });
-        }
-        return msg;
-      })
-    );
-
-    const body: AddReactionRequest = {
-      message_id: messageId,
-      user_id: sender.id,
-      emoji,
-    };
-
-    try {
-      console.log("🎭 Adding reaction:", body);
-      await callApi(`${API_ROUTES.CHAT_SERVER.ADD_REACTION}`, HTTP_METHOD_ENUM.POST, body);
-      // Chat server sẽ broadcast ReceiveReaction event
-    } catch (error) {
-      console.error("❌ Add reaction error:", error);
-      // Revert optimistic update on error
-      setMessages((prev) =>
-        prev.map((msg) => {
-          if (msg.id === messageId) {
-            const newReactions = (msg.reactions || []).filter((r) => !(r.user_id === sender.id && r.emoji === emoji));
-            return new Message({ ...msg, reactions: newReactions });
-          }
-          return msg;
-        })
-      );
-    }
-  };
-
-  const handleRemoveReaction = async (messageId: number, emoji: string) => {
-    if (!sender.id) return;
-
-    // Store the removed reaction for potential rollback
-    let removedReaction: any = null;
-
-    // Optimistic update for immediate UI feedback
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id === messageId) {
-          const newReactions = (msg.reactions || []).filter((r) => {
-            const shouldRemove = r.user_id === sender.id && r.emoji === emoji;
-            if (shouldRemove) {
-              removedReaction = r; // Store for rollback
-            }
-            return !shouldRemove;
-          });
-
-          return new Message({ ...msg, reactions: newReactions });
-        }
-        return msg;
-      })
-    );
-
-    const body: RemoveReactionRequest = {
-      message_id: messageId,
-      user_id: sender.id,
-      emoji,
-    };
-
-    try {
-      console.log("🎭 Removing reaction:", body);
-      await callApi(`${API_ROUTES.CHAT_SERVER.REMOVE_REACTION}`, HTTP_METHOD_ENUM.POST, body);
-      // Chat server sẽ broadcast RemoveReaction event
-    } catch (error) {
-      console.error("❌ Remove reaction error:", error);
-      // Revert optimistic update on error
-      if (removedReaction) {
-        setMessages((prev) =>
-          prev.map((msg) => {
-            if (msg.id === messageId) {
-              const newReactions = [...(msg.reactions || []), removedReaction];
-              return new Message({ ...msg, reactions: newReactions });
-            }
-            return msg;
-          })
-        );
-      }
-    }
-  };
 
   // Video call handlers
   const handleStartVideoCall = () => {
@@ -526,110 +279,40 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         style={style}
       >
         {/* Header - Enhanced for groups and mobile */}
-        <div className="flex items-center justify-between gap-3 border-b bg-card p-3 md:p-4 min-h-16 md:min-h-auto">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Avatar với chỉ báo trạng thái hoạt động */}
-            <div className="relative flex-shrink-0">
-              <Avatar
-                src={isGroup ? conversation.group_avatar_url : conversation.avatar_url ?? "/avatar.png"}
-                size="md"
-                className={cn(
-                  "w-10 h-10 md:w-8 md:h-8",
-                  isGroup ? "rounded-lg" : "rounded-full"
-                )}
-              />
-              {!isGroup && (
-                <span
-                  className={cn(
-                    "absolute bottom-0 right-0 block h-3 w-3 md:h-2.5 md:w-2.5 rounded-full ring-2 ring-card",
-                    isOtherUserOnline ? "bg-success" : "bg-muted-foreground"
-                  )}
-                />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-base md:text-sm truncate">
-                {isGroup ? conversation.name : conversation.other_user_name}
-              </p>
-              <p className="text-sm md:text-xs text-muted-foreground truncate">
-                {isGroup
-                  ? `${groupMembers.length} thành viên • ${groupMembers.filter((m) => m.is_online).length} đang online`
-                  : isOtherUserOnline
-                  ? "Online"
-                  : "Offline"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {/* Video Call Buttons - Only for private conversations */}
-            {!isGroup && (
-              <>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={handleStartVoiceCall} 
-                  title="Gọi thoại"
-                  className="w-10 h-10 md:w-8 md:h-8"
-                >
-                  <PhoneIcon className="h-5 w-5 md:h-4 md:w-4" />
-                </Button>
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={handleStartVideoCall} 
-                  title="Gọi video"
-                  className="w-10 h-10 md:w-8 md:h-8"
-                >
-                  <VideoCallIcon className="h-5 w-5 md:h-4 md:w-4" />
-                </Button>
-              </>
-            )}
-            
-            {isGroup && (
-              <>
-                <Button size="icon" variant="ghost" onClick={() => setShowGroupInfo(true)} title="Thông tin nhóm"
-                  className="w-10 h-10 md:w-8 md:h-8">
-                  <Info className="h-5 w-5 md:h-4 md:w-4" />
-                </Button>
-                {(currentUserRole === "admin" || currentUserRole === "moderator") && (
-                  <Button size="icon" variant="ghost" onClick={() => setShowGroupSettings(true)} title="Cài đặt nhóm"
-                    className="w-10 h-10 md:w-8 md:h-8">
-                    <Settings className="h-5 w-5 md:h-4 md:w-4" />
-                  </Button>
-                )}
-              </>
-            )}
-            <Button size="icon" variant="ghost" onClick={() => onClose(conversation.conversation_id!)}
-              className="w-10 h-10 md:w-8 md:h-8">
-              <X className="h-6 w-6 md:h-5 md:w-5" />
-            </Button>
-          </div>
-        </div>
+        <MessengerHeader
+          conversation={conversation}
+          isOtherUserOnline={isOtherUserOnline ?? false}
+          groupMembers={groupMembers}
+          currentUserRole={currentUserRole}
+          onClose={onClose}
+          onStartVideoCall={handleStartVideoCall}
+          onStartVoiceCall={handleStartVoiceCall}
+          onShowGroupInfo={setShowGroupInfo}
+          onShowGroupSettings={setShowGroupSettings}
+        />
 
         {/* Message list - Enhanced for groups and mobile */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-background/50">
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-4">
-            <div className="space-y-3 min-h-full flex flex-col justify-end">
-              <MessageList
-                messages={messages}
-                senderId={sender.id}
-                onRetrySend={handleRetrySend}
-                onReplyMessage={handleReplyMessage}
-                onAddReaction={handleAddReaction}
-                onRemoveReaction={handleRemoveReaction}
-                // Group-specific props
-                isGroup={isGroup}
-                getSenderName={(senderId: number) => {
-                  if (!isGroup) return "";
-                  const member = groupMembers.find((m) => m.user_id === senderId);
-                  return member?.name || "Unknown User";
-                }}
-                groupMembers={groupMembers}
-              />
-              <div ref={bottomRef} />
-            </div>
-          </div>
-        </div>
+        <MessengerContent
+          messagesContainerRef={messagesContainerRef}
+          bottomRef={bottomRef}
+          messages={messages}
+          senderId={sender.id}
+          isLoadingMessages={isLoadingMessages}
+          hasMoreMessages={hasMoreMessages}
+          isInitialLoad={isInitialLoad}
+          totalMessageCount={totalMessageCount}
+          isGroup={isGroup}
+          groupMembers={groupMembers}
+          onRetrySend={handleRetrySend}
+          onReplyMessage={handleReplyMessage}
+          onAddReaction={handleAddReaction}
+          onRemoveReaction={handleRemoveReaction}
+          getSenderName={(senderId: number) => {
+            if (!isGroup) return "";
+            const member = groupMembers.find((m) => m.user_id === senderId);
+            return member?.name || "Unknown User";
+          }}
+        />
 
         {/* Message Input */}
         <MessageInput
@@ -641,7 +324,10 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           isUploading={isUploading}
           replyingTo={replyingTo}
           setReplyingTo={setReplyingTo}
-          onSendMessage={sendMessage}
+          onSendMessage={(e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+            sendMessage(input, selectedFiles, setInput, setSelectedFiles, setIsUploading);
+          }}
         />
       </div>
 

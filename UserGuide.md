@@ -601,7 +601,7 @@ const handlePostCreate = async () => {
 ### 4. Loading States
 
 ```tsx
-// Page-level loading
+// Page-level loading with skeletons
 {
   isLoading ? (
     <div className="space-y-4">
@@ -623,6 +623,227 @@ const handlePostCreate = async () => {
   {isSubmitting ? "Creating..." : "Create Post"}
 </Button>;
 ```
+
+---
+
+## Global Loading System
+
+**Path**: `lib/utils/loading-manager.ts`, `contexts/LoadingContext.tsx`
+
+### Tổng quan
+
+Hệ thống loading toàn cục sử dụng **Singleton Pattern** để quản lý trạng thái loading nhất quán trong toàn bộ ứng dụng. Tự động tích hợp với tất cả API calls.
+
+### Tự động Loading với API
+
+```tsx
+import { callApi } from "@/lib/utils/api-client";
+import { LOADING_KEYS } from "@/lib/utils/loading-manager";
+
+// Loading tự động hiện khi gọi API
+const handleSearch = async () => {
+  const results = await callApi("/api/search/user", "GET", { query: "john" });
+  // Loading tự động tắt khi hoàn thành
+};
+
+// Tùy chỉnh loading key
+const handleLogin = async () => {
+  await callApi("/api/auth/login", "POST", credentials, {
+    loadingKey: LOADING_KEYS.LOGIN
+  });
+};
+
+// Tắt loading cho API cụ thể
+const checkAuth = async () => {
+  await callApi("/api/auth/me", "GET", undefined, {
+    silent: true // Không hiện loading
+  });
+};
+```
+
+### Manual Loading Control
+
+```tsx
+import { useLoading } from "@/contexts/LoadingContext";
+import { LOADING_KEYS } from "@/lib/utils/loading-manager";
+
+const ManualLoadingExample = () => {
+  const { start, stop, isKeyLoading } = useLoading();
+
+  const handleLongOperation = async () => {
+    start(LOADING_KEYS.DATA_REFRESH);
+    
+    try {
+      // Thực hiện tác vụ dài
+      await longRunningTask();
+    } finally {
+      stop(LOADING_KEYS.DATA_REFRESH);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleLongOperation}>
+        Bắt đầu
+      </button>
+      
+      {isKeyLoading(LOADING_KEYS.DATA_REFRESH) && (
+        <InlineLoading />
+      )}
+    </div>
+  );
+};
+```
+
+### Loading với Async Operations
+
+```tsx
+import { useLoading } from "@/contexts/LoadingContext";
+
+const AsyncExample = () => {
+  const { withLoading } = useLoading();
+
+  const handleUpload = async (file: File) => {
+    const result = await withLoading(
+      LOADING_KEYS.UPLOAD_FILE,
+      async () => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        return response.json();
+      }
+    );
+    
+    console.log("Upload thành công:", result);
+  };
+
+  return (
+    <input 
+      type="file" 
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) handleUpload(file);
+      }}
+    />
+  );
+};
+```
+
+### Loading UI Components
+
+```tsx
+import { LoadingSpinner, InlineLoading } from "@/components/ui/Loading";
+import { GlobalLoading } from "@/components/ui/GlobalLoading";
+
+// Global loading overlay (tự động hiện)
+// Đã được setup trong AppProviders
+
+// Inline loading spinner
+<InlineLoading size="md" variant="spinner" />
+
+// Loading spinner riêng lẻ
+<LoadingSpinner size="lg" color="primary" />
+
+// Button với loading state
+<ButtonLoading
+  isLoading={isSubmitting}
+  onClick={handleSubmit}
+  className="bg-blue-500 text-white px-4 py-2 rounded"
+>
+  Gửi
+</ButtonLoading>
+```
+
+### Loading Keys có sẵn
+
+```typescript
+export const LOADING_KEYS = {
+  // API calls
+  LOGIN: 'login',
+  LOGOUT: 'logout',
+  SEARCH_USERS: 'search_users',
+  LOAD_CONVERSATIONS: 'load_conversations',
+  LOAD_MESSAGES: 'load_messages',
+  SEND_MESSAGE: 'send_message',
+  UPLOAD_FILE: 'upload_file',
+  
+  // UI operations
+  PAGE_LOAD: 'page_load',
+  FORM_SUBMIT: 'form_submit',
+  DATA_REFRESH: 'data_refresh',
+  
+  // Global
+  GLOBAL: 'global'
+};
+```
+
+### API Helper Functions
+
+```tsx
+import { authApi, messengerApi, chatServerApi } from "@/lib/utils/api-helpers";
+
+// Sử dụng helper functions với loading tự động
+const handleLogin = async () => {
+  try {
+    const user = await authApi.login({ email, password });
+    // Loading tự động
+  } catch (error) {
+    console.error("Login failed:", error);
+  }
+};
+
+const handleSearch = async () => {
+  const users = await messengerApi.searchUsers(query);
+  // Loading tự động với LOADING_KEYS.SEARCH_USERS
+};
+```
+
+### Custom Loading Hook
+
+```tsx
+import { useApiLoading } from "@/hooks/useApiLoading";
+
+const CustomLoadingExample = () => {
+  const { execute, isLoading, error, data } = useApiLoading({
+    defaultKey: LOADING_KEYS.SEARCH_USERS,
+    onSuccess: (data) => console.log("Thành công:", data),
+    onError: (error) => console.error("Lỗi:", error)
+  });
+
+  const handleAction = async () => {
+    await execute(
+      () => fetch('/api/data').then(r => r.json())
+    );
+  };
+
+  return (
+    <div>
+      <button 
+        onClick={handleAction}
+        disabled={isLoading()}
+      >
+        {isLoading() ? "Đang xử lý..." : "Thực hiện"}
+      </button>
+      
+      {error && <p className="text-red-500">Lỗi: {error.message}</p>}
+      {data && <p>Kết quả: {JSON.stringify(data)}</p>}
+    </div>
+  );
+};
+```
+
+### Best Practices cho Loading
+
+1. **Sử dụng callApi()** - Loading tự động cho mọi API call
+2. **Loading keys riêng biệt** - Để track từng operation khác nhau  
+3. **Silent mode** - Cho API background không cần loading
+4. **Inline loading** - Cho loading local trong component
+5. **Global loading** - Cho operation quan trọng toàn app
 
 ---
 

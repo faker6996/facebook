@@ -73,5 +73,83 @@
     "callEnded": "Call ended",
     "callFailed": "Call failed",
     "unknownCaller": "Unknown caller"
+  },
+
+  "Messenger": {
+    "header": {
+      "online": "Online",
+      "offline": "Offline",
+      "members": "members",
+      "membersOnline": "online",
+      "voiceCall": "Voice call",
+      "videoCall": "Video call",
+      "groupInfo": "Group info",
+      "groupSettings": "Group settings"
+    },
+    "content": {
+      "loadingOlderMessages": "Loading older messages...",
+      "loadingMessages": "Loading messages...",
+      "allMessagesLoaded": "All messages loaded",
+      "messageCount": "messages"
+    },
+    "input": {
+      "replyingTo": "Replying to:",
+      "fileAttachment": "File attachment",
+      "uploadingFiles": "Uploading",
+      "sendMessage": "Send message",
+      "typeMessage": "Type a message...",
+      "selectFiles": "Select files"
+    },
+    "groupModal": {
+      "groupInfo": "Group Info",
+      "groupSettings": "Group Settings",
+      "close": "Close",
+      "cancel": "Cancel",
+      "save": "Save",
+      "name": "Name",
+      "members": "Members",
+      "online": "Online",
+      "admin": "Admin",
+      "moderator": "Moderator",
+      "member": "Member"
+    },
+    "groupSettings": {
+      "general": "General",
+      "membersTab": "Members",
+      "permissions": "Permissions",
+      "groupName": "Group name",
+      "groupDescription": "Group description",
+      "publicGroup": "Public group",
+      "publicGroupDesc": "Anyone can find and join this group",
+      "requireApproval": "Require approval",
+      "requireApprovalDesc": "Admin approval required to join",
+      "maxMembers": "Maximum members",
+      "inviteLink": "Invite link",
+      "joinedDate": "Joined",
+      "promoteToModerator": "Promote to moderator",
+      "promoteToAdmin": "Promote to admin",
+      "demote": "Demote",
+      "removeMember": "Remove from group",
+      "permissionsDesc": "Manage member permissions in this group",
+      "adminPermissions": "Admin",
+      "adminDesc": [
+        "Change group settings",
+        "Add/remove members",
+        "Promote/demote members",
+        "Delete any messages"
+      ],
+      "moderatorPermissions": "Moderator",
+      "moderatorDesc": [
+        "Add/remove members",
+        "Delete messages",
+        "Moderate content"
+      ],
+      "memberPermissions": "Member",
+      "memberDesc": [
+        "Send messages",
+        "View message history",
+        "Join calls"
+      ]
+    }
   }
 }
