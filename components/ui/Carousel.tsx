@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeftIcon } from "../icons/ArrowLeft";
-import { ArrowRightIcon } from "../icons/ArrowRight";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Button from "./Button";
 
 interface CarouselProps {
@@ -33,7 +32,7 @@ export function Carousel({ children }: CarouselProps) {
         onClick={scrollPrev}
         variant="outline"
         size="icon"
-        icon={ArrowLeftIcon}
+        icon={ArrowLeft}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-full"
       />
 
@@ -41,7 +40,7 @@ export function Carousel({ children }: CarouselProps) {
         onClick={scrollNext}
         variant="outline"
         size="icon"
-        icon={ArrowRightIcon}
+        icon={ArrowRight}
         className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-full"
       />
     </div>

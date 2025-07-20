@@ -2,9 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
-import ChevronDownIcon from "../icons/ChevronDownIcon";
-import SearchIcon from "../icons/SearchIcon";
-import { CheckIcon } from "../icons/CheckIcon";
+import { ChevronDown, Search, Check } from "lucide-react";
 
 interface MultiComboboxProps {
   options: string[];
@@ -106,7 +104,7 @@ export const MultiCombobox: React.FC<MultiComboboxProps> = ({
         className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
       >
         <span className="truncate">{value.length ? `${value.length} selected` : "Select..."}</span>
-        <ChevronDownIcon className="h-4 w-4 opacity-50" />
+        <ChevronDown className="h-4 w-4 opacity-50" />
       </button>
 
       <div
@@ -116,7 +114,7 @@ export const MultiCombobox: React.FC<MultiComboboxProps> = ({
         )}
       >
         <div className="relative">
-          <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <input
             ref={inputRef}
             value={query}
@@ -147,7 +145,7 @@ export const MultiCombobox: React.FC<MultiComboboxProps> = ({
                   )}
                 >
                   {item}
-                  {isSelected && <CheckIcon className="h-4 w-4" />}
+                  {isSelected && <Check className="h-4 w-4" />}
                 </li>
               );
             })

@@ -2,9 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
-import ChevronDownIcon from "../icons/ChevronDownIcon";
-import SearchIcon from "../icons/SearchIcon";
-import { CheckIcon } from "../icons/CheckIcon";
+import { ChevronDown, Search, Check } from "lucide-react";
 
 interface ComboboxProps {
   options: string[];
@@ -64,7 +62,7 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value, onChange, pl
         className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
       >
         <span>{value ?? "Select..."}</span>
-        <ChevronDownIcon className="h-4 w-4 opacity-50" />
+        <ChevronDown className="h-4 w-4 opacity-50" />
       </button>
 
       <div
@@ -74,7 +72,7 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value, onChange, pl
         )}
       >
         <div className="relative">
-          <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <input
             ref={inputRef}
             value={query}
@@ -100,7 +98,7 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value, onChange, pl
                 )}
               >
                 {item}
-                {item === value && <CheckIcon className="h-4 w-4" />}
+                {item === value && <Check className="h-4 w-4" />}
               </li>
             ))
           ) : (
