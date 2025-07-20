@@ -11,7 +11,7 @@ interface LoadingContextType {
   stop: (key: string) => void;
   stopAll: () => void;
   isKeyLoading: (key: string) => boolean;
-  withLoading: <T>(key: string, operation: () => Promise<T>, message?: string) => Promise<T>;
+  withLoading: (key: string, operation: () => Promise<any>, message?: string) => Promise<any>;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
@@ -40,8 +40,8 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
       setActiveKeys(loadingManager.getActiveKeys());
     });
 
-    // Initialize with current state
-    setIsLoading(loadingManager.isLoading());
+    // Initialize with current state (use global loading to exclude silent keys)
+    setIsLoading(loadingManager.isGlobalLoading());
     setMessage(loadingManager.getCurrentMessage());
     setActiveKeys(loadingManager.getActiveKeys());
 
@@ -56,7 +56,7 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
     stop: (key: string) => loadingManager.stop(key),
     stopAll: () => loadingManager.stopAll(),
     isKeyLoading: (key: string) => loadingManager.isLoading(key),
-    withLoading: <T>(key: string, operation: () => Promise<T>, message?: string) => 
+    withLoading: (key: string, operation: () => Promise<any>, message?: string) => 
       loadingManager.withLoading(key, operation, message),
   };
 

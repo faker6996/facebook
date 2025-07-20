@@ -10,8 +10,8 @@ export const messengerApp = {
   async getRecentConversations(userId: number) {
     return await messengerRepo.getRecentConversations(userId);
   },
-  async getMessagesByConversationId(conversationId: number) {
-    return await messengerRepo.getMessagesByConversationId(conversationId);
+  async getMessagesByConversationId(conversationId: number, page: number = 1, limit: number = 30) {
+    return await messengerRepo.getMessagesByConversationId(conversationId, page, limit);
   },
   async getMessagesAfterIdAsync(conversationId: number, lastMessageId: number) {
     return await messengerRepo.getMessagesAfterIdAsyncRepo(conversationId, lastMessageId);

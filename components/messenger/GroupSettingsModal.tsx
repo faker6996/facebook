@@ -185,11 +185,11 @@ export default function GroupSettingsModal({
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':
-        return <Crown className="h-4 w-4 text-yellow-500" />;
+        return <Crown className="h-4 w-4 text-warning" />;
       case 'moderator':
-        return <Shield className="h-4 w-4 text-blue-500" />;
+        return <Shield className="h-4 w-4 text-info" />;
       default:
-        return <User className="h-4 w-4 text-gray-400" />;
+        return <User className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -305,7 +305,7 @@ export default function GroupSettingsModal({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">Nhóm công khai</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           Mọi người có thể tìm thấy và tham gia nhóm
                         </p>
                       </div>
@@ -318,7 +318,7 @@ export default function GroupSettingsModal({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">Yêu cầu duyệt</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           Admin phê duyệt yêu cầu tham gia
                         </p>
                       </div>
@@ -493,7 +493,7 @@ export default function GroupSettingsModal({
 
                   <div className="p-3 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <Shield className="h-4 w-4 text-blue-500" />
+                      <Shield className="h-4 w-4 text-info" />
                       <span className="font-medium">Điều hành viên</span>
                     </div>
                     <ul className="text-sm text-muted-foreground space-y-1">
@@ -505,7 +505,7 @@ export default function GroupSettingsModal({
 
                   <div className="p-3 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <User className="h-4 w-4 text-gray-400" />
+                      <User className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">Thành viên</span>
                     </div>
                     <ul className="text-sm text-muted-foreground space-y-1">

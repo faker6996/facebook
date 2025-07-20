@@ -162,7 +162,6 @@ const LoadingSystemDemo = () => {
             placeholder="Tìm kiếm người dùng..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            size="sm"
           />
           <Button 
             size="sm" 

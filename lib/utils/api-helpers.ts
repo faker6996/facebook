@@ -48,6 +48,13 @@ export const messengerApi = {
     { loadingKey: LOADING_KEYS.LOAD_MESSAGES }
   ),
 
+  getMessagesPaginated: (conversationId: number, page: number, limit: number = 30) => callApi(
+    API_ROUTES.MESSENGER.MESSAGES_PAGINATED(conversationId, page, limit),
+    HTTP_METHOD_ENUM.GET,
+    undefined,
+    { loadingKey: LOADING_KEYS.LOAD_MESSAGES }
+  ),
+
   searchUsers: (query: string) => callApi(
     API_ROUTES.SEARCH.USER_NAME(query),
     HTTP_METHOD_ENUM.GET,

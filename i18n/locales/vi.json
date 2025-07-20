@@ -91,5 +91,83 @@
     "callEnded": "Cuộc gọi đã kết thúc",
     "callFailed": "Cuộc gọi thất bại",
     "unknownCaller": "Người gọi không xác định"
+  },
+
+  "Messenger": {
+    "header": {
+      "online": "Online",
+      "offline": "Offline",
+      "members": "thành viên",
+      "membersOnline": "đang online",
+      "voiceCall": "Gọi thoại",
+      "videoCall": "Gọi video",
+      "groupInfo": "Thông tin nhóm",
+      "groupSettings": "Cài đặt nhóm"
+    },
+    "content": {
+      "loadingOlderMessages": "Đang tải tin nhắn cũ hơn...",
+      "loadingMessages": "Đang tải tin nhắn...",
+      "allMessagesLoaded": "Đã hiển thị tất cả tin nhắn",
+      "messageCount": "tin nhắn"
+    },
+    "input": {
+      "replyingTo": "Đang trả lời:",
+      "fileAttachment": "File attachment",
+      "uploadingFiles": "Đang tải lên",
+      "sendMessage": "Gửi tin nhắn",
+      "typeMessage": "Nhập tin nhắn...",
+      "selectFiles": "Chọn file"
+    },
+    "groupModal": {
+      "groupInfo": "Thông tin nhóm",
+      "groupSettings": "Cài đặt nhóm",
+      "close": "Đóng",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "name": "Tên",
+      "members": "Thành viên",
+      "online": "Online",
+      "admin": "Quản trị viên",
+      "moderator": "Điều hành viên",
+      "member": "Thành viên"
+    },
+    "groupSettings": {
+      "general": "Chung",
+      "membersTab": "Thành viên",
+      "permissions": "Quyền hạn",
+      "groupName": "Tên nhóm",
+      "groupDescription": "Mô tả nhóm",
+      "publicGroup": "Nhóm công khai",
+      "publicGroupDesc": "Mọi người có thể tìm thấy và tham gia nhóm",
+      "requireApproval": "Yêu cầu duyệt",
+      "requireApprovalDesc": "Admin phê duyệt yêu cầu tham gia",
+      "maxMembers": "Số thành viên tối đa",
+      "inviteLink": "Link mời",
+      "joinedDate": "Tham gia",
+      "promoteToModerator": "Thăng cấp thành điều hành viên",
+      "promoteToAdmin": "Thăng cấp thành admin",
+      "demote": "Hạ cấp",
+      "removeMember": "Xóa khỏi nhóm",
+      "permissionsDesc": "Quản lý quyền hạn của các thành viên trong nhóm",
+      "adminPermissions": "Quản trị viên",
+      "adminDesc": [
+        "Thay đổi cài đặt nhóm",
+        "Thêm/xóa thành viên",
+        "Thăng/hạ cấp thành viên",
+        "Xóa tin nhắn bất kỳ"
+      ],
+      "moderatorPermissions": "Điều hành viên",
+      "moderatorDesc": [
+        "Thêm/xóa thành viên",
+        "Xóa tin nhắn",
+        "Kiểm duyệt nội dung"
+      ],
+      "memberPermissions": "Thành viên",
+      "memberDesc": [
+        "Gửi tin nhắn",
+        "Xem lịch sử tin nhắn",
+        "Tham gia cuộc gọi"
+      ]
+    }
   }
 }

@@ -141,10 +141,10 @@ const MessageList: React.FC<MessageListProps> = ({
                     {senderName}
                   </span>
                   {senderRole === 'admin' && (
-                    <Crown className="h-3 w-3 text-yellow-500 flex-shrink-0" />
+                    <Crown className="h-3 w-3 text-warning flex-shrink-0" />
                   )}
                   {senderRole === 'moderator' && (
-                    <Shield className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                    <Shield className="h-3 w-3 text-info flex-shrink-0" />
                   )}
                 </div>
               )}

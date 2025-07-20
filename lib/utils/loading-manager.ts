@@ -72,6 +72,15 @@ export class LoadingManager {
   }
 
   /**
+   * Kiểm tra có đang loading global không (loại trừ silent keys)
+   */
+  isGlobalLoading(): boolean {
+    const activeKeys = Array.from(this.loadingStates.keys());
+    const nonSilentKeys = activeKeys.filter(key => !SILENT_LOADING_KEYS.includes(key as any));
+    return nonSilentKeys.length > 0;
+  }
+
+  /**
    * Lấy message hiện tại
    */
   getCurrentMessage(): string | undefined {
@@ -104,7 +113,7 @@ export class LoadingManager {
   }
 
   private notifyListeners(): void {
-    const isLoading = this.isLoading();
+    const isLoading = this.isGlobalLoading(); // Use global loading instead of all loading
     const message = this.getCurrentMessage();
     
     this.listeners.forEach(listener => {
@@ -142,3 +151,8 @@ export const LOADING_KEYS = {
   // Global
   GLOBAL: 'global'
 } as const;
+
+// Keys that should NOT show global loading
+const SILENT_LOADING_KEYS = [
+  'send_message', // Don't show global loading for sending messages
+] as const;
