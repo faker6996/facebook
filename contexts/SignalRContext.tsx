@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import * as signalR from "@microsoft/signalr";
 import { User } from "@/lib/models/user";
 import { Message } from "@/lib/models/message";
@@ -8,17 +8,25 @@ import { useToast } from "@/components/ui/Toast";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { callApi } from "@/lib/utils/api-client";
+import { signalRLogger } from "@/lib/utils/logger";
+
+// SignalR Configuration Constants
+const SIGNALR_CONFIG = {
+  RECONNECT_DELAYS: [0, 1000, 3000, 10000, 30000] as number[], // Exponential backoff in milliseconds
+  TOAST_DURATION: 5000, // Toast notification duration
+  DEFAULT_TIMEOUT: 30000, // Default connection timeout
+};
 
 interface SignalRContextType {
   connection: signalR.HubConnection | null;
   isConnected: boolean;
   onlineUsers: Set<string>;
-  // Notification functions
-  onNewMessage?: (message: Message) => void;
-  onUserOnline?: (userId: string) => void;
-  onUserOffline?: (userId: string) => void;
+  // Event handler setters - components use these to register/unregister handlers
+  onNewMessage: (handler: ((message: Message) => void) | undefined) => void;
+  onUserOnline: (handler: ((userId: string) => void) | undefined) => void;
+  onUserOffline: (handler: ((userId: string) => void) | undefined) => void;
   // Group events
-  onGroupEvent?: (eventType: string, data: any) => void;
+  onGroupEvent: (handler: ((eventType: string, data: any) => void) | undefined) => void;
   // Connection management
   joinGroup: (groupId: string) => Promise<void>;
   leaveGroup: (groupId: string) => Promise<void>;
@@ -49,11 +57,28 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const { addToast } = useToast();
   
-  // Event handlers
-  const [messageHandler, setMessageHandler] = useState<((message: Message) => void) | undefined>();
-  const [userOnlineHandler, setUserOnlineHandler] = useState<((userId: string) => void) | undefined>();
-  const [userOfflineHandler, setUserOfflineHandler] = useState<((userId: string) => void) | undefined>();
-  const [groupEventHandler, setGroupEventHandler] = useState<((eventType: string, data: any) => void) | undefined>();
+  // Event handlers - using refs to prevent memory leaks
+  const messageHandlerRef = useRef<((message: Message) => void) | undefined>(undefined);
+  const userOnlineHandlerRef = useRef<((userId: string) => void) | undefined>(undefined);
+  const userOfflineHandlerRef = useRef<((userId: string) => void) | undefined>(undefined);
+  const groupEventHandlerRef = useRef<((eventType: string, data: any) => void) | undefined>(undefined);
+
+  // Setter functions for external components to register handlers
+  const setMessageHandler = useCallback((handler: ((message: Message) => void) | undefined) => {
+    messageHandlerRef.current = handler;
+  }, []);
+
+  const setUserOnlineHandler = useCallback((handler: ((userId: string) => void) | undefined) => {
+    userOnlineHandlerRef.current = handler;
+  }, []);
+
+  const setUserOfflineHandler = useCallback((handler: ((userId: string) => void) | undefined) => {
+    userOfflineHandlerRef.current = handler;
+  }, []);
+
+  const setGroupEventHandler = useCallback((handler: ((eventType: string, data: any) => void) | undefined) => {
+    groupEventHandlerRef.current = handler;
+  }, []);
 
   const setUser = (user: User | null) => {
     setCurrentUser(user);
@@ -61,18 +86,18 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
   const createConnection = async (user: User) => {
     if (connectionRef.current?.state === signalR.HubConnectionState.Connected) {
-      console.log("🔄 SignalR already connected, skipping...");
+      signalRLogger.info("Already connected, skipping...");
       return connectionRef.current;
     }
 
-    console.log("🚀 Creating global SignalR connection for user:", user.id);
+    signalRLogger.info("Creating global SignalR connection", { userId: user.id });
 
     const conn = new signalR.HubConnectionBuilder()
       .withUrl(`${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/chathub`, {
         withCredentials: true,
         transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling,
       })
-      .withAutomaticReconnect([0, 1000, 3000, 10000, 30000])
+      .withAutomaticReconnect(SIGNALR_CONFIG.RECONNECT_DELAYS)
       .configureLogging(signalR.LogLevel.Information)
       .build();
 
@@ -84,7 +109,7 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
       const messageObj = new Message(newMsg);
       
       // Notify global handler nếu có
-      messageHandler?.(messageObj);
+      messageHandlerRef.current?.(messageObj);
       
       // Hiển thị toast notification
       if (newMsg.sender_id !== user.id) {
@@ -111,7 +136,7 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     conn.on("UserOnline", (userId: string) => {
       console.log(`👤 User ${userId} is now ONLINE`);
       setOnlineUsers(prev => new Set([...prev, userId]));
-      userOnlineHandler?.(userId);
+      userOnlineHandlerRef.current?.(userId);
     });
 
     conn.on("UserOffline", (userId: string) => {
@@ -121,13 +146,13 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
         newSet.delete(userId);
         return newSet;
       });
-      userOfflineHandler?.(userId);
+      userOfflineHandlerRef.current?.(userId);
     });
 
     // Group event listeners
     conn.on("GroupMemberAdded", (data: any) => {
       console.log("👥 Global: Member added to group:", data);
-      groupEventHandler?.("member_added", data);
+      groupEventHandlerRef.current?.("member_added", data);
       
       if (data.member?.user_id !== user.id) {
         addToast({
@@ -141,7 +166,7 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     conn.on("GroupMemberRemoved", (data: any) => {
       console.log("👥 Global: Member removed from group:", data);
-      groupEventHandler?.("member_removed", data);
+      groupEventHandlerRef.current?.("member_removed", data);
       
       if (data.userId !== user.id) {
         addToast({
@@ -155,7 +180,7 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     conn.on("GroupMemberPromoted", (data: any) => {
       console.log("👑 Global: Member promoted:", data);
-      groupEventHandler?.("member_promoted", data);
+      groupEventHandlerRef.current?.("member_promoted", data);
       
       addToast({
         type: "success",
@@ -167,7 +192,7 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     conn.on("GroupUpdated", (data: any) => {
       console.log("📝 Global: Group updated:", data);
-      groupEventHandler?.("group_updated", data);
+      groupEventHandlerRef.current?.("group_updated", data);
       
       addToast({
         type: "info",
@@ -241,7 +266,7 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
         type: "error",
         title: "Connection Failed",
         message: "Unable to connect to chat server",
-        duration: 5000
+        duration: SIGNALR_CONFIG.TOAST_DURATION
       });
       
       throw error;
@@ -312,10 +337,10 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     connection: connectionRef.current,
     isConnected,
     onlineUsers,
-    onNewMessage: messageHandler,
-    onUserOnline: userOnlineHandler,
-    onUserOffline: userOfflineHandler,
-    onGroupEvent: groupEventHandler,
+    onNewMessage: setMessageHandler,
+    onUserOnline: setUserOnlineHandler,
+    onUserOffline: setUserOfflineHandler,
+    onGroupEvent: setGroupEventHandler,
     joinGroup,
     leaveGroup,
     setUser
