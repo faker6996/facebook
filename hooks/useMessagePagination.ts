@@ -23,6 +23,7 @@ export const useMessagePagination = ({
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [totalMessageCount, setTotalMessageCount] = useState(0);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   const MESSAGES_PER_PAGE = 30;
 
@@ -36,6 +37,7 @@ export const useMessagePagination = ({
     }
 
     setIsLoadingMessages(true);
+    setLoadError(null); // Clear previous errors
     
     try {
       console.log("🔥 Loading messages for conversation:", conversation.conversation_id, "page:", page);
@@ -46,7 +48,12 @@ export const useMessagePagination = ({
         currentPage: number;
       }>(
         API_ROUTES.MESSENGER.MESSAGES_PAGINATED(conversation.conversation_id, page, MESSAGES_PER_PAGE), 
-        HTTP_METHOD_ENUM.GET
+        HTTP_METHOD_ENUM.GET,
+        undefined,
+        { 
+          timeout: 20000, // Tăng timeout lên 20 giây cho pagination
+          silent: true // Không hiển thị alert cho loading messages
+        }
       );
       
       console.log("✅ Raw API Response:", response);
@@ -79,21 +86,43 @@ export const useMessagePagination = ({
         setTotalMessageCount(response.totalCount);
         setCurrentPage(response.currentPage);
         
-        // Cuộn xuống cuối sau khi load messages thành công (chỉ khi không phải load more)
-        if (!isLoadMore) {
-          console.log("🎯 Auto-scrolling to bottom after loading messages", {
+        // Chỉ scroll xuống cuối cho lần đầu load conversation (initial load)
+        if (!isLoadMore && isInitialLoad) {
+          console.log("🎯 Auto-scrolling to bottom after initial load", {
             messagesCount: mappedMessages.length,
-            isInitialLoad,
             conversation_id: conversation?.conversation_id
           });
-          onScrollToBottom(500, 'loadMessages-initial');
+          // Delay để đảm bảo DOM đã render
+          setTimeout(() => onScrollToBottom(0, 'initial-load'), 100);
         }
       }
     } catch (err) {
       console.error("❌ Lỗi tải tin nhắn:", err);
+      
+      // Handle different types of errors
+      let errorMessage = "Không thể tải tin nhắn";
+      if (err instanceof Error) {
+        if (err.message.includes('timeout')) {
+          errorMessage = "Tải tin nhắn quá lâu, vui lòng thử lại";
+        } else if (err.message.includes('Network Error')) {
+          errorMessage = "Lỗi kết nối, vui lòng kiểm tra mạng";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setLoadError(errorMessage);
+      
+      // Don't reset hasMoreMessages on error for load more
+      // Only reset for initial load
+      if (!isLoadMore) {
+        setHasMoreMessages(false);
+      }
     } finally {
       setIsLoadingMessages(false);
-      setIsInitialLoad(false);
+      if (!isLoadMore) {
+        setIsInitialLoad(false);
+      }
     }
   }, [conversation, isInitialLoad, onScrollToBottom, onSetMessages]);
 
@@ -106,11 +135,19 @@ export const useMessagePagination = ({
     await loadMessages(nextPage, true);
   }, [hasMoreMessages, isLoadingMessages, currentPage, loadMessages]);
 
+  // Retry loading messages
+  const retryLoadMessages = useCallback(async () => {
+    if (isLoadingMessages) return;
+    console.log("🔄 Retrying to load messages...");
+    await loadMessages(currentPage, true);
+  }, [isLoadingMessages, currentPage, loadMessages]);
+
   // Reset pagination state
   const resetPaginationState = useCallback(() => {
     setCurrentPage(1);
     setHasMoreMessages(true);
     setIsInitialLoad(true);
+    setLoadError(null);
   }, []);
 
   return {
@@ -119,8 +156,10 @@ export const useMessagePagination = ({
     isLoadingMessages,
     totalMessageCount,
     isInitialLoad,
+    loadError,
     loadMessages,
     loadMoreMessages,
+    retryLoadMessages,
     resetPaginationState
   };
 };

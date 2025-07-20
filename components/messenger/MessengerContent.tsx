@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import MessageList from "@/components/messenger/MessageList";
 import { Message } from "@/lib/models/message";
 import { GroupMember } from "@/lib/models/group";
+import Button from "@/components/ui/Button";
 
 interface MessengerContentProps {
   messagesContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -15,6 +16,7 @@ interface MessengerContentProps {
   hasMoreMessages: boolean;
   isInitialLoad: boolean;
   totalMessageCount: number;
+  loadError?: string | null;
   isGroup: boolean;
   groupMembers: GroupMember[];
   onRetrySend: (message: Message) => void;
@@ -22,6 +24,7 @@ interface MessengerContentProps {
   onAddReaction: (messageId: number, emoji: string) => void;
   onRemoveReaction: (messageId: number, emoji: string) => void;
   getSenderName: (senderId: number) => string;
+  onRetryLoadMessages?: () => void;
 }
 
 export const MessengerContent: React.FC<MessengerContentProps> = ({
@@ -33,13 +36,15 @@ export const MessengerContent: React.FC<MessengerContentProps> = ({
   hasMoreMessages,
   isInitialLoad,
   totalMessageCount,
+  loadError,
   isGroup,
   groupMembers,
   onRetrySend,
   onReplyMessage,
   onAddReaction,
   onRemoveReaction,
-  getSenderName
+  getSenderName,
+  onRetryLoadMessages
 }) => {
   const t = useTranslations('Messenger.content');
   return (
@@ -55,6 +60,28 @@ export const MessengerContent: React.FC<MessengerContentProps> = ({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 {t('loadingOlderMessages')}
+              </div>
+            </div>
+          )}
+          
+          {/* Error indicator */}
+          {loadError && (
+            <div className="flex justify-center py-2">
+              <div className="flex flex-col items-center gap-2 text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{loadError}</span>
+                </div>
+                {onRetryLoadMessages && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={onRetryLoadMessages}
+                    className="text-xs"
+                  >
+                    Thử lại
+                  </Button>
+                )}
               </div>
             </div>
           )}
