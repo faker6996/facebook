@@ -1,26 +1,36 @@
 "use client";
 
-import React from 'react';
-import { useLoading } from '@/contexts/LoadingContext';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { LoadingSpinner } from './Loading';
+import { loading, LoadingState } from '@/lib/utils/loading';
 
 interface GlobalLoadingProps {
   className?: string;
-  showMessage?: boolean;
   backdrop?: boolean;
   position?: 'fixed' | 'absolute';
+  size?: 'sm' | 'md' | 'lg';
 }
 
+/**
+ * Component GlobalLoading - tự động lắng nghe singleton loading state
+ * Chỉ cần gắn 1 lần ở root của app
+ */
 export const GlobalLoading: React.FC<GlobalLoadingProps> = ({
   className,
-  showMessage = false, // Default to false - chỉ hiện spinner
   backdrop = true,
-  position = 'fixed'
+  position = 'fixed',
+  size = 'lg'
 }) => {
-  const { isLoading } = useLoading();
+  const [state, setState] = useState<LoadingState>(() => loading.getState());
 
-  if (!isLoading) return null;
+  useEffect(() => {
+    // Subscribe to loading state changes
+    const unsubscribe = loading.subscribe(setState);
+    return unsubscribe;
+  }, []);
+
+  if (!state.isVisible) return null;
 
   return (
     <div
@@ -31,8 +41,14 @@ export const GlobalLoading: React.FC<GlobalLoadingProps> = ({
         className
       )}
     >
-      {/* Chỉ hiển thị spinner đơn giản */}
-      <LoadingSpinner size="lg" color="primary" />
+      <div className="flex flex-col items-center space-y-3">
+        <LoadingSpinner size={size} color="primary" />
+        {state.text && (
+          <p className="text-sm font-medium text-foreground animate-pulse">
+            {state.text}
+          </p>
+        )}
+      </div>
     </div>
   );
 };
@@ -66,6 +82,35 @@ export const PageLoading: React.FC<PageLoadingProps> = ({
   );
 };
 
+// Inline loading component cho buttons hoặc containers nhỏ
+interface InlineLoadingProps {
+  isLoading: boolean;
+  text?: string;
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const InlineLoading: React.FC<InlineLoadingProps> = ({
+  isLoading,
+  text,
+  className,
+  size = 'md'
+}) => {
+  if (!isLoading) return null;
+
+  return (
+    <div className={cn('flex items-center justify-center space-x-2', className)}>
+      <LoadingSpinner size={size} color="primary" />
+      {text && (
+        <span className="text-sm text-muted-foreground animate-pulse">
+          {text}
+        </span>
+      )}
+    </div>
+  );
+};
+
+// Button loading wrapper
 interface ButtonLoadingProps {
   isLoading: boolean;
   children: React.ReactNode;
