@@ -27,6 +27,7 @@ interface UseGlobalSignalRConnectionProps {
 export const useGlobalSignalRConnection = ({
   sender,
   conversation,
+  messages,
   setMessages,
   setIsOtherUserOnline,
   isGroup = false,
@@ -200,10 +201,25 @@ export const useGlobalSignalRConnection = ({
   useEffect(() => {
     if (!isGroup && conversation.other_user_id) {
       const otherUserId = conversation.other_user_id.toString();
-      const isOnline = onlineUsers.has(otherUserId);
-      setIsOtherUserOnline(isOnline);
+      const isOnlineFromSignalR = onlineUsers.has(otherUserId);
+      
+      console.log('🟢 Online status check:', {
+        other_user_id: conversation.other_user_id,
+        otherUserIdString: otherUserId,
+        onlineUsers: Array.from(onlineUsers),
+        onlineUsersSize: onlineUsers.size,
+        isOnlineFromSignalR,
+        isConnected,
+        conversation_name: conversation.other_user_name
+      });
+      
+      // If SignalR has online users data, use it
+      // Otherwise fall back to connection status (better than always showing offline)
+      const finalOnlineStatus = onlineUsers.size > 0 ? isOnlineFromSignalR : isConnected;
+      
+      setIsOtherUserOnline(finalOnlineStatus);
     }
-  }, [onlineUsers, conversation.other_user_id, isGroup, setIsOtherUserOnline]);
+  }, [onlineUsers, conversation.other_user_id, isGroup, setIsOtherUserOnline, isConnected]);
 
   // Join/leave group when conversation changes
   useEffect(() => {
