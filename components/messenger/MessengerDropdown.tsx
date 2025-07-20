@@ -14,9 +14,7 @@ import CreateGroupModal from "@/components/messenger/CreateGroupModal";
 import { Users, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import ClientOnly from "@/components/ui/ClientOnly";
-import { useLoading } from "@/contexts/LoadingContext";
-import { LOADING_KEYS } from "@/lib/utils/loading-manager";
-import { InlineLoading } from "@/components/ui/Loading";
+import { loading } from "@/lib/utils/loading";
 
 interface MessengerDropdownProps {
   onClose: () => void;
@@ -29,32 +27,31 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
   const [searchUser, setSearchUser] = useState<string>("");
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
   const [searchResults, setSearchResults] = useState<MessengerPreview[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { isKeyLoading } = useLoading();
   const [user, setUser] = useState<User | null>(null);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [filter, setFilter] = useState<"all" | "private" | "groups">("all");
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const user = loadFromLocalStorage("user", User);
-        setUser(user); // Set user state regardless of whether it has ID
+      const user = loadFromLocalStorage("user", User);
+      setUser(user);
 
-        if (!user?.id) return;
+      if (!user?.id) return;
 
-        const res = await callApi<MessengerPreview[]>(
-          API_ROUTES.MESSENGER.RECENT(user.id), 
-          HTTP_METHOD_ENUM.GET,
-          undefined,
-          { loadingKey: LOADING_KEYS.LOAD_CONVERSATIONS }
-        );
-
-        setConversations(res);
-      } catch (err) {
-        console.error("Lỗi khi load conversations:", err);
-      } finally {
-        setLoading(false);
+      if (user?.id) {
+        loading.show("Đang tải cuộc trò chuyện...");
+        
+        try {
+          const res = await callApi<MessengerPreview[]>(
+            API_ROUTES.MESSENGER.RECENT(user.id!), 
+            HTTP_METHOD_ENUM.GET
+          );
+          setConversations(res);
+        } catch (err) {
+          console.error("Lỗi khi load conversations:", err);
+        } finally {
+          loading.hide();
+        }
       }
     };
 
@@ -98,16 +95,19 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
       setSearchResults(null);
       return;
     }
+    
+    loading.show("Đang tìm kiếm...");
+    
     try {
       const res = await callApi<MessengerPreview[]>(
         API_ROUTES.SEARCH.USER_NAME(searchUser), 
-        HTTP_METHOD_ENUM.GET,
-        undefined,
-        { loadingKey: LOADING_KEYS.SEARCH_USERS }
+        HTTP_METHOD_ENUM.GET
       );
       setSearchResults(res);
     } catch (err) {
       console.error("Lỗi khi tìm kiếm người dùng:", err);
+    } finally {
+      loading.hide();
     }
   };
 
@@ -203,15 +203,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
           </Button>
         </form>
 
-        {(loading || isKeyLoading(LOADING_KEYS.LOAD_CONVERSATIONS) || isKeyLoading(LOADING_KEYS.SEARCH_USERS)) ? (
-          <div className="flex items-center justify-center py-8">
-            <InlineLoading 
-              message="" // Không hiển thị text
-              size="md"
-              variant="spinner"
-            />
-          </div>
-        ) : filteredConversations.length === 0 ? (
+        {filteredConversations.length === 0 ? (
           searchResults !== null ? (
             <div className="text-muted-foreground text-center py-4">Không tìm thấy kết quả nào.</div>
           ) : (

@@ -17,12 +17,12 @@ const sizeClasses: Record<NonNullable<AvatarProps["size"]>, string> = {
 
 export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", className, onClick, ...props }: AvatarProps) => {
   const [loaded, setLoaded] = React.useState<boolean>(false);
-  const [isLoading, setIsLoading] = React.useState<boolean>(!!src);
+  const [isImageLoading, setIsImageLoading] = React.useState<boolean>(!!src);
   const [imageError, setImageError] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (src) {
-      setIsLoading(true);
+      setIsImageLoading(true);
       setImageError(false);
       setLoaded(false);
     }
@@ -30,12 +30,12 @@ export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", class
 
   const handleImageLoad = () => {
     setLoaded(true);
-    setIsLoading(false);
+    setIsImageLoading(false);
   };
 
   const handleImageError = () => {
     setLoaded(false);
-    setIsLoading(false);
+    setIsImageLoading(false);
     setImageError(true);
   };
 
@@ -51,12 +51,12 @@ export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", class
       {...props}
     >
       {/* Skeleton loading animation */}
-      {isLoading && (
+      {isImageLoading && (
         <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded-full" />
       )}
       
       {/* Shimmer effect during loading */}
-      {isLoading && (
+      {isImageLoading && (
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer rounded-full" />
       )}
 
@@ -74,7 +74,7 @@ export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", class
       )}
       
       {/* Fallback text with better styling */}
-      {(!src || imageError || !loaded) && !isLoading && (
+      {(!src || imageError || !loaded) && !isImageLoading && (
         <span className={cn(
           "font-bold uppercase bg-gradient-to-br from-primary to-primary/80 bg-clip-text text-transparent",
           "transition-all duration-200 animate-fade-in"

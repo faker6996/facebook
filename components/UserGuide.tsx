@@ -17,10 +17,9 @@ import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, SelectDropdown }
 import { RadioGroup, RadioGroupItem, RadioGroupWithLabel, RadioButtonGroup } from "@/components/ui/RadioGroup";
 import { Skeleton, SkeletonAvatar, SkeletonText, SkeletonPost, SkeletonMessage } from "@/components/ui/Skeleton";
 import Alert from "@/components/ui/Alert";
-import { LoadingSpinner, InlineLoading } from "@/components/ui/Loading";
-import { GlobalLoading, ButtonLoading } from "@/components/ui/GlobalLoading";
-import { useLoading } from "@/contexts/LoadingContext";
-import { LOADING_KEYS } from "@/lib/utils/loading-manager";
+import { LoadingSpinner } from "@/components/ui/Loading";
+import { InlineLoading, ButtonLoading } from "@/components/ui/GlobalLoading";
+import { loading } from "@/lib/utils/loading";
 
 // Import icons
 import { Heart, MessageCircle, Share, Settings, User, Image, Video, Plus, Edit, Trash, Grid, List, Search, ChevronDown, ChevronRight, Users, Bell, Check, X, AlertTriangle, Info, Upload, Download, Play, Pause, SkipForward, Star } from "lucide-react";
@@ -132,13 +131,14 @@ const ResponsiveDemo = () => {
 const LoadingSystemDemo = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const { isKeyLoading } = useLoading();
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleAutoSearch = async () => {
+  const handleLocalSearch = async () => {
     if (!searchQuery.trim()) return;
     
+    setIsSearching(true);
     try {
-      // Simulate API call với auto loading
+      // Simulate API call
       const results = await new Promise(resolve => {
         setTimeout(() => {
           resolve([
@@ -148,15 +148,37 @@ const LoadingSystemDemo = () => {
         }, 2000);
       });
       setSearchResults(results as any[]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleGlobalSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    loading.show("Đang tìm kiếm toàn cục...");
+    
+    try {
+      const results = await new Promise(resolve => {
+        setTimeout(() => {
+          resolve([
+            { id: 1, name: "Global Result A", email: "a@global.com" },
+            { id: 2, name: "Global Result B", email: "b@global.com" }
+          ]);
+        }, 2000);
+      });
+      setSearchResults(results as any[]);
     } catch (error) {
       console.error("Search failed:", error);
+    } finally {
+      loading.hide();
     }
   };
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h4 className="font-medium">API Call với Auto Loading</h4>
+        <h4 className="font-medium">Loading Demos</h4>
         <div className="flex gap-2">
           <Input
             placeholder="Tìm kiếm người dùng..."
@@ -165,17 +187,22 @@ const LoadingSystemDemo = () => {
           />
           <Button 
             size="sm" 
-            onClick={handleAutoSearch}
-            disabled={isKeyLoading(LOADING_KEYS.SEARCH_USERS)}
+            onClick={handleLocalSearch}
+            disabled={isSearching}
           >
-            {isKeyLoading(LOADING_KEYS.SEARCH_USERS) ? "Đang tìm..." : "Tìm"}
+            {isSearching ? "Đang tìm..." : "Tìm local"}
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={handleGlobalSearch}
+          >
+            Tìm global
           </Button>
         </div>
       </div>
 
-      {isKeyLoading(LOADING_KEYS.SEARCH_USERS) && (
-        <InlineLoading />
-      )}
+      <InlineLoading isLoading={isSearching} text="Đang tìm kiếm..." />
 
       {searchResults.length > 0 && (
         <div className="space-y-2">
@@ -189,19 +216,17 @@ const LoadingSystemDemo = () => {
       )}
 
       <div className="text-xs text-muted-foreground">
-        Loading tự động hiện khi gọi API
+        <strong>Local:</strong> InlineLoading component | <strong>Global:</strong> loading.wrap() cho toàn màn hình
       </div>
     </div>
   );
 };
 
 const ManualLoadingDemo = () => {
-  const { start, stop, isKeyLoading } = useLoading();
   const [result, setResult] = useState<string>("");
 
-  const handleManualLoading = async () => {
-    const loadingKey = "manual_demo";
-    start(loadingKey);
+  const handleGlobalLoading = async () => {
+    loading.show("Đang xử lý...");
     
     try {
       // Simulate long operation
@@ -210,7 +235,20 @@ const ManualLoadingDemo = () => {
     } catch (error) {
       setResult("Có lỗi xảy ra");
     } finally {
-      stop(loadingKey);
+      loading.hide();
+    }
+  };
+
+  const handleSimpleLoading = async () => {
+    loading.show("Xử lý với show/hide...");
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      setResult("Hoàn thành với show/hide!");
+    } catch (error) {
+      setResult("Có lỗi xảy ra");
+    } finally {
+      loading.hide();
     }
   };
 
@@ -219,31 +257,30 @@ const ManualLoadingDemo = () => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h4 className="font-medium">Manual Loading Control</h4>
+        <h4 className="font-medium">Global Loading Control</h4>
         <div className="flex gap-2">
           <Button 
             size="sm" 
-            onClick={handleManualLoading}
-            disabled={isKeyLoading("manual_demo")}
+            onClick={handleGlobalLoading}
           >
-            Bắt đầu
+            loading.show()
           </Button>
           <Button 
             size="sm" 
             variant="outline"
+            onClick={handleSimpleLoading}
+          >
+            loading.show/hide
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost"
             onClick={clearResult}
           >
             Xóa
           </Button>
         </div>
       </div>
-
-      {isKeyLoading("manual_demo") && (
-        <div className="flex items-center gap-2">
-          <InlineLoading />
-          <span className="text-sm text-muted-foreground">Đang xử lý...</span>
-        </div>
-      )}
 
       {result && (
         <div className="text-sm p-2 bg-success/10 text-success rounded">
@@ -252,7 +289,7 @@ const ManualLoadingDemo = () => {
       )}
 
       <div className="text-xs text-muted-foreground">
-        Kiểm soát loading thủ công với start() / stop()
+Sử dụng <strong>loading.show()</strong> ở đầu và <strong>loading.hide()</strong> trong finally
       </div>
     </div>
   );
@@ -282,9 +319,9 @@ const LoadingUIDemo = () => {
       <div className="space-y-3">
         <h4 className="font-medium">Inline Loading</h4>
         <div className="space-y-2">
-          <InlineLoading />
-          <InlineLoading variant="dots" />
-          <InlineLoading size="sm" />
+          <InlineLoading isLoading={true} text="Đang tải..." />
+          <InlineLoading isLoading={true} />
+          <InlineLoading isLoading={true} size="sm" />
         </div>
       </div>
 
@@ -301,8 +338,10 @@ const LoadingUIDemo = () => {
       </div>
 
       <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded">
-        💡 <strong>Best Practice:</strong> Sử dụng <code>callApi()</code> để có loading tự động cho tất cả API calls. 
-        Chỉ dùng manual loading cho các tác vụ không phải API.
+        💡 <strong>Best Practice:</strong><br/>
+        <code>loading.show()</code> - Hiển thị loading<br/>
+        <code>loading.hide()</code> - Ẩn loading (luôn gọi trong finally)<br/>
+        <code>InlineLoading</code> - Loading nhỏ cho từng phần
       </div>
     </div>
   );
@@ -709,7 +748,7 @@ const UserGuideContent: React.FC = () => {
         <h2 className="text-2xl font-semibold text-foreground">Global Loading System</h2>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Auto Loading with API">
+          <Card title="Loading System Demo">
             <LoadingSystemDemo />
           </Card>
 
