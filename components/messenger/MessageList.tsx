@@ -117,7 +117,7 @@ const MessageList: React.FC<MessageListProps> = ({
           <div
             key={key}
             className={cn(
-              "flex gap-2 w-full max-w-none",
+              "flex gap-2 w-full max-w-none pt-2",
               isSender ? "justify-end" : "justify-start"
             )}
           >
@@ -131,7 +131,7 @@ const MessageList: React.FC<MessageListProps> = ({
             )}
             
             <div className={cn(
-              "flex flex-col gap-1 max-w-[70%] min-w-0",
+              "flex flex-col gap-1 max-w-[70%] min-w-0 w-full",
               isSender ? "items-end" : "items-start"
             )}>
               {/* Sender name for group messages */}
@@ -152,8 +152,8 @@ const MessageList: React.FC<MessageListProps> = ({
               {/* Message bubble */}
               <div
                 className={cn(
-                  "relative group px-3 py-2 rounded-2xl break-words text-sm shadow-md flex flex-col",
-                  "max-w-full min-w-0 word-wrap break-all",
+                  "relative group px-3 py-2 rounded-2xl text-sm shadow-md flex flex-col",
+                  "max-w-full min-w-0 break-words overflow-wrap-anywhere",
                   isSender
                     ? "bg-primary text-primary-foreground"
                     : isGroup 
@@ -176,8 +176,8 @@ const MessageList: React.FC<MessageListProps> = ({
             
             {/* Action Buttons */}
             <div className={cn(
-              "absolute -top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1",
-              isSender ? "left-2" : "right-2"
+              "absolute -top-8 opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-1 z-30",
+              isSender ? "left-0" : "right-0"
             )}>
               {/* Reply Button */}
               {onReplyMessage && (
@@ -213,7 +213,7 @@ const MessageList: React.FC<MessageListProps> = ({
             {/* Reaction Picker */}
             {showReactionPicker === Number(msg.id) && (
               <div className={cn(
-                "absolute -top-12 z-20 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-1",
+                "absolute -top-16 z-40 bg-card border border-border rounded-lg shadow-lg p-2 flex gap-1",
                 "min-w-fit whitespace-nowrap",
                 isSender ? "right-0" : "left-0"
               )}>
@@ -229,7 +229,7 @@ const MessageList: React.FC<MessageListProps> = ({
               </div>
             )}
 
-            {msg.content && <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.content}</p>}
+            {msg.content && <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere hyphens-auto">{msg.content}</p>}
             
             {/* Hiển thị attachments */}
             {msg.attachments && msg.attachments.length > 0 && (

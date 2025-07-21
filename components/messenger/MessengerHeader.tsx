@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 import { MessengerPreview } from "@/lib/models/messenger_review";
 import { GroupMember } from "@/lib/models/group";
 import { cn } from "@/lib/utils/cn";
-import { VideoCallIcon, PhoneIcon } from "@/components/icons/VideoCallIcons";
+import { Video, Phone } from "lucide-react";
 
 interface MessengerHeaderProps {
   conversation: MessengerPreview;
@@ -82,7 +82,7 @@ export const MessengerHeader: React.FC<MessengerHeaderProps> = ({
               title={t('voiceCall')}
               className="w-10 h-10 md:w-8 md:h-8"
             >
-              <PhoneIcon className="h-5 w-5 md:h-4 md:w-4" />
+              <Phone className="h-5 w-5 md:h-4 md:w-4" />
             </Button>
             <Button 
               size="icon" 
@@ -91,7 +91,7 @@ export const MessengerHeader: React.FC<MessengerHeaderProps> = ({
               title={t('videoCall')}
               className="w-10 h-10 md:w-8 md:h-8"
             >
-              <VideoCallIcon className="h-5 w-5 md:h-4 md:w-4" />
+              <Video className="h-5 w-5 md:h-4 md:w-4" />
             </Button>
           </>
         )}

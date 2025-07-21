@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 import Link from "next/link";
-import ChevronRightIcon from "../icons/ChevronRightIcon";
+import { ChevronRight } from "lucide-react";
 
 interface BreadcrumbItem {
   label: string;
@@ -31,7 +31,7 @@ export default function Breadcrumb({ items, className }: BreadcrumbProps) {
 
               {!isLast && (
                 <span className="px-1 text-muted-foreground" role="presentation">
-                  <ChevronRightIcon className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4" />
                 </span>
               )}
             </li>

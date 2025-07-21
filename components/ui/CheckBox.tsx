@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
-import { CheckIcon } from "../icons/CheckIcon";
+import { Check } from "lucide-react";
 
 interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: React.ReactNode;
@@ -36,7 +36,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               : "bg-background border-input hover:border-accent-foreground/30 hover:bg-accent/10"
           )}
         >
-          {isChecked && <CheckIcon className="w-4 h-4" />}
+          {isChecked && <Check className="w-4 h-4" />}
         </div>
         {label && <span className={cn("text-sm text-foreground", labelClassName)}>{label}</span>}
       </label>

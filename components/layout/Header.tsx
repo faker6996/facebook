@@ -1,15 +1,9 @@
 // components/Header.tsx
 import { useEffect, useState, useRef } from "react";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, Home, Tv, Store, Users, Gamepad2, Bell } from "lucide-react";
 import BsMessengerIcon from "../icons/BsMessengerIcon";
-import FaBellIcon from "../icons/FaBellIcon";
 import FaThIcon from "../icons/FaThIcon";
-import GamepadIcon from "../icons/GamepadIcon";
-import HomeIcon from "../icons/HomeIcon";
 import { FacebookIcon } from "../icons/SocialIcons";
-import StoreIcon from "../icons/StoreIcon";
-import TvIcon from "../icons/TvIcon";
-import UsersIcon from "../icons/UsersIcon";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import MessengerDropdown from "@/components/messenger/MessengerDropdown";
@@ -129,11 +123,11 @@ export default function Header() {
 
             {/* Desktop Center: Navigation Icons */}
             <div className="flex gap-6 text-2xl">
-              <Button icon={HomeIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
-              <Button icon={TvIcon} iConClassName="w-8 h-8" variant="ghost"></Button>
-              <Button icon={StoreIcon} variant="ghost"></Button>
-              <Button icon={UsersIcon} variant="ghost"></Button>
-              <Button icon={GamepadIcon} variant="ghost"></Button>
+              <Button icon={Home} variant="ghost"></Button>
+              <Button icon={Tv} variant="ghost"></Button>
+              <Button icon={Store} variant="ghost"></Button>
+              <Button icon={Users} variant="ghost"></Button>
+              <Button icon={Gamepad2} variant="ghost"></Button>
             </div>
 
             {/* Desktop Right: Actions */}
@@ -156,7 +150,7 @@ export default function Header() {
                   />
                 )}
               </div>
-              <Button icon={FaBellIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
+              <Button icon={Bell} size="icon" className="bg-muted hover:bg-accent"></Button>
 
               <div className="relative">
                 <Avatar onClick={() => setShowAvatarMenu(!showAvatarMenu)} className="cursor-pointer" src={user.avatar_url} size="md" />
@@ -172,22 +166,22 @@ export default function Header() {
         <div className="fixed top-16 left-0 right-0 bottom-0 z-40 bg-card">
           <div className="p-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Button icon={HomeIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
+              <Button icon={Home} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Trang chủ
               </Button>
-              <Button icon={TvIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
+              <Button icon={Tv} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Video
               </Button>
-              <Button icon={StoreIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
+              <Button icon={Store} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Marketplace
               </Button>
-              <Button icon={UsersIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
+              <Button icon={Users} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Bạn bè
               </Button>
-              <Button icon={GamepadIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
+              <Button icon={Gamepad2} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Gaming
               </Button>
-              <Button icon={FaBellIcon} variant="ghost" className="h-16 flex-col gap-2 text-center">
+              <Button icon={Bell} variant="ghost" className="h-16 flex-col gap-2 text-center">
                 Thông báo
               </Button>
             </div>

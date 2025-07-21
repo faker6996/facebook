@@ -23,8 +23,6 @@ import { cn } from "@/lib/utils/cn";
 import VideoCall from "@/components/video-call/VideoCall";
 import useVideoCall from "@/hooks/useVideoCall";
 
-
-
 // ----- Props Interface -----
 interface Props {
   conversation: MessengerPreview;
@@ -55,45 +53,30 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     handleRetrySend,
     handleReplyMessage,
     handleAddReaction,
-    handleRemoveReaction
+    handleRemoveReaction,
   } = useMessageHandler({
     conversation,
     sender,
     onScrollToBottom: (delay, reason) => {}, // Will be set later
-    onSetShouldAutoScroll: () => {} // Will be set later
+    onSetShouldAutoScroll: () => {}, // Will be set later
   });
 
   // ----- Pagination Hook -----
-  const {
-    currentPage,
-    hasMoreMessages,
-    isLoadingMessages,
-    totalMessageCount,
-    isInitialLoad,
-    loadMessages,
-    loadMoreMessages,
-    resetPaginationState
-  } = useMessagePagination({
-    conversation,
-    onScrollToBottom: (delay, reason) => {}, // Will be set later
-    onSetMessages: setMessages
-  });
+  const { currentPage, hasMoreMessages, isLoadingMessages, totalMessageCount, isInitialLoad, loadError, loadMessages, loadMoreMessages, retryLoadMessages, resetPaginationState } =
+    useMessagePagination({
+      conversation,
+      onScrollToBottom: (delay, reason) => {}, // Will be set later
+      onSetMessages: setMessages,
+    });
 
   // ----- Scroll Hook -----
-  const {
-    bottomRef,
-    messagesContainerRef,
-    shouldAutoScroll,
-    setShouldAutoScroll,
-    scrollToBottom,
-    resetScrollState
-  } = useMessengerScroll({
+  const { bottomRef, messagesContainerRef, shouldAutoScroll, setShouldAutoScroll, scrollToBottom, resetScrollState } = useMessengerScroll({
     messages,
     isLoadingMessages,
     isInitialLoad,
     conversation,
     onLoadMore: loadMoreMessages,
-    hasMoreMessages
+    hasMoreMessages,
   });
 
   // Group-specific state
@@ -103,34 +86,37 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [showGroupSettings, setShowGroupSettings] = useState(false);
 
   const isGroup = conversation.is_group === true;
-  
+
   // Debug video call buttons (only once per conversation)
   useEffect(() => {
-    console.log('🔍 Video call debug:', {
+    console.log("🔍 Video call debug:", {
       isGroup,
       conversation_id: conversation.conversation_id,
       other_user_id: conversation.other_user_id,
       isOtherUserOnline,
-      showVideoCallButtons: !isGroup
+      showVideoCallButtons: !isGroup,
     });
   }, [isGroup, conversation.conversation_id, conversation.other_user_id, isOtherUserOnline]);
 
   // Video call integration
-  const videoCallEvents = useMemo(() => ({
-    onIncomingCall: (callerId: string, callerName: string) => {
-      console.log('📞 Incoming call from:', callerName);
-      // The VideoCall component will handle the incoming call UI
-    },
-    onCallAccepted: (callerId: string) => {
-      console.log('📞 Call accepted by:', callerId);
-    },
-    onCallDeclined: (callerId: string) => {
-      console.log('📞 Call declined by:', callerId);
-    },
-    onCallEnded: (callerId: string) => {
-      console.log('📞 Call ended by:', callerId);
-    }
-  }), []);
+  const videoCallEvents = useMemo(
+    () => ({
+      onIncomingCall: (callerId: string, callerName: string) => {
+        console.log("📞 Incoming call from:", callerName);
+        // The VideoCall component will handle the incoming call UI
+      },
+      onCallAccepted: (callerId: string) => {
+        console.log("📞 Call accepted by:", callerId);
+      },
+      onCallDeclined: (callerId: string) => {
+        console.log("📞 Call declined by:", callerId);
+      },
+      onCallEnded: (callerId: string) => {
+        console.log("📞 Call ended by:", callerId);
+      },
+    }),
+    []
+  );
 
   const videoCall = useVideoCall(videoCallEvents);
 
@@ -162,7 +148,6 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     },
   });
 
-
   // ----- useEffect Hooks -----
   // Load tin nhắn ban đầu và group data
   useEffect(() => {
@@ -184,11 +169,14 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           try {
             console.log(`🔍 Loading group members for conversation ${conversation.conversation_id}`);
             console.log(`📊 Expected member count from conversation list: ${conversation.member_count}`);
-            
+
             const members = await callApi<GroupMember[]>(API_ROUTES.CHAT_SERVER.GROUP_MEMBERS(conversation.conversation_id!), HTTP_METHOD_ENUM.GET);
             console.log(`📊 Actual members retrieved: ${members?.length || 0}`);
-            console.log(`👥 Members:`, members?.map(m => ({ user_id: m.user_id, name: m.name })));
-            
+            console.log(
+              `👥 Members:`,
+              members?.map((m) => ({ user_id: m.user_id, name: m.name }))
+            );
+
             setGroupMembers(members || []);
 
             const currentMember = members?.find((m) => m.user_id === currentUser?.id);
@@ -210,33 +198,29 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     };
   }, [conversation, isGroup]);
 
-
-
-
-
   // Video call handlers
   const handleStartVideoCall = () => {
     if (!isGroup && conversation.other_user_id) {
-      console.log('📞 Starting video call to user ID:', conversation.other_user_id);
-      console.log('📞 Current sender ID:', sender.id);
-      console.log('📞 Conversation details:', {
+      console.log("📞 Starting video call to user ID:", conversation.other_user_id);
+      console.log("📞 Current sender ID:", sender.id);
+      console.log("📞 Conversation details:", {
         conversation_id: conversation.conversation_id,
         other_user_id: conversation.other_user_id,
-        other_user_name: conversation.other_user_name
+        other_user_name: conversation.other_user_name,
       });
       videoCall.startCall(conversation.other_user_id.toString(), true);
     } else {
-      console.log('📞 Cannot start video call:', { isGroup, other_user_id: conversation.other_user_id });
+      console.log("📞 Cannot start video call:", { isGroup, other_user_id: conversation.other_user_id });
     }
   };
 
   const handleStartVoiceCall = () => {
     if (!isGroup && conversation.other_user_id) {
-      console.log('📞 Starting voice call to user ID:', conversation.other_user_id);
-      console.log('📞 Current sender ID:', sender.id);
+      console.log("📞 Starting voice call to user ID:", conversation.other_user_id);
+      console.log("📞 Current sender ID:", sender.id);
       videoCall.startCall(conversation.other_user_id.toString(), false);
     } else {
-      console.log('📞 Cannot start voice call:', { isGroup, other_user_id: conversation.other_user_id });
+      console.log("📞 Cannot start voice call:", { isGroup, other_user_id: conversation.other_user_id });
     }
   };
 
@@ -272,9 +256,9 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         className={cn(
           "fixed z-40 flex flex-col overflow-hidden border bg-card shadow-2xl transition-all duration-300 ease-soft",
           // Mobile styles (default)
-          "inset-0 rounded-none max-h-none",
-          // Desktop styles (md+) - Fixed positioning to bottom (right is handled by style prop) 
-          "md:fixed md:bottom-4 md:top-auto md:left-auto md:w-80 md:h-[480px] md:rounded-2xl md:max-h-[480px]"
+          "inset-0 rounded-none max-h-none h-[80vh] max-w-full",
+          // Desktop styles (md+) - Fixed positioning to bottom (right is handled by style prop)
+          "md:fixed md:bottom-4 md:top-auto md:left-auto md:w-80 md:h-[480px] md:rounded-2xl md:max-h-[480px] md:max-w-80"
         )}
         style={style}
       >
@@ -301,6 +285,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           hasMoreMessages={hasMoreMessages}
           isInitialLoad={isInitialLoad}
           totalMessageCount={totalMessageCount}
+          loadError={loadError}
           isGroup={isGroup}
           groupMembers={groupMembers}
           onRetrySend={handleRetrySend}
@@ -312,6 +297,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
             const member = groupMembers.find((m) => m.user_id === senderId);
             return member?.name || "Unknown User";
           }}
+          onRetryLoadMessages={retryLoadMessages}
         />
 
         {/* Message Input */}
@@ -362,9 +348,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
             <div className="p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-4">Cài đặt nhóm</h3>
               <p className="text-sm md:text-base text-muted-foreground mb-6">
-                Bạn là <span className="font-medium text-primary">
-                  {currentUserRole === "admin" ? "Quản trị viên" : "Điều hành viên"}
-                </span>
+                Bạn là <span className="font-medium text-primary">{currentUserRole === "admin" ? "Quản trị viên" : "Điều hành viên"}</span>
               </p>
               <Button onClick={() => setShowGroupSettings(false)} className="w-full" size="lg">
                 Đóng
@@ -379,7 +363,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         isActive={videoCall.callState.isCallActive}
         isIncoming={videoCall.callState.isIncomingCall}
         isOutgoing={videoCall.callState.isOutgoingCall}
-        callerName={videoCall.callState.callerName || conversation.other_user_name || 'Unknown'}
+        callerName={videoCall.callState.callerName || conversation.other_user_name || "Unknown"}
         callerAvatar={videoCall.callState.callerAvatar || conversation.avatar_url}
         onAccept={handleAcceptCall}
         onDecline={handleDeclineCall}
