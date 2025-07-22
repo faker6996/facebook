@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MessageStatusIcon } from "@/components/icons/MessageStatusIcon";
 import { FileText, Download, Image, X, FileVideo, FileAudio, Archive, File, Reply, Smile, Crown, Shield } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 
 interface MessageListProps {
   messages: Message[];
@@ -25,6 +26,7 @@ const MessageList: React.FC<MessageListProps> = ({
   messages, senderId, onRetrySend, onReplyMessage, onAddReaction, onRemoveReaction,
   isGroup = false, getSenderName, groupMembers = []
 }) => {
+  const t = useTranslations("Messenger.content");
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [viewingImageName, setViewingImageName] = useState<string>("");
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null);
@@ -169,8 +171,8 @@ const MessageList: React.FC<MessageListProps> = ({
                 "mb-2 p-2 rounded-lg border-l-2 text-xs opacity-75",
                 isSender ? "border-primary-foreground/40 bg-primary-foreground/10" : "border-muted-foreground/40 bg-muted/50"
               )}>
-                <p className="font-medium">Trả lời tin nhắn:</p>
-                <p className="truncate">{msg.replied_message.content || "File attachment"}</p>
+                <p className="font-medium">{t('replyTo')}</p>
+                <p className="truncate">{msg.replied_message.content || t('fileAttachment')}</p>
               </div>
             )}
             
@@ -323,7 +325,7 @@ const MessageList: React.FC<MessageListProps> = ({
                     className="h-5 text-xs text-red-600 hover:text-red-700"
                     onClick={() => onRetrySend(msg)}
                   >
-                    Thử lại
+                    {t('retry')}
                   </Button>
                 )}
               </div>

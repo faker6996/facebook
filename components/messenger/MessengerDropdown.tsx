@@ -1,6 +1,7 @@
 // components/messenger/MessengerDropdown.tsx
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
+import { useTranslations } from 'next-intl';
 import { MessengerPreview } from "@/lib/models/messenger_review";
 import { formatTime } from "@/lib/utils/formatTime";
 import { callApi } from "@/lib/utils/api-client";
@@ -23,6 +24,7 @@ interface MessengerDropdownProps {
 }
 
 export default function MessengerDropdown({ onClose, onOpenConversation, triggerRef }: MessengerDropdownProps) {
+  const t = useTranslations('Messenger.dropdown');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [searchUser, setSearchUser] = useState<string>("");
   const [conversations, setConversations] = useState<MessengerPreview[]>([]);
@@ -39,7 +41,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
       if (!user?.id) return;
 
       if (user?.id) {
-        loading.show("Đang tải cuộc trò chuyện...");
+        loading.show(t('loadingConversations'));
         
         try {
           const res = await callApi<MessengerPreview[]>(
@@ -96,7 +98,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
       return;
     }
     
-    loading.show("Đang tìm kiếm...");
+    loading.show(t('searching'));
     
     try {
       const res = await callApi<MessengerPreview[]>(
@@ -145,14 +147,14 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
       <div ref={dropdownRef} className="absolute right-0 top-14 w-96 bg-card shadow-lg rounded-md p-4 z-50">
         {/* Header with Create Group Button */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-foreground">Tin nhắn gần đây</h3>
+          <h3 className="text-lg font-bold text-foreground">{t('recentMessages')}</h3>
           <Button 
             size="sm" 
             onClick={() => setShowCreateGroupModal(true)} 
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Tạo nhóm
+            {t('createGroup')}
           </Button>
         </div>
 
@@ -165,7 +167,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
             )}
             onClick={() => setFilter("all")}
           >
-            Tất cả
+            {t('all')}
           </button>
           <button
             className={cn(
@@ -174,7 +176,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
             )}
             onClick={() => setFilter("private")}
           >
-            Riêng tư
+            {t('private')}
           </button>
           <button
             className={cn(
@@ -184,7 +186,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
             onClick={() => setFilter("groups")}
           >
             <Users className="h-3 w-3" />
-            Nhóm
+            {t('groups')}
           </button>
         </div>
 
@@ -196,19 +198,19 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
               setSearchUser(e.target.value);
               if (e.target.value === "") setSearchResults(null);
             }}
-            placeholder="Nhập tên bạn bè..."
+            placeholder={t('searchFriendsPlaceholder')}
           />
           <Button type="submit" disabled={!searchUser.trim()}>
-            Tìm
+            {t('search')}
           </Button>
         </form>
 
         {filteredConversations.length === 0 ? (
           searchResults !== null ? (
-            <div className="text-muted-foreground text-center py-4">Không tìm thấy kết quả nào.</div>
+            <div className="text-muted-foreground text-center py-4">{t('noResultsFound')}</div>
           ) : (
             <div className="text-muted-foreground text-center py-4">
-              {filter === "groups" ? "Không có nhóm nào" : filter === "private" ? "Không có tin nhắn riêng tư nào" : "Không có cuộc trò chuyện nào"}
+              {filter === "groups" ? t('noGroups') : filter === "private" ? t('noPrivateMessages') : t('noConversations')}
             </div>
           )
         ) : (
@@ -252,7 +254,7 @@ export default function MessengerDropdown({ onClose, onOpenConversation, trigger
                       <ClientOnly fallback={<div className="text-xs text-muted-foreground">--:--</div>}>
                         <div className="text-xs text-muted-foreground">{formatTime(item.last_message_at)}</div>
                       </ClientOnly>
-                      {item.is_group && item.member_count && <div className="text-xs text-muted-foreground">{item.member_count} thành viên</div>}
+                      {item.is_group && item.member_count && <div className="text-xs text-muted-foreground">{item.member_count} {t('membersCount')}</div>}
                     </div>
                   </div>
 

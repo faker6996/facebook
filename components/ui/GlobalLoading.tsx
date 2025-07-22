@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { LoadingSpinner } from './Loading';
 import { loading, LoadingState } from '@/lib/utils/loading';
+import { useTranslations } from 'next-intl';
 
 interface GlobalLoadingProps {
   className?: string;
@@ -59,9 +60,11 @@ interface PageLoadingProps {
 }
 
 export const PageLoading: React.FC<PageLoadingProps> = ({
-  message = 'Đang tải trang...',
+  message,
   className
 }) => {
+  const t = useTranslations("Loading");
+  const defaultMessage = message || t("loadingPage");
   return (
     <div className={cn(
       'min-h-screen flex items-center justify-center bg-background',
@@ -71,10 +74,10 @@ export const PageLoading: React.FC<PageLoadingProps> = ({
         <LoadingSpinner size="lg" />
         <div>
           <p className="text-lg font-medium text-foreground">
-            {message}
+            {defaultMessage}
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Vui lòng đợi một chút...
+            {t("pleaseWait")}
           </p>
         </div>
       </div>
