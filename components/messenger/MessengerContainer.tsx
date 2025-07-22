@@ -20,8 +20,9 @@ import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 import { cn } from "@/lib/utils/cn";
-import VideoCall from "@/components/video-call/VideoCall";
-import useVideoCall from "@/hooks/useVideoCall";
+// Video calls handled by GlobalVideoCallManager
+// import VideoCall from "@/components/video-call/VideoCall";
+// import useVideoCall from "@/hooks/useVideoCall";
 
 // ----- Props Interface -----
 interface Props {
@@ -99,28 +100,29 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   }, [isGroup, conversation.conversation_id, conversation.other_user_id, isOtherUserOnline]);
 
   // Video call integration
-  const videoCallEvents = useMemo(
-    () => ({
-      onIncomingCall: (callerId: string, callerName: string) => {
-        console.log("📞 Incoming call from:", callerName);
-        // The VideoCall component will handle the incoming call UI
-      },
-      onCallAccepted: (callerId: string) => {
-        console.log("📞 Call accepted by:", callerId);
-      },
-      onCallDeclined: (callerId: string) => {
-        console.log("📞 Call declined by:", callerId);
-      },
-      onCallEnded: (callerId: string) => {
-        console.log("📞 Call ended by:", callerId);
-      },
-    }),
-    []
-  );
+  // Global video call manager handles all video calls
+  // const videoCallEvents = useMemo(
+  //   () => ({
+  //     onIncomingCall: (callerId: string, callerName: string) => {
+  //       console.log("📞 Incoming call from:", callerName);
+  //       // The VideoCall component will handle the incoming call UI
+  //     },
+  //     onCallAccepted: (callerId: string) => {
+  //       console.log("📞 Call accepted by:", callerId);
+  //     },
+  //     onCallDeclined: (callerId: string) => {
+  //       console.log("📞 Call declined by:", callerId);
+  //     },
+  //     onCallEnded: (callerId: string) => {
+  //       console.log("📞 Call ended by:", callerId);
+  //     },
+  //   }),
+  //   []
+  // );
 
-  const videoCall = useVideoCall(videoCallEvents);
+  // const videoCall = useVideoCall(videoCallEvents);
 
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Global SignalR Connection
   useGlobalSignalRConnection({
@@ -208,7 +210,14 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         other_user_id: conversation.other_user_id,
         other_user_name: conversation.other_user_name,
       });
-      videoCall.startCall(conversation.other_user_id.toString(), true);
+      // Use global video call manager instead
+      window.dispatchEvent(new CustomEvent('startVideoCall', {
+        detail: {
+          targetUserId: conversation.other_user_id.toString(),
+          isVideoCall: true,
+          callerName: conversation.other_user_name
+        }
+      }));
     } else {
       console.log("📞 Cannot start video call:", { isGroup, other_user_id: conversation.other_user_id });
     }
@@ -218,35 +227,43 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     if (!isGroup && conversation.other_user_id) {
       console.log("📞 Starting voice call to user ID:", conversation.other_user_id);
       console.log("📞 Current sender ID:", sender.id);
-      videoCall.startCall(conversation.other_user_id.toString(), false);
+      // Use global video call manager instead
+      window.dispatchEvent(new CustomEvent('startVideoCall', {
+        detail: {
+          targetUserId: conversation.other_user_id.toString(),
+          isVideoCall: false,
+          callerName: conversation.other_user_name
+        }
+      }));
     } else {
       console.log("📞 Cannot start voice call:", { isGroup, other_user_id: conversation.other_user_id });
     }
   };
 
-  const handleAcceptCall = () => {
-    videoCall.acceptCall();
-  };
+  // Video call handlers moved to GlobalVideoCallManager
+  // const handleAcceptCall = () => {
+  //   videoCall.acceptCall();
+  // };
 
-  const handleDeclineCall = () => {
-    videoCall.declineCall();
-  };
+  // const handleDeclineCall = () => {
+  //   videoCall.declineCall();
+  // };
 
-  const handleEndCall = () => {
-    videoCall.endCall();
-  };
+  // const handleEndCall = () => {
+  //   videoCall.endCall();
+  // };
 
-  const handleToggleVideo = () => {
-    videoCall.toggleVideo();
-  };
+  // const handleToggleVideo = () => {
+  //   videoCall.toggleVideo();
+  // };
 
-  const handleToggleAudio = () => {
-    videoCall.toggleAudio();
-  };
+  // const handleToggleAudio = () => {
+  //   videoCall.toggleAudio();
+  // };
 
-  const handleToggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
+  // const handleToggleFullscreen = () => {
+  //   setIsFullscreen(!isFullscreen);
+  // };
 
   // ----- JSX Render -----
   return (
@@ -358,25 +375,8 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         </div>
       )}
 
-      {/* Video Call Component */}
-      <VideoCall
-        isActive={videoCall.callState.isCallActive}
-        isIncoming={videoCall.callState.isIncomingCall}
-        isOutgoing={videoCall.callState.isOutgoingCall}
-        callerName={videoCall.callState.callerName || conversation.other_user_name || "Unknown"}
-        callerAvatar={videoCall.callState.callerAvatar || conversation.avatar_url}
-        onAccept={handleAcceptCall}
-        onDecline={handleDeclineCall}
-        onEnd={handleEndCall}
-        onToggleVideo={handleToggleVideo}
-        onToggleAudio={handleToggleAudio}
-        onToggleFullscreen={handleToggleFullscreen}
-        isVideoEnabled={videoCall.callState.isVideoEnabled}
-        isAudioEnabled={videoCall.callState.isAudioEnabled}
-        isFullscreen={isFullscreen}
-        localStream={videoCall.localStream || undefined}
-        remoteStream={videoCall.remoteStream || undefined}
-      />
+      {/* Video Call Component - Handled by GlobalVideoCallManager */}
+      {/* All video calls are now managed globally */}
     </>
   );
 }
