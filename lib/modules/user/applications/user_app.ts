@@ -61,4 +61,12 @@ export const userApp = {
 
     return await userRepo.searchUsersWithConversation(currentUserId, query.trim());
   },
+
+  async searchUsersForGroupInvite(currentUserId: number, query: string, groupId: number): Promise<User[]> {
+    if (!query || query.trim().length < 2) {
+      throw new ApiError("Search query must be at least 2 characters", 400);
+    }
+
+    return await userRepo.searchUsersForGroupInvite(currentUserId, query.trim(), groupId);
+  },
 };

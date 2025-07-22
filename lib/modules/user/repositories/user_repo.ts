@@ -134,4 +134,44 @@ export const userRepo = {
       unread_count: 0
     }));
   },
+
+  async searchUsersForGroupInvite(currentUserId: number, query: string, groupId: number): Promise<User[]> {
+    const searchPattern = `%${query}%`;
+    
+    const sql = `
+      SELECT DISTINCT u.id, u.name, u.user_name, u.email, u.avatar_url, u.created_at, u.updated_at
+      FROM ${User.table} u
+      WHERE u.id != $1
+        AND (LOWER(u.name) LIKE LOWER($2) OR LOWER(u.user_name) LIKE LOWER($3))
+        AND u.id NOT IN (
+          SELECT gm.user_id 
+          FROM group_members gm 
+          WHERE gm.group_id = $4
+        )
+      ORDER BY 
+        CASE 
+          WHEN LOWER(u.name) = LOWER($5) THEN 1
+          WHEN LOWER(u.user_name) = LOWER($6) THEN 2
+          WHEN LOWER(u.name) LIKE LOWER($7) THEN 3
+          WHEN LOWER(u.user_name) LIKE LOWER($8) THEN 4
+          ELSE 5
+        END,
+        u.name ASC
+      LIMIT 20
+    `;
+    
+    const params = [
+      currentUserId,    // $1 - exclude current user
+      searchPattern,    // $2 - name LIKE pattern
+      searchPattern,    // $3 - user_name LIKE pattern
+      groupId,          // $4 - group ID to exclude existing members
+      query,            // $5 - exact name match
+      query,            // $6 - exact user_name match
+      `${query}%`,      // $7 - name starts with
+      `${query}%`       // $8 - user_name starts with
+    ];
+    
+    const result = await safeQuery(sql, params);
+    return result.rows.map(row => new User(row));
+  },
 };

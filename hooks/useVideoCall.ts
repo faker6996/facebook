@@ -19,6 +19,8 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
   ]);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isAudioOnlyFallback, setIsAudioOnlyFallback] = useState(false);
 
   // Debug SignalR connection state
   useEffect(() => {
@@ -54,13 +56,14 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
 
   // Memoize signaling callbacks to prevent infinite re-renders
   const signalingCallbacks = useMemo(() => ({
-    onCallOffer: (offer: RTCSessionDescriptionInit, targetUserId: string) => {
-      console.log('📞 Sending call offer to:', targetUserId);
+    onCallOffer: (offer: RTCSessionDescriptionInit, targetUserId: string, isVideoCall?: boolean) => {
+      console.log('📞 Sending call offer to:', targetUserId, 'isVideo:', isVideoCall);
       console.log('📞 Offer being sent:', offer);
       if (connection && isConnected) {
         const offerString = JSON.stringify(offer);
-        console.log('📞 Offer string:', offerString);
-        connection.invoke('SendCallOffer', targetUserId, offerString)
+        const callType = isVideoCall ? 'video' : 'audio';
+        console.log('📞 Offer string:', offerString, 'callType:', callType);
+        connection.invoke('SendCallOffer', targetUserId, offerString, callType)
           .then(() => console.log('📞 Call offer sent successfully'))
           .catch(err => console.error('Error sending call offer:', err));
       } else {
@@ -127,8 +130,8 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
     console.log(`📞 Setting up ${listenerPrefix} SignalR video call listeners...`);
 
     // Handle incoming call offer
-    const handleCallOffer = async (callerId: string, offer: string) => {
-      console.log('📞 Received call offer from:', callerId);
+    const handleCallOffer = async (callerId: string, offer: string, callType: string = 'video') => {
+      console.log('📞 Received call offer from:', callerId, 'callType:', callType);
       console.log('📞 Offer string:', offer);
       
       try {
@@ -146,8 +149,16 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
           console.warn('Failed to fetch caller info:', error);
         }
         
-        await webRTC.handleOffer(offerObj, callerId, callerName, undefined);
-        events?.onIncomingCall?.(callerId, callerName, undefined);
+        const isVideoCall = callType === 'video';
+        const isRenegotiation = await webRTC.handleOffer(offerObj, callerId, callerName, undefined, isVideoCall);
+        
+        // Only trigger onIncomingCall for new calls, not renegotiation
+        if (!isRenegotiation) {
+          console.log(`📞 ${listenerPrefix} - Triggering onIncomingCall for NEW call from:`, callerId);
+          events?.onIncomingCall?.(callerId, callerName, undefined);
+        } else {
+          console.log(`📞 ${listenerPrefix} - Renegotiation handled, NOT triggering new call UI`);
+        }
       } catch (error) {
         console.error('Error handling call offer:', error);
       }
@@ -240,9 +251,37 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
     try {
       console.log('📞 Starting call to:', targetUserId, 'isVideo:', isVideoCall);
       console.log('📞 SignalR connection state:', { connection: !!connection, isConnected });
+      
+      // Reset error states
+      setCameraError(null);
+      setIsAudioOnlyFallback(false);
+      
       await webRTC.startCall(targetUserId, isVideoCall);
-    } catch (error) {
+      
+      // Check if we actually got video after the call started
+      if (isVideoCall && webRTC.localStream) {
+        const hasVideo = webRTC.localStream.getVideoTracks().length > 0;
+        if (!hasVideo) {
+          setIsAudioOnlyFallback(true);
+          setCameraError('No camera devices available - using audio-only');
+        }
+      }
+    } catch (error: any) {
       console.error('Error starting call:', error);
+      
+      // Handle specific camera errors
+      if (error.message?.includes('No media devices available')) {
+        setCameraError('No camera or microphone devices available');
+      } else if (error.message?.includes('Camera and microphone permissions denied')) {
+        setCameraError('Camera and microphone permissions denied');
+      } else if (error.message?.includes('Camera is already in use')) {
+        setCameraError('Camera is already in use by another application');
+      } else if (error.message?.includes('Camera constraints cannot be satisfied')) {
+        setCameraError('Camera constraints cannot be satisfied');
+      } else {
+        setCameraError('Failed to access camera or microphone');
+      }
+      
       throw error;
     }
   }, [webRTC, connection, isConnected]);
@@ -251,11 +290,40 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
   const acceptCall = useCallback(async () => {
     try {
       console.log('📞 Accepting call...');
+      
+      // Reset error states
+      setCameraError(null);
+      setIsAudioOnlyFallback(false);
+      
       await webRTC.acceptCall();
+      
+      // Check if we actually got video after accepting the call
+      if (webRTC.callState.isVideoEnabled && webRTC.localStream) {
+        const hasVideo = webRTC.localStream.getVideoTracks().length > 0;
+        if (!hasVideo) {
+          setIsAudioOnlyFallback(true);
+          setCameraError('No camera devices available - using audio-only');
+        }
+      }
+      
       // Trigger local onCallAccepted event for the receiver
       events?.onCallAccepted?.('local');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accepting call:', error);
+      
+      // Handle specific camera errors
+      if (error.message?.includes('No media devices available')) {
+        setCameraError('No camera or microphone devices available');
+      } else if (error.message?.includes('Camera and microphone permissions denied')) {
+        setCameraError('Camera and microphone permissions denied');
+      } else if (error.message?.includes('Camera is already in use')) {
+        setCameraError('Camera is already in use by another application');
+      } else if (error.message?.includes('Camera constraints cannot be satisfied')) {
+        setCameraError('Camera constraints cannot be satisfied');
+      } else {
+        setCameraError('Failed to access camera or microphone');
+      }
+      
       throw error;
     }
   }, [webRTC, events]);
@@ -286,5 +354,10 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
     
     // SignalR connection state
     isSignalRConnected: isConnected,
+    
+    // Camera error state
+    cameraError,
+    isAudioOnlyFallback,
+    clearCameraError: () => setCameraError(null),
   };
 }

@@ -33,12 +33,12 @@ export interface UseWebRTCReturn {
   toggleAudio: () => void;
   
   // Signaling (to be integrated with SignalR)
-  handleOffer: (offer: RTCSessionDescriptionInit, callerId: string, callerName: string, callerAvatar?: string) => Promise<void>;
+  handleOffer: (offer: RTCSessionDescriptionInit, callerId: string, callerName: string, callerAvatar?: string, isVideoCall?: boolean) => Promise<boolean>;
   handleAnswer: (answer: RTCSessionDescriptionInit) => Promise<void>;
   handleIceCandidate: (candidate: RTCIceCandidateInit) => Promise<void>;
   
   // Events
-  onCallOffer?: (offer: RTCSessionDescriptionInit, targetUserId: string) => void;
+  onCallOffer?: (offer: RTCSessionDescriptionInit, targetUserId: string, isVideoCall?: boolean) => void;
   onCallAnswer?: (answer: RTCSessionDescriptionInit, targetUserId: string) => void;
   onIceCandidate?: (candidate: RTCIceCandidateInit, targetUserId: string) => void;
   onCallEnd?: (targetUserId: string) => void;
@@ -55,7 +55,7 @@ const defaultConfig: WebRTCConfig = {
 export default function useWebRTC(
   config: WebRTCConfig = defaultConfig,
   onSignalingSend?: {
-    onCallOffer?: (offer: RTCSessionDescriptionInit, targetUserId: string) => void;
+    onCallOffer?: (offer: RTCSessionDescriptionInit, targetUserId: string, isVideoCall?: boolean) => void;
     onCallAnswer?: (answer: RTCSessionDescriptionInit, targetUserId: string) => void;
     onIceCandidate?: (candidate: RTCIceCandidateInit, targetUserId: string) => void;
     onCallEnd?: (targetUserId: string) => void;
@@ -101,6 +101,8 @@ export default function useWebRTC(
     // Handle incoming stream
     pc.ontrack = (event) => {
       const [stream] = event.streams;
+      console.log('📡 Received track:', event.track.kind, 'enabled:', event.track.enabled);
+      console.log('📡 Remote stream tracks:', stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
       remoteStreamRef.current = stream;
       setRemoteStream(stream);
     };
@@ -115,9 +117,30 @@ export default function useWebRTC(
     return pc;
   }, [config, onSignalingSend]);
 
-  // Get user media
+  // Check camera availability
+  const checkCameraAvailability = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      return videoDevices.length > 0;
+    } catch (error) {
+      console.error('Error enumerating devices:', error);
+      return false;
+    }
+  }, []);
+
+  // Get user media with enhanced error handling
   const getUserMedia = useCallback(async (video: boolean = true, audio: boolean = true) => {
     try {
+      // Check for camera availability if video is requested
+      if (video) {
+        const hasCameraDevice = await checkCameraAvailability();
+        if (!hasCameraDevice) {
+          console.warn('No camera devices found, falling back to audio-only');
+          video = false;
+        }
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: video ? { 
           width: { ideal: 1280 }, 
@@ -135,11 +158,62 @@ export default function useWebRTC(
       setLocalStream(stream);
       
       return stream;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accessing media devices:', error);
+      
+      // Handle specific camera errors
+      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        console.warn('Camera device not found, attempting audio-only');
+        if (video && audio) {
+          // Retry with audio only
+          try {
+            const audioOnlyStream = await navigator.mediaDevices.getUserMedia({
+              video: false,
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+              }
+            });
+            
+            localStreamRef.current = audioOnlyStream;
+            setLocalStream(audioOnlyStream);
+            return audioOnlyStream;
+          } catch (audioError) {
+            console.error('Audio-only fallback failed:', audioError);
+            throw new Error('No media devices available');
+          }
+        }
+      } else if (error.name === 'NotAllowedError') {
+        throw new Error('Camera and microphone permissions denied');
+      } else if (error.name === 'NotReadableError') {
+        throw new Error('Camera is already in use by another application');
+      } else if (error.name === 'ConstraintError' || error.name === 'OverconstrainedError') {
+        console.warn('Camera constraints not satisfied, attempting with basic constraints');
+        if (video) {
+          try {
+            const basicStream = await navigator.mediaDevices.getUserMedia({
+              video: true, // Basic video constraints
+              audio: audio ? {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+              } : false
+            });
+            
+            localStreamRef.current = basicStream;
+            setLocalStream(basicStream);
+            return basicStream;
+          } catch (basicError) {
+            console.error('Basic constraints fallback failed:', basicError);
+            throw new Error('Camera constraints cannot be satisfied');
+          }
+        }
+      }
+      
       throw error;
     }
-  }, []);
+  }, [checkCameraAvailability]);
 
   // Start outgoing call
   const startCall = useCallback(async (targetUserId: string, isVideoCall: boolean = true) => {
@@ -157,6 +231,16 @@ export default function useWebRTC(
       // Get user media
       const stream = await getUserMedia(isVideoCall, true);
       
+      // Update video state based on actual stream (in case of camera fallback)
+      const hasVideo = stream.getVideoTracks().length > 0;
+      if (isVideoCall && !hasVideo) {
+        console.warn('Video call requested but no video track available, continuing as audio-only');
+        setCallState(prev => ({
+          ...prev,
+          isVideoEnabled: false
+        }));
+      }
+      
       // Initialize peer connection
       const pc = initializePeerConnection();
       
@@ -170,7 +254,7 @@ export default function useWebRTC(
       await pc.setLocalDescription(offer);
 
       // Send offer through signaling
-      onSignalingSend?.onCallOffer?.(offer, targetUserId);
+      onSignalingSend?.onCallOffer?.(offer, targetUserId, isVideoCall);
       
     } catch (error) {
       console.error('Error starting call:', error);
@@ -183,11 +267,56 @@ export default function useWebRTC(
     offer: RTCSessionDescriptionInit, 
     callerId: string, 
     callerName: string, 
-    callerAvatar?: string
-  ) => {
+    callerAvatar?: string,
+    isVideoCall?: boolean
+  ): Promise<boolean> => {
     try {
       targetUserIdRef.current = callerId;
       
+      // Check if this is a renegotiation (call already active)
+      const isRenegotiation = callState.isCallActive && peerConnectionRef.current;
+      
+      if (isRenegotiation) {
+        console.log('🔄 Handling renegotiation offer');
+        
+        const pc = peerConnectionRef.current!;
+        
+        // Set remote description
+        await pc.setRemoteDescription(offer);
+        
+        // Debug incoming offer SDP
+        const audioInOfferSDP = offer.sdp?.includes('m=audio');
+        const videoInOfferSDP = offer.sdp?.includes('m=video');
+        console.log('🔄 Renegotiation offer SDP includes:', { audio: audioInOfferSDP, video: videoInOfferSDP });
+        
+        // Create and send answer automatically for renegotiation
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        
+        // Debug answer SDP
+        const audioInAnswerSDP = answer.sdp?.includes('m=audio');
+        const videoInAnswerSDP = answer.sdp?.includes('m=video');
+        console.log('🔄 Renegotiation answer SDP includes:', { audio: audioInAnswerSDP, video: videoInAnswerSDP });
+        
+        onSignalingSend?.onCallAnswer?.(answer, targetUserIdRef.current);
+        
+        // Update video state if changed, but preserve other call states
+        if (isVideoCall !== undefined) {
+          setCallState(prev => ({
+            ...prev,
+            isVideoEnabled: isVideoCall,
+            // Ensure call remains active and not treated as incoming
+            isCallActive: true,
+            isIncomingCall: false,
+            isOutgoingCall: false
+          }));
+        }
+        
+        console.log('🔄 Renegotiation completed');
+        return true; // Indicate this was a renegotiation
+      }
+      
+      // Handle as new incoming call
       setCallState(prev => ({
         ...prev,
         isIncomingCall: true,
@@ -195,20 +324,22 @@ export default function useWebRTC(
         callerId,
         callerName,
         callerAvatar,
-        isVideoEnabled: offer.type === 'offer' // Assume video if it's an offer
+        isVideoEnabled: isVideoCall !== undefined ? isVideoCall : true
       }));
 
-      // Initialize peer connection
+      // Initialize peer connection for new call
       const pc = initializePeerConnection();
       
       // Set remote description
       await pc.setRemoteDescription(offer);
       
+      return false; // Indicate this was a new call
     } catch (error) {
       console.error('Error handling offer:', error);
       declineCall();
+      return false;
     }
-  }, [initializePeerConnection]);
+  }, [callState.isCallActive, callState.isVideoEnabled, initializePeerConnection, onSignalingSend]);
 
   // Accept incoming call
   const acceptCall = useCallback(async () => {
@@ -218,6 +349,16 @@ export default function useWebRTC(
 
       // Get user media
       const stream = await getUserMedia(callState.isVideoEnabled, true);
+      
+      // Update video state based on actual stream (in case of camera fallback)
+      const hasVideo = stream.getVideoTracks().length > 0;
+      if (callState.isVideoEnabled && !hasVideo) {
+        console.warn('Video call accepted but no video track available, continuing as audio-only');
+        setCallState(prev => ({
+          ...prev,
+          isVideoEnabled: false
+        }));
+      }
       
       // Add local stream to peer connection
       stream.getTracks().forEach(track => {
@@ -318,18 +459,108 @@ export default function useWebRTC(
   }, [onSignalingSend]);
 
   // Toggle video
-  const toggleVideo = useCallback(() => {
-    if (localStreamRef.current) {
-      const videoTrack = localStreamRef.current.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setCallState(prev => ({
-          ...prev,
-          isVideoEnabled: videoTrack.enabled
-        }));
+  const toggleVideo = useCallback(async () => {
+    if (!localStreamRef.current) return;
+    
+    const videoTrack = localStreamRef.current.getVideoTracks()[0];
+    
+    if (videoTrack) {
+      // If we have a video track, toggle it
+      const willEnable = !videoTrack.enabled;
+      videoTrack.enabled = willEnable;
+      
+      setCallState(prev => ({
+        ...prev,
+        isVideoEnabled: willEnable
+      }));
+      
+      console.log(`📹 Video track ${willEnable ? 'enabled' : 'disabled'}`);
+    } else if (callState.isCallActive) {
+      // If no video track but user wants to enable video, check camera availability
+      try {
+        const hasCameraDevice = await checkCameraAvailability();
+        if (!hasCameraDevice) {
+          console.warn('No camera devices available for video toggle');
+          return;
+        }
+        
+        // Try to add video track
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 },
+            facingMode: 'user'
+          },
+          audio: false
+        });
+        
+        const newVideoTrack = videoStream.getVideoTracks()[0];
+        if (newVideoTrack && peerConnectionRef.current) {
+          // Add video track to existing stream (don't create new stream)
+          localStreamRef.current.addTrack(newVideoTrack);
+          
+          // Force React re-render with same stream reference but new tracks
+          setLocalStream(null);
+          setTimeout(() => setLocalStream(localStreamRef.current), 0);
+          
+          console.log('🔊 Updated stream tracks:', localStreamRef.current.getTracks().map(t => `${t.kind}:${t.enabled}`));
+          console.log('📹 Video track enabled:', newVideoTrack.enabled);
+          
+          // Verify audio track is still working
+          const audioTracks = localStreamRef.current.getAudioTracks();
+          if (audioTracks.length > 0) {
+            console.log('🎤 Audio tracks after video upgrade:', audioTracks.map(t => `enabled:${t.enabled}, readyState:${t.readyState}, id:${t.id}`));
+          } else {
+            console.warn('⚠️ No audio tracks found after video upgrade!');
+          }
+          
+          // Add track to peer connection
+          const sender = peerConnectionRef.current.addTrack(newVideoTrack, localStreamRef.current);
+          
+          // Trigger renegotiation to inform peer about new video track
+          try {
+            // Check all senders before creating offer
+            const senders = peerConnectionRef.current.getSenders();
+            console.log('🔊 Current PC senders:', senders.map(s => s.track?.kind || 'no-track'));
+            
+            const offer = await peerConnectionRef.current.createOffer();
+            await peerConnectionRef.current.setLocalDescription(offer);
+            
+            // Debug offer SDP to ensure audio is included
+            const audioInSDP = offer.sdp?.includes('m=audio');
+            const videoInSDP = offer.sdp?.includes('m=video');
+            console.log('📞 Offer SDP includes:', { audio: audioInSDP, video: videoInSDP });
+            
+            // Send updated offer to peer (send as renegotiation, not new call)
+            onSignalingSend?.onCallOffer?.(offer, targetUserIdRef.current, true);
+            
+            console.log('📹 Video track added and renegotiation initiated');
+            console.log('📹 New local stream tracks:', localStreamRef.current.getTracks().map(t => t.kind));
+          } catch (renegotiationError) {
+            console.error('Error during renegotiation:', renegotiationError);
+            // Remove track on failure
+            peerConnectionRef.current.removeTrack(sender);
+            localStreamRef.current.removeTrack(newVideoTrack);
+            newVideoTrack.stop();
+          }
+          
+          setCallState(prev => ({
+            ...prev,
+            isVideoEnabled: true
+          }));
+        }
+      } catch (error: any) {
+        console.error('Error enabling video:', error);
+        
+        // Handle specific errors
+        if (error.name === 'NotAllowedError') {
+          console.warn('Camera permission denied for video upgrade');
+        } else if (error.name === 'NotFoundError') {
+          console.warn('No camera devices found for video upgrade');
+        }
       }
     }
-  }, []);
+  }, [callState.isCallActive, callState.isVideoEnabled, checkCameraAvailability]);
 
   // Toggle audio
   const toggleAudio = useCallback(() => {

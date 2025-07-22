@@ -82,7 +82,23 @@ export default function AvatarMenuItemContainer({ onClose }: Props) {
   const [user, setUser] = useState(new User());
 
   useEffect(() => {
-    setUser(loadFromLocalStorage("user", User));
+    // Load from localStorage first for immediate display
+    const cachedUser = loadFromLocalStorage("user", User);
+    setUser(cachedUser);
+    
+    // Then fetch fresh data from API
+    const fetchUserData = async () => {
+      try {
+        const freshUser = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
+        if (freshUser) {
+          setUser(freshUser);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      }
+    };
+    
+    fetchUserData();
   }, []);
 
   const handleLogout = async () => {
@@ -102,7 +118,7 @@ export default function AvatarMenuItemContainer({ onClose }: Props) {
       <div className="flex items-center gap-4 border-b border-border px-6 py-5">
         <Avatar className="cursor-pointer" src={user.avatar_url} size="md"></Avatar>
         <div>
-          <p className="font-medium text-foreground">Tran Van Bach</p>
+          <p className="font-medium text-foreground">{user.name || user.user_name || 'Người dùng'}</p>
           <Link href="#" className="text-sm text-muted-foreground hover:underline">
             Xem tất cả trang cá nhân
           </Link>

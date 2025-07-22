@@ -89,7 +89,8 @@ export default function GlobalVideoCallManager() {
     toggleVideo, 
     callState: webRTCCallState,
     localStream,
-    remoteStream
+    remoteStream,
+    startCall
   } = useVideoCall(videoCallEvents, true); // Mark as global
 
   // Custom accept call wrapper
@@ -104,6 +105,29 @@ export default function GlobalVideoCallManager() {
       isOutgoingCall: false,
     }));
   };
+
+  // Listen for custom events from messenger to start calls
+  useEffect(() => {
+    const handleStartCall = (event: CustomEvent) => {
+      const { targetUserId, isVideoCall, callerName } = event.detail;
+      console.log('🌐 Global manager starting call:', { targetUserId, isVideoCall, callerName });
+      
+      // Update local state for outgoing call
+      setCallState({
+        isCallActive: true,
+        isIncomingCall: false,
+        isOutgoingCall: true,
+        callerName: callerName || 'Unknown',
+        callerId: targetUserId,
+      });
+      
+      // Start the actual call
+      startCall(targetUserId, isVideoCall);
+    };
+    
+    window.addEventListener('startVideoCall', handleStartCall as EventListener);
+    return () => window.removeEventListener('startVideoCall', handleStartCall as EventListener);
+  }, [startCall]);
 
   // Sync WebRTC call state with local state
   useEffect(() => {
@@ -141,8 +165,8 @@ export default function GlobalVideoCallManager() {
       onEnd={endCall}
       onToggleVideo={toggleVideo}
       onToggleAudio={toggleAudio}
-      isVideoEnabled={webRTCCallState.isVideoEnabled}
-      isAudioEnabled={webRTCCallState.isAudioEnabled}
+      isVideoEnabled={localStream ? localStream.getVideoTracks().length > 0 : false}
+      isAudioEnabled={localStream ? localStream.getAudioTracks().some(t => t.enabled) : false}
       localStream={localStream || undefined}
       remoteStream={remoteStream || undefined}
     />
