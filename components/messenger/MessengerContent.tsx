@@ -12,9 +12,11 @@ interface MessengerContentProps {
   bottomRef: React.RefObject<HTMLDivElement | null>;
   messages: Message[];
   senderId?: number;
+  senderAvatar?: string; // Add sender's avatar
   isLoadingMessages: boolean;
   hasMoreMessages: boolean;
   isInitialLoad: boolean;
+  hasUserLoadedMore: boolean;
   totalMessageCount: number;
   loadError?: string | null;
   isGroup: boolean;
@@ -32,9 +34,11 @@ export const MessengerContent: React.FC<MessengerContentProps> = ({
   bottomRef,
   messages,
   senderId,
+  senderAvatar,
   isLoadingMessages,
   hasMoreMessages,
   isInitialLoad,
+  hasUserLoadedMore,
   totalMessageCount,
   loadError,
   isGroup,
@@ -90,6 +94,7 @@ export const MessengerContent: React.FC<MessengerContentProps> = ({
           <MessageList
             messages={messages}
             senderId={senderId}
+            senderAvatar={senderAvatar}
             onRetrySend={onRetrySend}
             onReplyMessage={onReplyMessage}
             onAddReaction={onAddReaction}
@@ -110,8 +115,8 @@ export const MessengerContent: React.FC<MessengerContentProps> = ({
             </div>
           )}
           
-          {/* End of messages indicator */}
-          {!hasMoreMessages && messages.length > 0 && (
+          {/* End of messages indicator - chỉ hiển thị khi user đã scroll lên load more */}
+          {!hasMoreMessages && messages.length > 0 && hasUserLoadedMore && (
             <div className="flex justify-center py-2">
               <div className="text-xs text-muted-foreground">
                 {t('allMessagesLoaded')} ({totalMessageCount} {t('messageCount')})

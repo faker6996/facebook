@@ -104,6 +104,12 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     // Global message listener - nhận tất cả tin nhắn
     conn.on("ReceiveMessage", (newMsg: any) => {
       console.log("📨 Global: Received new message:", newMsg);
+      console.log("🔍 DEBUG Global: Message routing key debug:", {
+        message_type: newMsg.message_type,
+        conversation_id: newMsg.conversation_id,
+        sender_id: newMsg.sender_id,
+        target_id: newMsg.target_id
+      });
       
       // Hiển thị toast notification nếu không đang trong conversation đó
       const messageObj = new Message(newMsg);
@@ -117,6 +123,49 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
           type: "info",
           title: "New Message",
           message: `${newMsg.sender_name || 'Someone'}: ${newMsg.content?.substring(0, 50)}${newMsg.content?.length > 50 ? '...' : ''}`,
+          duration: 4000
+        });
+      }
+    });
+
+    // Group message listener - nhận tin nhắn nhóm
+    conn.on("ReceiveGroupMessage", (data: any) => {
+      console.log("📨 Global: Received GROUP message:", data);
+      
+      // Handle different backend message formats
+      let messageData;
+      if (data.message && data.group_id) {
+        // Backend format: {group_id: 22, message: {...}}
+        messageData = {
+          ...data.message,
+          conversation_id: data.group_id // Map group_id to conversation_id
+        };
+      } else {
+        // Direct message format
+        messageData = data;
+      }
+      
+      console.log("🔍 DEBUG Global: Group message processed:", {
+        message_type: messageData.message_type,
+        conversation_id: messageData.conversation_id,
+        sender_id: messageData.sender_id,
+        target_id: messageData.target_id
+      });
+      
+      // Hiển thị toast notification nếu không đang trong conversation đó
+      const messageObj = new Message(messageData);
+      
+      // Call message handler để xử lý tin nhắn group
+      if (messageHandlerRef.current) {
+        messageHandlerRef.current(messageObj);
+      }
+
+      // Hiển thị toast notification
+      if (messageData.sender_id !== user.id) {
+        addToast({
+          type: "info",
+          title: "New Group Message",
+          message: `${messageData.sender_name || 'Someone'}: ${messageData.content?.substring(0, 50)}${messageData.content?.length > 50 ? '...' : ''}`,
           duration: 4000
         });
       }
