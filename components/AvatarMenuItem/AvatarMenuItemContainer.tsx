@@ -13,6 +13,7 @@ import { HTTP_METHOD_ENUM, LOCALE } from "@/lib/constants/enum";
 import { useRouter } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
 import Button from "@/components/ui/Button";
+import { useTranslations } from "next-intl";
 
 interface MenuItem {
   key: string;
@@ -43,33 +44,7 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const menu: MenuItem[] = [
-  {
-    key: "settings",
-    label: "Cài đặt và quyền riêng tư",
-    icon: <GearIcon />,
-  },
-  {
-    key: "help",
-    label: "Trợ giúp và hỗ trợ",
-    icon: <QuestionIcon />,
-  },
-  {
-    key: "display",
-    label: "Màn hình & trợ năng",
-    icon: <MonitorIcon />,
-  },
-  {
-    key: "feedback",
-    label: "Đóng góp ý kiến",
-    icon: <CommentIcon />,
-  },
-  {
-    key: "logout",
-    label: "Đăng xuất",
-    icon: <LogoutIcon />,
-  },
-];
+// Move menu creation inside component to access translations
 
 interface Props {
   onClose: () => void;
@@ -80,6 +55,36 @@ export default function AvatarMenuItemContainer({ onClose }: Props) {
   const router = useRouter();
   const locale = pathname.split("/")[1] || LOCALE.VI;
   const [user, setUser] = useState(new User());
+  const t = useTranslations('AvatarMenu');
+  const tCommon = useTranslations('Common');
+
+  const menu: MenuItem[] = [
+    {
+      key: "settings",
+      label: t("settings"),
+      icon: <GearIcon />,
+    },
+    {
+      key: "help", 
+      label: t("help"),
+      icon: <QuestionIcon />,
+    },
+    {
+      key: "display",
+      label: t("display"),
+      icon: <MonitorIcon />,
+    },
+    {
+      key: "feedback",
+      label: t("feedback"),
+      icon: <CommentIcon />,
+    },
+    {
+      key: "logout",
+      label: t("logout"),
+      icon: <LogoutIcon />,
+    },
+  ];
 
   useEffect(() => {
     // Load from localStorage first for immediate display
@@ -116,11 +121,13 @@ export default function AvatarMenuItemContainer({ onClose }: Props) {
     <aside className="absolute top-14 right-0 z-50 w-96 bg-card text-card-foreground rounded-md shadow-lg border border-border">
       {/* Profile section */}
       <div className="flex items-center gap-4 border-b border-border px-6 py-5">
-        <Avatar className="cursor-pointer" src={user.avatar_url} size="md"></Avatar>
+        <Link href={`/${locale}/profile`}>
+          <Avatar className="cursor-pointer" src={user.avatar_url} size="md"></Avatar>
+        </Link>
         <div>
-          <p className="font-medium text-foreground">{user.name || user.user_name || 'Người dùng'}</p>
-          <Link href="#" className="text-sm text-muted-foreground hover:underline">
-            Xem tất cả trang cá nhân
+          <p className="font-medium text-foreground">{user.name || user.user_name || tCommon('user')}</p>
+          <Link href={`/${locale}/profile`} className="text-sm text-muted-foreground hover:underline">
+            {t('viewProfile')}
           </Link>
         </div>
       </div>
@@ -150,7 +157,14 @@ export default function AvatarMenuItemContainer({ onClose }: Props) {
       {/* Footer */}
       <div className="mt-auto space-y-2 px-6 pb-6 text-[11px] text-muted-foreground">
         <p className="flex flex-wrap gap-x-2 gap-y-1 leading-4">
-          {["Quyền riêng tư", "Điều khoản", "Quảng cáo", "Lựa chọn quảng cáo", "Cookie", "Xem thêm"].map((text, i) => (
+          {[
+            tCommon('privacy'),
+            tCommon('terms'), 
+            tCommon('advertising'),
+            tCommon('adChoices'),
+            tCommon('cookies'),
+            tCommon('viewMore')
+          ].map((text, i) => (
             <span key={text} className="flex items-center gap-1">
               <a href="#" className="hover:underline">
                 {text}

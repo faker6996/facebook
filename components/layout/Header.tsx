@@ -15,9 +15,13 @@ import AvatarMenuItemContainer from "@/components/AvatarMenuItem/AvatarMenuItemC
 import { callApi } from "@/lib/utils/api-client";
 import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { MessengerPreview } from "@/lib/models/messenger_review";
 import { useResponsive } from "@/lib/utils/responsive";
 import { cn } from "@/lib/utils/cn";
+import LanguageSwitcher from "../ui/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 const MAX_MESSENGER_WINDOWS = 3; // Define the maximum number of chat windows
 
@@ -30,6 +34,9 @@ export default function Header() {
   const [user, setUser] = useState(new User());
   const [openConversations, setOpenConversations] = useState<MessengerPreview[]>([]);
   const { isMobile, isHydrated } = useResponsive();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "vi";
+  const t = useTranslations('Common');
 
   useEffect(() => {
     // Load from localStorage first for immediate display
@@ -57,6 +64,10 @@ export default function Header() {
 
   const handleClickAvatar = () => {
     setShowAvatarMenu((prev) => !prev);
+  };
+
+  const handleDoubleClickAvatar = () => {
+    window.location.href = `/${locale}/profile`;
   };
 
   const handleOpenConversation = (conversation: MessengerPreview) => {
@@ -96,15 +107,16 @@ export default function Header() {
             <div className="flex items-center gap-2 flex-1">
               <FacebookIcon className="w-8 h-8 flex-shrink-0" />
               <div className="flex-1 max-w-xs">
-                <Input type="text" placeholder="Tìm kiếm" className="h-9 text-sm" />
+                <Input type="text" placeholder={t('search')} className="h-9 text-sm" />
               </div>
               <Button size="icon" variant="ghost" onClick={() => setShowMobileMenu(!showMobileMenu)} className="w-9 h-9 flex-shrink-0">
                 {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
             </div>
 
-            {/* Mobile Right: Messenger + Avatar */}
+            {/* Mobile Right: Language + Messenger + Avatar */}
             <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+              <LanguageSwitcher />
               <div className="relative">
                 <Button size="icon" variant="ghost" onClick={() => setShowMessenger(!showMessenger)} className="w-9 h-9">
                   <BsMessengerIcon className="w-5 h-5" />
@@ -123,7 +135,8 @@ export default function Header() {
                   src={user?.avatar_url ?? "/avatar.png"}
                   size="sm"
                   className="cursor-pointer w-8 h-8"
-                  onClick={() => setShowAvatarMenu(!showAvatarMenu)}
+                  onClick={handleClickAvatar}
+                  onDoubleClick={handleDoubleClickAvatar}
                 />
                 {showAvatarMenu && <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />}
               </div>
@@ -136,7 +149,7 @@ export default function Header() {
             <div className="flex items-center gap-2">
               <FacebookIcon className="w-10 h-10" />
               <div className="relative w-64">
-                <Input type="text" placeholder="Tìm kiếm trên Facebook" />
+                <Input type="text" placeholder={t('searchOnFacebook')} />
               </div>
             </div>
 
@@ -151,6 +164,7 @@ export default function Header() {
 
             {/* Desktop Right: Actions */}
             <div className="flex items-center gap-3">
+              <LanguageSwitcher />
               <Button icon={FaThIcon} size="icon" className="bg-muted hover:bg-accent"></Button>
               <div className="relative">
                 <Button
@@ -172,7 +186,13 @@ export default function Header() {
               <Button icon={Bell} size="icon" className="bg-muted hover:bg-accent"></Button>
 
               <div className="relative">
-                <Avatar onClick={() => setShowAvatarMenu(!showAvatarMenu)} className="cursor-pointer" src={user.avatar_url} size="md" />
+                <Avatar 
+                  onClick={handleClickAvatar} 
+                  onDoubleClick={handleDoubleClickAvatar}
+                  className="cursor-pointer" 
+                  src={user.avatar_url} 
+                  size="md" 
+                />
                 {showAvatarMenu && <AvatarMenuItemContainer onClose={() => setShowAvatarMenu(false)} />}
               </div>
             </div>
@@ -186,22 +206,22 @@ export default function Header() {
           <div className="p-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Button icon={Home} variant="ghost" className="h-16 flex-col gap-2 text-center">
-                Trang chủ
+                {t('home')}
               </Button>
               <Button icon={Tv} variant="ghost" className="h-16 flex-col gap-2 text-center">
-                Video
+                {t('video')}
               </Button>
               <Button icon={Store} variant="ghost" className="h-16 flex-col gap-2 text-center">
-                Marketplace
+                {t('marketplace')}
               </Button>
               <Button icon={Users} variant="ghost" className="h-16 flex-col gap-2 text-center">
-                Bạn bè
+                {t('friends')}
               </Button>
               <Button icon={Gamepad2} variant="ghost" className="h-16 flex-col gap-2 text-center">
-                Gaming
+                {t('gaming')}
               </Button>
               <Button icon={Bell} variant="ghost" className="h-16 flex-col gap-2 text-center">
-                Thông báo
+                {t('notifications')}
               </Button>
             </div>
           </div>

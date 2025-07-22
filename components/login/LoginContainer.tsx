@@ -31,7 +31,7 @@ export default function LoginContainer() {
       console.error("Facebook SSO error:", err);
       addToast({
         type: "error",
-        message: err?.message || "Facebook đăng nhập thất bại"
+        message: err?.message || t("errors.facebookLoginFailed")
       });
     }
   };
@@ -44,7 +44,7 @@ export default function LoginContainer() {
       console.error("Google SSO error:", err);
       addToast({
         type: "error",
-        message: err?.message || "Google đăng nhập thất bại"
+        message: err?.message || t("errors.googleLoginFailed")
       });
     }
   };
@@ -71,7 +71,7 @@ export default function LoginContainer() {
       console.error(err);
       addToast({
         type: "error",
-        message: err?.message || "Đăng nhập thất bại"
+        message: err?.message || t("errors.loginFailed")
       });
     }
   };

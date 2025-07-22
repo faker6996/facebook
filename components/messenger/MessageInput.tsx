@@ -5,6 +5,7 @@ import { SendHorizontal, X, Paperclip, Image, FileText, FileVideo, FileAudio, Ar
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Message } from "@/lib/models/message";
+import { useTranslations } from "next-intl";
 
 interface MessageInputProps {
   input: string;
@@ -28,6 +29,7 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
   onSendMessage
 }, ref) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('Messenger.input');
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -62,8 +64,8 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
         <div className="mb-3 p-3 bg-muted rounded-lg border-l-4 border-primary">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-primary">Đang trả lời:</p>
-              <p className="text-sm truncate">{replyingTo.content || "File attachment"}</p>
+              <p className="text-xs font-medium text-primary">{t('replyingTo')}</p>
+              <p className="text-sm truncate">{replyingTo.content || t('fileAttachment')}</p>
             </div>
             <Button
               type="button"
@@ -130,7 +132,7 @@ const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(({
             ref={ref}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Nhập tin nhắn..."
+            placeholder={t('typeMessage')}
             className="w-full rounded-full border bg-muted py-2 pl-4 pr-4 text-base md:text-sm focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>

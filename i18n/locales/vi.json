@@ -16,6 +16,11 @@
     "social": {
       "google": "Google",
       "facebook": "Facebook"
+    },
+    "errors": {
+      "facebookLoginFailed": "Facebook đăng nhập thất bại",
+      "googleLoginFailed": "Google đăng nhập thất bại",
+      "loginFailed": "Đăng nhập thất bại"
     }
   },
   "ValidationInput": {
@@ -76,6 +81,71 @@
     "charactersCount": "ký tự"
   },
 
+  "ProfilePage": {
+    "loading": "Đang tải...",
+    "editCoverPhoto": "Chỉnh sửa ảnh bìa",
+    "editAvatar": "Chỉnh sửa ảnh đại diện",
+    "editProfile": "Chỉnh sửa hồ sơ",
+    "joinedSince": "Tham gia từ",
+    "about": "Giới thiệu",
+    "lastUpdate": "Cập nhật lần cuối:",
+    "stats": "Thống kê",
+    "friends": "Bạn bè",
+    "groups": "Nhóm",
+    "recentActivity": "Hoạt động gần đây",
+    "noActivity": "Chưa có hoạt động nào",
+    "startSharing": "Bắt đầu chia sẻ những khoảnh khắc của bạn!",
+    "photos": "Ảnh",
+    "viewAll": "Xem tất cả",
+    "noPhotos": "Chưa có ảnh nào",
+    "noFriends": "Chưa có bạn bè nào",
+    "findFriends": "Tìm bạn bè",
+    "user": "Người dùng"
+  },
+
+  "ForbiddenPage": {
+    "heading": "403 - Bạn không có quyền truy cập",
+    "message": "Vui lòng liên hệ quản trị viên nếu bạn nghĩ đây là nhầm lẫn."
+  },
+
+  "Loading": {
+    "loadingPage": "Đang tải trang...",
+    "pleaseWait": "Vui lòng đợi một chút..."
+  },
+
+  "DeleteDataPage": {
+    "heading": "Xóa dữ liệu người dùng",
+    "message": "Nếu bạn muốn xóa tài khoản và dữ liệu liên quan, vui lòng gửi email tới: support@yourapp.com"
+  },
+
+  "AvatarMenu": {
+    "viewProfile": "Xem trang cá nhân",
+    "settings": "Cài đặt và quyền riêng tư",
+    "help": "Trợ giúp và hỗ trợ",
+    "display": "Màn hình & trợ năng",
+    "feedback": "Đóng góp ý kiến",
+    "logout": "Đăng xuất"
+  },
+
+  "Common": {
+    "search": "Tìm kiếm",
+    "searchOnFacebook": "Tìm kiếm trên Facebook",
+    "home": "Trang chủ",
+    "video": "Video",
+    "marketplace": "Marketplace",
+    "friends": "Bạn bè",
+    "gaming": "Gaming",
+    "notifications": "Thông báo",
+    "user": "Người dùng",
+    "privacy": "Quyền riêng tư",
+    "terms": "Điều khoản",
+    "advertising": "Quảng cáo",
+    "adChoices": "Lựa chọn quảng cáo",
+    "cookies": "Cookies",
+    "viewMore": "Xem thêm",
+    "language": "Ngôn ngữ"
+  },
+
   "VideoCall": {
     "incomingCall": "Đang gọi bạn...",
     "outgoingCall": "Đang kết nối...",
@@ -108,7 +178,9 @@
       "loadingOlderMessages": "Đang tải tin nhắn cũ hơn...",
       "loadingMessages": "Đang tải tin nhắn...",
       "allMessagesLoaded": "Đã hiển thị tất cả tin nhắn",
-      "messageCount": "tin nhắn"
+      "messageCount": "tin nhắn",
+      "replyTo": "Trả lời tin nhắn:",
+      "retry": "Thử lại"
     },
     "input": {
       "replyingTo": "Đang trả lời:",
@@ -116,7 +188,24 @@
       "uploadingFiles": "Đang tải lên",
       "sendMessage": "Gửi tin nhắn",
       "typeMessage": "Nhập tin nhắn...",
-      "selectFiles": "Chọn file"
+      "selectFiles": "Chọn file",
+      "retry": "Thử lại"
+    },
+    "dropdown": {
+      "loadingConversations": "Đang tải cuộc trò chuyện...",
+      "searching": "Đang tìm kiếm...",
+      "recentMessages": "Tin nhắn gần đây",
+      "createGroup": "Tạo nhóm",
+      "all": "Tất cả",
+      "private": "Riêng tư",
+      "groups": "Nhóm",
+      "searchFriendsPlaceholder": "Nhập tên bạn bè...",
+      "search": "Tìm",
+      "noResultsFound": "Không tìm thấy kết quả nào.",
+      "membersCount": "thành viên",
+      "noConversations": "Không có cuộc trò chuyện nào",
+      "noPrivateMessages": "Không có tin nhắn riêng tư nào",
+      "noGroups": "Không có nhóm nào"
     },
     "groupModal": {
       "groupInfo": "Thông tin nhóm",

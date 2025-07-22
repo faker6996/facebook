@@ -16,7 +16,45 @@
     "social": {
       "google": "Google",
       "facebook": "Facebook"
+    },
+    "errors": {
+      "facebookLoginFailed": "Facebook login failed",
+      "googleLoginFailed": "Google login failed",
+      "loginFailed": "Login failed"
     }
+  },
+
+  "ResetPassword": {
+    "heading": "Reset Password",
+    "passwordPlaceholder": "Enter new password",
+    "submitButton": "Update",
+    "successTitle": "Password changed successfully!",
+    "backToLogin": "Back to login",
+    "errorDefault": "An error occurred"
+  },
+
+  "ForgotPassword": {
+    "heading": "Forgot Password",
+    "emailPlaceholder": "Enter your email",
+    "submitButton": "Send",
+    "sending": "Sending...",
+    "sentSuccess": "Password reset instructions have been sent to your email.",
+    "errorDefault": "Send failed."
+  },
+
+  "ForbiddenPage": {
+    "heading": "403 - Access Denied",
+    "message": "Please contact administrator if you think this is a mistake."
+  },
+
+  "Loading": {
+    "loadingPage": "Loading page...",
+    "pleaseWait": "Please wait a moment..."
+  },
+
+  "DeleteDataPage": {
+    "heading": "Delete User Data",
+    "message": "If you want to delete your account and related data, please send an email to: support@yourapp.com"
   },
   "ValidationInput": {
     "required": "This field is required",
@@ -58,6 +96,56 @@
     "charactersCount": "characters"
   },
 
+  "ProfilePage": {
+    "loading": "Loading...",
+    "editCoverPhoto": "Edit cover photo",
+    "editAvatar": "Edit profile picture",
+    "editProfile": "Edit profile",
+    "joinedSince": "Joined",
+    "about": "About",
+    "lastUpdate": "Last updated:",
+    "stats": "Stats",
+    "friends": "Friends",
+    "groups": "Groups",
+    "recentActivity": "Recent Activity",
+    "noActivity": "No activity yet",
+    "startSharing": "Start sharing your moments!",
+    "photos": "Photos",
+    "viewAll": "View all",
+    "noPhotos": "No photos yet",
+    "noFriends": "No friends yet",
+    "findFriends": "Find friends",
+    "user": "User"
+  },
+
+  "AvatarMenu": {
+    "viewProfile": "View profile",
+    "settings": "Settings & privacy",
+    "help": "Help & support",
+    "display": "Display & accessibility",
+    "feedback": "Give feedback",
+    "logout": "Log out"
+  },
+
+  "Common": {
+    "search": "Search",
+    "searchOnFacebook": "Search on Facebook",
+    "home": "Home",
+    "video": "Video",
+    "marketplace": "Marketplace",
+    "friends": "Friends",
+    "gaming": "Gaming",
+    "notifications": "Notifications",
+    "user": "User",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "advertising": "Advertising",
+    "adChoices": "Ad Choices",
+    "cookies": "Cookies",
+    "viewMore": "See More",
+    "language": "Language"
+  },
+
   "VideoCall": {
     "incomingCall": "Incoming call...",
     "outgoingCall": "Connecting...",
@@ -90,7 +178,9 @@
       "loadingOlderMessages": "Loading older messages...",
       "loadingMessages": "Loading messages...",
       "allMessagesLoaded": "All messages loaded",
-      "messageCount": "messages"
+      "messageCount": "messages",
+      "replyTo": "Reply to message:",
+      "retry": "Try again"
     },
     "input": {
       "replyingTo": "Replying to:",
@@ -98,7 +188,24 @@
       "uploadingFiles": "Uploading",
       "sendMessage": "Send message",
       "typeMessage": "Type a message...",
-      "selectFiles": "Select files"
+      "selectFiles": "Select files",
+      "retry": "Try again"
+    },
+    "dropdown": {
+      "loadingConversations": "Loading conversations...",
+      "searching": "Searching...",
+      "recentMessages": "Recent Messages",
+      "createGroup": "Create Group",
+      "all": "All",
+      "private": "Private",
+      "groups": "Groups",
+      "searchFriendsPlaceholder": "Enter friend's name...",
+      "search": "Search",
+      "noResultsFound": "No results found.",
+      "membersCount": "members",
+      "noConversations": "No conversations",
+      "noPrivateMessages": "No private messages",
+      "noGroups": "No groups"
     },
     "groupModal": {
       "groupInfo": "Group Info",

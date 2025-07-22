@@ -1,10 +1,15 @@
-// pages/delete-data.tsx
+"use client";
+
+import { useTranslations } from "next-intl";
+
 export default function DeleteDataPage() {
-    return (
-      <div>
-        <h1>Xóa dữ liệu người dùng</h1>
-        <p>Nếu bạn muốn xóa tài khoản và dữ liệu liên quan, vui lòng gửi email tới: support@yourapp.com</p>
-      </div>
-    );
-  }
+  const t = useTranslations("DeleteDataPage");
+
+  return (
+    <div>
+      <h1>{t("heading")}</h1>
+      <p>{t("message")}</p>
+    </div>
+  );
+}
   
