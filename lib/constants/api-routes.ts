@@ -27,6 +27,8 @@ export const API_ROUTES = {
   },
   SEARCH: {
     USER_NAME: (user_name: string) => `/api/search/user?user_name=${user_name}`,
+    USER_FOR_GROUP: (query: string) => `/api/search/user?user_name=${query}&mode=group`,
+    USER_FOR_GROUP_INVITE: (query: string, groupId: number) => `/api/search/user?user_name=${query}&mode=group-invite&groupId=${groupId}`,
   },
   CHAT_SERVER: {
     SENT_MESSAGE: `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/messages`,

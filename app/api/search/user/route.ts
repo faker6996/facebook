@@ -21,13 +21,31 @@ async function getHandler(req: NextRequest) {
   const user_name = searchParams.get("user_name");
   const name = searchParams.get("name");
   const search = searchParams.get("search");
+  const mode = searchParams.get("mode"); // Add mode parameter to differentiate
   const query = user_name || name || search;
 
   if (!query || query.trim().length < 2) {
     throw new ApiError("Search query must be at least 2 characters long", 400);
   }
 
-  const searchResults = await userApp.searchUsersForMessenger(currentUser.id, query.trim());
+  // If mode is 'group', use simple user search for group creation
+  // If mode is 'group-invite', use search that excludes existing group members
+  // Otherwise use messenger search with conversation info
+  let searchResults;
+  if (mode === 'group') {
+    searchResults = await userApp.searchUsers(query.trim());
+    // Filter out current user
+    searchResults = searchResults.filter(user => user.id !== currentUser.id);
+  } else if (mode === 'group-invite') {
+    const groupId = searchParams.get("groupId");
+    if (!groupId) {
+      throw new ApiError("Group ID is required for group invite search", 400);
+    }
+    searchResults = await userApp.searchUsersForGroupInvite(currentUser.id, query.trim(), parseInt(groupId));
+  } else {
+    searchResults = await userApp.searchUsersForMessenger(currentUser.id, query.trim());
+  }
+  
   return createResponse(searchResults, "Search completed successfully");
 }
 

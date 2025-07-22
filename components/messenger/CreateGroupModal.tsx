@@ -14,6 +14,7 @@ import { API_ROUTES } from "@/lib/constants/api-routes";
 import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { callApi } from "@/lib/utils/api-client";
 import { cn } from "@/lib/utils/cn";
+import { useTranslations } from "next-intl";
 
 interface CreateGroupModalProps {
   isOpen: boolean;
@@ -32,36 +33,7 @@ export default function CreateGroupModal({
   onGroupCreated, 
   currentUser 
 }: CreateGroupModalProps) {
-  // Create simple translations object to avoid dependency issues
-  const t = (key: string) => {
-    const translations: Record<string, string> = {
-      'title': 'Tạo nhóm mới',
-      'addMembers': 'Thêm thành viên',
-      'groupName': 'Tên nhóm',
-      'groupNamePlaceholder': 'Nhập tên nhóm...',
-      'groupDescription': 'Mô tả nhóm',
-      'groupDescriptionPlaceholder': 'Nhập mô tả nhóm...',
-      'groupSettings': 'Cài đặt nhóm',
-      'publicGroup': 'Nhóm công khai',
-      'publicGroupDescription': 'Mọi người có thể tìm và tham gia nhóm',
-      'requireApproval': 'Yêu cầu phê duyệt',
-      'requireApprovalDescription': 'Quản trị viên phải duyệt thành viên mới',
-      'maxMembers': 'Số thành viên tối đa',
-      'maxMembersRange': 'Từ 5 đến 500 thành viên',
-      'searchPlaceholder': 'Tìm kiếm bạn bè...',
-      'selected': 'Đã chọn',
-      'searching': 'Đang tìm kiếm...',
-      'noUsersFound': 'Không tìm thấy người dùng nào',
-      'enterToSearch': 'Nhập tên để tìm kiếm',
-      'cancel': 'Hủy',
-      'next': 'Tiếp theo',
-      'back': 'Quay lại',
-      'create': 'Tạo nhóm',
-      'creating': 'Đang tạo...',
-      'charactersCount': 'ký tự'
-    };
-    return translations[key] || key;
-  };
+  const t = useTranslations('CreateGroup');
   
   const [step, setStep] = useState<'details' | 'members'>('details');
   const [groupName, setGroupName] = useState('');
@@ -116,7 +88,7 @@ export default function CreateGroupModal({
     setIsSearching(true);
     try {
       const users = await callApi<User[]>(
-        API_ROUTES.SEARCH.USER_NAME(query),
+        API_ROUTES.SEARCH.USER_FOR_GROUP(query),
         HTTP_METHOD_ENUM.GET
       );
       
@@ -193,15 +165,23 @@ export default function CreateGroupModal({
         initial_members: selectedUsers.map(user => user.id!)
       };
 
-      const response = await callApi<{ group_id: number }>(
+      const response = await callApi<{ group_id: number } | { id: number } | any>(
         API_ROUTES.CHAT_SERVER.CREATE_GROUP,
         HTTP_METHOD_ENUM.POST,
         createRequest
       );
 
-      if (response?.group_id) {
-        onGroupCreated(response.group_id);
+      // Check multiple possible response formats
+      const groupId = response?.group_id || response?.id || response?.data?.group_id;
+      
+      if (groupId) {
+        onGroupCreated(groupId);
         onClose();
+      } else {
+        // Still close modal if we got any response (might be successful but different format)
+        if (response) {
+          onClose();
+        }
       }
     } catch (error) {
       console.error('Failed to create group:', error);
@@ -215,7 +195,7 @@ export default function CreateGroupModal({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" 
+      className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center" 
       onClick={handleBackdropClick}
       data-modal="true"
     >
@@ -325,7 +305,7 @@ export default function CreateGroupModal({
               {/* Search */}
               <div className="p-4 border-b border-border">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
