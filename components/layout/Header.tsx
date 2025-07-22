@@ -12,6 +12,9 @@ import Avatar from "@/components/ui/Avatar";
 import { User } from "@/lib/models/user";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 import AvatarMenuItemContainer from "@/components/AvatarMenuItem/AvatarMenuItemContainer";
+import { callApi } from "@/lib/utils/api-client";
+import { API_ROUTES } from "@/lib/constants/api-routes";
+import { HTTP_METHOD_ENUM } from "@/lib/constants/enum";
 import { MessengerPreview } from "@/lib/models/messenger_review";
 import { useResponsive } from "@/lib/utils/responsive";
 import { cn } from "@/lib/utils/cn";
@@ -29,7 +32,23 @@ export default function Header() {
   const { isMobile, isHydrated } = useResponsive();
 
   useEffect(() => {
-    setUser(loadFromLocalStorage("user", User));
+    // Load from localStorage first for immediate display
+    const cachedUser = loadFromLocalStorage("user", User);
+    setUser(cachedUser);
+    
+    // Then fetch fresh data from API
+    const fetchUserData = async () => {
+      try {
+        const freshUser = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
+        if (freshUser) {
+          setUser(freshUser);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      }
+    };
+    
+    fetchUserData();
   }, []);
 
   const toggleMessenger = () => {

@@ -13,14 +13,18 @@ import { normalLoginApp } from "@/lib/modules/auth/normal_login/applications/nor
 import { cacheUser } from "@/lib/cache/user";
 
 async function handler(req: NextRequest) {
-  const { email, password } = await req.json();
+  const { email, password, rememberMe } = await req.json();
 
   const userVerify = await userApp.verifyUser(email, password);
   const user = await normalLoginApp.handleAfterLogin(userVerify);
 
   if (!user) throw new ApiError("Sai tài khoản hoặc mật khẩu", 401);
 
-  const token = signJwt({ sub: user.id!.toString(), email: user.email, name: user.name, id: user.id! }, "2h");
+  // If rememberMe is true, extend token expiration to 30 days, otherwise 2 hours
+  const tokenExpiry = rememberMe ? "30d" : "2h";
+  const cookieMaxAge = rememberMe ? 30 * 24 * 60 * 60 : 60 * 60; // 30 days or 1 hour in seconds
+  
+  const token = signJwt({ sub: user.id!.toString(), email: user.email, name: user.name, id: user.id! }, tokenExpiry);
   await cacheUser(user);
   /* ✅ KHÔNG đưa token vào JSON */
   const res = createResponse(null, "Đăng nhập thành công");
@@ -33,7 +37,7 @@ async function handler(req: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 60 * 60,
+      maxAge: cookieMaxAge,
     })
   );
 

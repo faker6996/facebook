@@ -54,9 +54,14 @@ export default function LoginContainer() {
     const form = new FormData(e.currentTarget);
     const email = form.get("email") as string;
     const password = form.get("password") as string;
+    const rememberMe = form.get("rememberMe") === "on";
 
     try {
-      await callApi<void>(API_ROUTES.AUTH.LOGIN, HTTP_METHOD_ENUM.POST, { email, password });
+      await callApi<void>(API_ROUTES.AUTH.LOGIN, HTTP_METHOD_ENUM.POST, { 
+        email, 
+        password, 
+        rememberMe 
+      });
 
       // Trigger SignalR initialization
       triggerAuthChange();
@@ -103,7 +108,11 @@ export default function LoginContainer() {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center text-sm text-muted-foreground">
-                <input type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                <input 
+                  type="checkbox" 
+                  name="rememberMe"
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary" 
+                />
                 <span className="ml-2">{t("rememberMe")}</span>
               </label>
               <Link href={`/${locale}/forgot-password`} className="text-sm text-primary hover:underline font-medium">
