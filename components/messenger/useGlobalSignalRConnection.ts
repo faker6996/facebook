@@ -40,7 +40,28 @@ export const useGlobalSignalRConnection = ({
   useEffect(() => {
     if (!connection || !isConnected) return;
 
-    const handleReceiveMessage = (newMsg: any) => {
+    const handleReceiveMessage = (data: any) => {
+      // Handle different backend message formats
+      let newMsg;
+      if (data.message && data.group_id) {
+        // Backend format: {group_id: 22, message: {...}}
+        newMsg = {
+          ...data.message,
+          conversation_id: data.group_id // Map group_id to conversation_id
+        };
+      } else {
+        // Direct message format
+        newMsg = data;
+      }
+      
+      console.log("🔍 DEBUG: Received message for group check:", {
+        newMsg_conversationId: newMsg.conversation_id,
+        current_conversationId: conversation.conversation_id,
+        isGroup,
+        original_data: data,
+        processed_message: newMsg
+      });
+      
       let isForCurrent = false;
       
       if (isGroup) {
@@ -167,6 +188,7 @@ export const useGlobalSignalRConnection = ({
 
     // Register event listeners
     connection.on("ReceiveMessage", handleReceiveMessage);
+    connection.on("ReceiveGroupMessage", handleReceiveMessage); // Group messages cũng dùng chung handler
     connection.on("ReceiveReaction", handleReceiveReaction);
     connection.on("RemoveReaction", handleRemoveReaction);
 
@@ -183,6 +205,7 @@ export const useGlobalSignalRConnection = ({
     // Cleanup
     return () => {
       connection.off("ReceiveMessage", handleReceiveMessage);
+      connection.off("ReceiveGroupMessage", handleReceiveMessage);
       connection.off("ReceiveReaction", handleReceiveReaction);
       connection.off("RemoveReaction", handleRemoveReaction);
 
@@ -238,7 +261,7 @@ export const useGlobalSignalRConnection = ({
         console.error("❌ Failed to leave group:", error);
       });
     };
-  }, [conversation.conversation_id, isGroup, isConnected, joinGroup, leaveGroup]);
+  }, [conversation.conversation_id, isGroup, isConnected]);
 
   return {
     isConnected,

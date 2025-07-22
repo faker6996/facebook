@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 interface MessageListProps {
   messages: Message[];
   senderId?: number;
+  senderAvatar?: string; // Add sender's avatar for optimistic messages
   onRetrySend: (message: Message) => void;
   onReplyMessage?: (message: Message) => void;
   onAddReaction?: (messageId: number, emoji: string) => void;
@@ -23,7 +24,7 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
-  messages, senderId, onRetrySend, onReplyMessage, onAddReaction, onRemoveReaction,
+  messages, senderId, senderAvatar, onRetrySend, onReplyMessage, onAddReaction, onRemoveReaction,
   isGroup = false, getSenderName, groupMembers = []
 }) => {
   const t = useTranslations("Messenger.content");
@@ -41,6 +42,13 @@ const MessageList: React.FC<MessageListProps> = ({
 
   const getSenderAvatar = (senderUserId: number): string => {
     if (!isGroup) return '';
+    
+    // If this is the current user (sender), use their avatar
+    if (senderUserId === senderId && senderAvatar) {
+      return senderAvatar;
+    }
+    
+    // Otherwise, look in group members
     const member = groupMembers.find(m => m.user_id === senderUserId);
     return member?.avatar_url || '/avatar.png';
   };
@@ -129,6 +137,7 @@ const MessageList: React.FC<MessageListProps> = ({
                 src={senderAvatar} 
                 size="sm" 
                 className="mt-auto flex-shrink-0" 
+                fallback={getSenderName?.(msg.sender_id || 0)?.charAt(0) || '?'}
               />
             )}
             

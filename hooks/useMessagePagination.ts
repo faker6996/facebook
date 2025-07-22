@@ -24,6 +24,7 @@ export const useMessagePagination = ({
   const [totalMessageCount, setTotalMessageCount] = useState(0);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasUserLoadedMore, setHasUserLoadedMore] = useState(false); // Track if user manually loaded more
   
   const MESSAGES_PER_PAGE = 30;
 
@@ -132,6 +133,7 @@ export const useMessagePagination = ({
     
     const nextPage = currentPage + 1;
     console.log("📄 Loading more messages, page:", nextPage);
+    setHasUserLoadedMore(true); // Mark that user has manually loaded more
     await loadMessages(nextPage, true);
   }, [hasMoreMessages, isLoadingMessages, currentPage, loadMessages]);
 
@@ -148,6 +150,7 @@ export const useMessagePagination = ({
     setHasMoreMessages(true);
     setIsInitialLoad(true);
     setLoadError(null);
+    setHasUserLoadedMore(false); // Reset user load more flag
   }, []);
 
   return {
@@ -157,6 +160,7 @@ export const useMessagePagination = ({
     totalMessageCount,
     isInitialLoad,
     loadError,
+    hasUserLoadedMore,
     loadMessages,
     loadMoreMessages,
     retryLoadMessages,

@@ -63,7 +63,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   });
 
   // ----- Pagination Hook -----
-  const { currentPage, hasMoreMessages, isLoadingMessages, totalMessageCount, isInitialLoad, loadError, loadMessages, loadMoreMessages, retryLoadMessages, resetPaginationState } =
+  const { currentPage, hasMoreMessages, isLoadingMessages, totalMessageCount, isInitialLoad, loadError, hasUserLoadedMore, loadMessages, loadMoreMessages, retryLoadMessages, resetPaginationState } =
     useMessagePagination({
       conversation,
       onScrollToBottom: (delay, reason) => {}, // Will be set later
@@ -298,9 +298,11 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           bottomRef={bottomRef}
           messages={messages}
           senderId={sender.id}
+          senderAvatar={sender.avatar_url}
           isLoadingMessages={isLoadingMessages}
           hasMoreMessages={hasMoreMessages}
           isInitialLoad={isInitialLoad}
+          hasUserLoadedMore={hasUserLoadedMore}
           totalMessageCount={totalMessageCount}
           loadError={loadError}
           isGroup={isGroup}
