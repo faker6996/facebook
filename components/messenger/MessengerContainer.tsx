@@ -2,6 +2,8 @@
 
 // ----- Imports -----
 import React, { useEffect, useState, useMemo } from "react";
+import { Phone, PhoneOff } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 // Local Imports
 import MessageInput from "@/components/messenger/MessageInput";
@@ -20,6 +22,8 @@ import { User } from "@/lib/models/user";
 import { callApi } from "@/lib/utils/api-client";
 import { loadFromLocalStorage } from "@/lib/utils/local-storage";
 import { cn } from "@/lib/utils/cn";
+import { useGroupCall } from "@/hooks/useGroupCall";
+import { GroupVideoCall } from "@/components/video-call/GroupVideoCall";
 // Video calls handled by GlobalVideoCallManager
 // import VideoCall from "@/components/video-call/VideoCall";
 // import useVideoCall from "@/hooks/useVideoCall";
@@ -33,6 +37,8 @@ interface Props {
 
 // ----- Component Definition -----
 export default function MessengerContainer({ conversation, onClose, style }: Props) {
+  const t = useTranslations('GroupCall');
+  
   // ----- Basic State -----
   const [sender, setSender] = useState<User>({});
   const [input, setInput] = useState("");
@@ -87,6 +93,17 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [showGroupSettings, setShowGroupSettings] = useState(false);
 
   const isGroup = conversation.is_group === true;
+
+  // Group call hook
+  const groupCall = useGroupCall({
+    currentUser: sender,
+    onCallStateChange: (isActive) => {
+      console.log('📞 Group call state changed:', isActive);
+    },
+    onError: (error) => {
+      console.error('📞 Group call error:', error);
+    }
+  });
 
   // Debug video call buttons (only once per conversation)
   useEffect(() => {
@@ -240,6 +257,21 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     }
   };
 
+  // Group call handlers
+  const handleStartGroupVideoCall = () => {
+    if (isGroup && conversation.conversation_id) {
+      console.log("📞 Starting group video call for group:", conversation.conversation_id);
+      groupCall.startGroupCall(conversation.conversation_id, 'video');
+    }
+  };
+
+  const handleStartGroupVoiceCall = () => {
+    if (isGroup && conversation.conversation_id) {
+      console.log("📞 Starting group voice call for group:", conversation.conversation_id);
+      groupCall.startGroupCall(conversation.conversation_id, 'audio');
+    }
+  };
+
   // Video call handlers moved to GlobalVideoCallManager
   // const handleAcceptCall = () => {
   //   videoCall.acceptCall();
@@ -288,6 +320,8 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           onClose={onClose}
           onStartVideoCall={handleStartVideoCall}
           onStartVoiceCall={handleStartVoiceCall}
+          onStartGroupVideoCall={handleStartGroupVideoCall}
+          onStartGroupVoiceCall={handleStartGroupVoiceCall}
           onShowGroupInfo={setShowGroupInfo}
           onShowGroupSettings={setShowGroupSettings}
         />
@@ -338,7 +372,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
 
       {/* Group Modals - Responsive for mobile */}
       {isGroup && showGroupInfo && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowGroupInfo(false)}>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGroupInfo(false)}>
           <div className="bg-card rounded-lg md:rounded-xl max-w-md w-full border shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-4">Thông tin nhóm</h3>
@@ -362,7 +396,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       )}
 
       {isGroup && showGroupSettings && (currentUserRole === "admin" || currentUserRole === "moderator") && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowGroupSettings(false)}>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGroupSettings(false)}>
           <div className="bg-card rounded-lg md:rounded-xl max-w-md w-full border shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-4">Cài đặt nhóm</h3>
@@ -372,6 +406,97 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
               <Button onClick={() => setShowGroupSettings(false)} className="w-full" size="lg">
                 Đóng
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Group Video Call Component */}
+      {groupCall.callState.isActive && groupCall.currentCall && (
+        <GroupVideoCall
+          call={groupCall.currentCall}
+          currentUserId={sender.id || 0}
+          localStream={groupCall.localStream || undefined}
+          remoteStreams={groupCall.remoteStreams}
+          isLocalAudioEnabled={groupCall.callState.isLocalAudioEnabled}
+          isLocalVideoEnabled={groupCall.callState.isLocalVideoEnabled}
+          connectionStates={groupCall.connectionStates}
+          callState={groupCall.callState}
+          onEndCall={groupCall.leaveGroupCall}
+          onToggleAudio={groupCall.toggleAudio}
+          onToggleVideo={groupCall.toggleVideo}
+        />
+      )}
+
+      {/* Incoming Group Call Dialog - Enhanced Design */}
+      {groupCall.callState.isIncomingCall && groupCall.incomingCallData && (
+        <div className="fixed inset-0 bg-gradient-to-br from-background/95 via-background/90 to-muted/80 backdrop-blur-md z-50 flex items-center justify-center p-4 video-call-backdrop">
+          <div className="relative max-w-sm w-full">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-success/10 to-info/20 rounded-3xl blur-xl opacity-60"></div>
+            <div className="absolute inset-1 bg-gradient-to-br from-card/90 to-card/95 rounded-2xl backdrop-blur-sm border border-border/50"></div>
+            
+            {/* Main content */}
+            <div className="relative p-8 text-center">
+              {/* Animated avatar section */}
+              <div className="relative mb-8 flex items-center justify-center">
+                {/* Multi-layer animation rings */}
+                <div className="absolute inset-0 w-32 h-32 rounded-full bg-primary/20 animate-ping"></div>
+                <div className="absolute inset-2 w-28 h-28 rounded-full bg-success/15 animate-ping" style={{ animationDelay: "0.5s" }}></div>
+                <div className="absolute inset-4 w-24 h-24 rounded-full bg-info/20 animate-pulse" style={{ animationDelay: "1s" }}></div>
+                
+                {/* Avatar container */}
+                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary via-success to-info flex items-center justify-center text-3xl font-bold text-primary-foreground shadow-2xl border-4 border-background/20">
+                  <Phone className="w-10 h-10 animate-pulse" />
+                </div>
+                
+                {/* Video call indicator */}
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-success rounded-full flex items-center justify-center shadow-lg">
+                  <div className="w-6 h-6 bg-background rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Call information */}
+              <div className="space-y-3 mb-8">
+                <h3 className="text-2xl font-bold text-foreground tracking-wide" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
+                  {t('incomingCall')}
+                </h3>
+                <p className="text-lg font-semibold text-foreground/90">
+                  {groupCall.incomingCallData.call?.group_name || t('groupVideoCall')}
+                </p>
+                <p className="text-sm text-muted-foreground font-medium animate-pulse">
+                  {groupCall.incomingCallData.call?.initiator_name || 'Someone'} {t('isCalling')}
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-4">
+                <Button
+                  onClick={groupCall.declineIncomingCall}
+                  className="flex-1 h-14 bg-destructive/10 hover:bg-destructive text-destructive hover:text-destructive-foreground border-2 border-destructive/30 hover:border-destructive rounded-2xl transition-all duration-300 hover:scale-105 video-call-button group"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-10 h-10 bg-destructive/20 group-hover:bg-destructive-foreground/20 rounded-full flex items-center justify-center transition-all duration-300">
+                      <PhoneOff className="w-5 h-5" />
+                    </div>
+                    <span className="font-semibold">{t('declineCall')}</span>
+                  </div>
+                </Button>
+                
+                <Button
+                  onClick={groupCall.acceptIncomingCall}
+                  className="flex-1 h-14 bg-success hover:bg-success/90 text-success-foreground rounded-2xl transition-all duration-300 hover:scale-105 video-call-button group shadow-lg hover:shadow-success/25"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-10 h-10 bg-success-foreground/20 group-hover:bg-success-foreground/30 rounded-full flex items-center justify-center transition-all duration-300">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <span className="font-semibold">{t('acceptCall')}</span>
+                  </div>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

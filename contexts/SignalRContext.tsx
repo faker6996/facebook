@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import * as signalR from "@microsoft/signalr";
+import { useTranslations } from 'next-intl';
 import { User } from "@/lib/models/user";
 import { Message } from "@/lib/models/message";
 import { useToast } from "@/components/ui/Toast";
@@ -27,6 +28,15 @@ interface SignalRContextType {
   onUserOffline: (handler: ((userId: string) => void) | undefined) => void;
   // Group events
   onGroupEvent: (handler: ((eventType: string, data: any) => void) | undefined) => void;
+  // Group call events
+  onGroupCallStarted: (handler: ((data: any) => void) | undefined) => void;
+  onGroupCallEnded: (handler: ((data: any) => void) | undefined) => void;
+  onGroupCallParticipantJoined: (handler: ((data: any) => void) | undefined) => void;
+  onGroupCallParticipantLeft: (handler: ((data: any) => void) | undefined) => void;
+  onGroupCallMediaToggled: (handler: ((data: any) => void) | undefined) => void;
+  onReceiveGroupCallOffer: (handler: ((data: any) => void) | undefined) => void;
+  onReceiveGroupCallAnswer: (handler: ((data: any) => void) | undefined) => void;
+  onReceiveGroupIceCandidate: (handler: ((data: any) => void) | undefined) => void;
   // Connection management
   joinGroup: (groupId: string) => Promise<void>;
   leaveGroup: (groupId: string) => Promise<void>;
@@ -49,6 +59,7 @@ interface SignalRProviderProps {
 }
 
 export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) => {
+  const t = useTranslations('GroupCall');
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
@@ -62,6 +73,16 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
   const userOnlineHandlerRef = useRef<((userId: string) => void) | undefined>(undefined);
   const userOfflineHandlerRef = useRef<((userId: string) => void) | undefined>(undefined);
   const groupEventHandlerRef = useRef<((eventType: string, data: any) => void) | undefined>(undefined);
+  
+  // Group call event handlers
+  const groupCallStartedHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
+  const groupCallEndedHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
+  const groupCallParticipantJoinedHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
+  const groupCallParticipantLeftHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
+  const groupCallMediaToggledHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
+  const receiveGroupCallOfferHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
+  const receiveGroupCallAnswerHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
+  const receiveGroupIceCandidateHandlerRef = useRef<((data: any) => void) | undefined>(undefined);
 
   // Setter functions for external components to register handlers
   const setMessageHandler = useCallback((handler: ((message: Message) => void) | undefined) => {
@@ -78,6 +99,39 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
   const setGroupEventHandler = useCallback((handler: ((eventType: string, data: any) => void) | undefined) => {
     groupEventHandlerRef.current = handler;
+  }, []);
+
+  // Group call event setter functions
+  const setGroupCallStartedHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    groupCallStartedHandlerRef.current = handler;
+  }, []);
+
+  const setGroupCallEndedHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    groupCallEndedHandlerRef.current = handler;
+  }, []);
+
+  const setGroupCallParticipantJoinedHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    groupCallParticipantJoinedHandlerRef.current = handler;
+  }, []);
+
+  const setGroupCallParticipantLeftHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    groupCallParticipantLeftHandlerRef.current = handler;
+  }, []);
+
+  const setGroupCallMediaToggledHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    groupCallMediaToggledHandlerRef.current = handler;
+  }, []);
+
+  const setReceiveGroupCallOfferHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    receiveGroupCallOfferHandlerRef.current = handler;
+  }, []);
+
+  const setReceiveGroupCallAnswerHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    receiveGroupCallAnswerHandlerRef.current = handler;
+  }, []);
+
+  const setReceiveGroupIceCandidateHandler = useCallback((handler: ((data: any) => void) | undefined) => {
+    receiveGroupIceCandidateHandlerRef.current = handler;
   }, []);
 
   const setUser = (user: User | null) => {
@@ -251,6 +305,80 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
       });
     });
 
+    // Group call event listeners
+    conn.on("GroupCallStarted", (callEvent: any) => {
+      console.log("📞 Global: Group call started:", callEvent);
+      
+      groupCallStartedHandlerRef.current?.(callEvent);
+      
+      addToast({
+        type: "info",
+        title: t('groupVideoCall'),
+        message: `${callEvent.call?.initiator_name || 'Someone'} ${t('callStarted')}`,
+        duration: 4000
+      });
+    });
+
+    conn.on("GroupCallEnded", (endEvent: any) => {
+      console.log("📞 Global: Group call ended:", endEvent);
+      
+      groupCallEndedHandlerRef.current?.(endEvent);
+      
+      addToast({
+        type: "info",
+        title: t('groupVideoCall'),
+        message: t('callEnded'),
+        duration: 3000
+      });
+    });
+
+    conn.on("GroupCallParticipantJoined", (joinEvent: any) => {
+      console.log("👤 Global: Participant joined call:", joinEvent);
+      
+      groupCallParticipantJoinedHandlerRef.current?.(joinEvent);
+      
+      addToast({
+        type: "info",
+        title: "Call Update",
+        message: `${joinEvent.participant?.user_name || 'Someone'} ${t('participantJoined')}`,
+        duration: 3000
+      });
+    });
+
+    conn.on("GroupCallParticipantLeft", (leaveEvent: any) => {
+      console.log("👤 Global: Participant left call:", leaveEvent);
+      
+      groupCallParticipantLeftHandlerRef.current?.(leaveEvent);
+      
+      addToast({
+        type: "info",
+        title: "Call Update",
+        message: `${leaveEvent.user_name || 'Someone'} ${t('participantLeft')}`,
+        duration: 3000
+      });
+    });
+
+    conn.on("GroupCallMediaToggled", (mediaEvent: any) => {
+      console.log("🎥 Global: Media toggled in call:", mediaEvent);
+      
+      groupCallMediaToggledHandlerRef.current?.(mediaEvent);
+    });
+
+    conn.on("ReceiveGroupCallOffer", (data: any) => {
+      console.log("📡 Global: Received group call offer:", data);
+      receiveGroupCallOfferHandlerRef.current?.(data);
+    });
+
+    conn.on("ReceiveGroupCallAnswer", (data: any) => {
+      console.log("📡 Global: Received group call answer:", data);
+      receiveGroupCallAnswerHandlerRef.current?.(data);
+    });
+
+    conn.on("ReceiveGroupIceCandidate", (data: any) => {
+      console.log("🧊 Global: Received group ICE candidate:", data);
+      receiveGroupIceCandidateHandlerRef.current?.(data);
+    });
+
     // Connection event handlers
     conn.onreconnecting((error) => {
       console.log("🟡 Global SignalR reconnecting...", error);
@@ -390,6 +518,15 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     onUserOnline: setUserOnlineHandler,
     onUserOffline: setUserOfflineHandler,
     onGroupEvent: setGroupEventHandler,
+    // Group call event handlers
+    onGroupCallStarted: setGroupCallStartedHandler,
+    onGroupCallEnded: setGroupCallEndedHandler,
+    onGroupCallParticipantJoined: setGroupCallParticipantJoinedHandler,
+    onGroupCallParticipantLeft: setGroupCallParticipantLeftHandler,
+    onGroupCallMediaToggled: setGroupCallMediaToggledHandler,
+    onReceiveGroupCallOffer: setReceiveGroupCallOfferHandler,
+    onReceiveGroupCallAnswer: setReceiveGroupCallAnswerHandler,
+    onReceiveGroupIceCandidate: setReceiveGroupIceCandidateHandler,
     joinGroup,
     leaveGroup,
     setUser

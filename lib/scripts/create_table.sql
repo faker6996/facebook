@@ -136,3 +136,35 @@ CREATE TABLE password_reset_token (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+  CREATE TABLE group_calls (
+      id VARCHAR(36) PRIMARY KEY,               -- UUID cho call session
+      group_id INT NOT NULL,                   -- ID của group
+      initiator_id INT NOT NULL,               -- Người khởi tạo cuộc gọi
+      call_type ENUM('audio', 'video') NOT NULL, -- Loại cuộc gọi
+      started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      ended_at TIMESTAMP NULL,
+      status ENUM('active', 'ended') DEFAULT 'active',
+      max_participants INT DEFAULT 10,         -- Giới hạn số người tham gia
+      FOREIGN KEY (group_id) REFERENCES groups(id),
+      FOREIGN KEY (initiator_id) REFERENCES users(id),
+      INDEX idx_group_active (group_id, status),
+      INDEX idx_started_at (started_at)
+  );
+
+  -- Bảng lưu thành viên tham gia cuộc gọi
+  CREATE TABLE call_participants (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      call_id VARCHAR(36) NOT NULL,           -- Link tới group_calls.id
+      user_id INT NOT NULL,                   -- ID user tham gia
+      joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      left_at TIMESTAMP NULL,
+      is_audio_enabled BOOLEAN DEFAULT TRUE,   -- Trạng thái micro
+      is_video_enabled BOOLEAN DEFAULT TRUE,   -- Trạng thái camera
+      connection_quality ENUM('excellent', 'good', 'poor', 'disconnected') DEFAULT 'good',
+      FOREIGN KEY (call_id) REFERENCES group_calls(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      UNIQUE KEY unique_participant (call_id, user_id),
+      INDEX idx_call_participants (call_id),
+      INDEX idx_user_calls (user_id, left_at)
+  );

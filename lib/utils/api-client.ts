@@ -1,11 +1,34 @@
 // lib/utils/api-client.ts
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
+// Function to get JWT token from cookie
+function getJwtToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  
+  const cookies = document.cookie.split(';');
+  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('access_token='));
+  
+  if (tokenCookie) {
+    return tokenCookie.split('=')[1];
+  }
+  
+  return null;
+}
+
 const api = axios.create({
   baseURL: "", // process.env.NEXT_PUBLIC_API_URL (nếu có)
   timeout: 10_000,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
+});
+
+// Add request interceptor to include JWT token in Authorization header
+api.interceptors.request.use((config) => {
+  const token = getJwtToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 /**

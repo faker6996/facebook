@@ -53,6 +53,17 @@ export const API_ROUTES = {
     HANDLE_JOIN_REQUEST: (groupId: number, requestId: number) =>
       `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/${groupId}/requests/${requestId}`,
     JOIN_VIA_INVITE: (inviteCode: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groups/join/${inviteCode}`,
+
+    // Group calls
+    GET_ACTIVE_GROUP_CALL: (groupId: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${groupId}/active`,
+    START_GROUP_CALL: (groupId: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${groupId}/start`,
+    JOIN_GROUP_CALL: (callId: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${callId}/join`,
+    LEAVE_GROUP_CALL: (callId: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${callId}/leave`,
+    END_GROUP_CALL: (callId: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${callId}/end`,
+    TOGGLE_GROUP_CALL_MEDIA: (callId: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${callId}/media`,
+    GET_GROUP_CALL_PARTICIPANTS: (callId: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${callId}/participants`,
+    UPDATE_CONNECTION_QUALITY: (callId: string) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/${callId}/connection-quality`,
+    GET_GROUP_CALL_HISTORY: (groupId: number) => `${process.env.NEXT_PUBLIC_CHAT_SERVER_URL}/api/groupcalls/history/${groupId}`,
   },
   RESET_PASSWORD: {
     REQUEST: `/api/forgot-password`,

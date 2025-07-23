@@ -18,6 +18,8 @@ interface MessengerHeaderProps {
   onClose: (conversationId: number) => void;
   onStartVideoCall: () => void;
   onStartVoiceCall: () => void;
+  onStartGroupVideoCall?: () => void;
+  onStartGroupVoiceCall?: () => void;
   onShowGroupInfo: (show: boolean) => void;
   onShowGroupSettings: (show: boolean) => void;
 }
@@ -30,10 +32,13 @@ export const MessengerHeader: React.FC<MessengerHeaderProps> = ({
   onClose,
   onStartVideoCall,
   onStartVoiceCall,
+  onStartGroupVideoCall,
+  onStartGroupVoiceCall,
   onShowGroupInfo,
   onShowGroupSettings
 }) => {
   const t = useTranslations('Messenger.header');
+  const tGroup = useTranslations('GroupCall');
   const isGroup = conversation.is_group === true;
 
   return (
@@ -98,6 +103,30 @@ export const MessengerHeader: React.FC<MessengerHeaderProps> = ({
         
         {isGroup && (
           <>
+            {/* Group Call Buttons */}
+            {onStartGroupVoiceCall && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onClick={onStartGroupVoiceCall} 
+                title={tGroup('voiceCallButton')}
+                className="w-10 h-10 md:w-8 md:h-8"
+              >
+                <Phone className="h-5 w-5 md:h-4 md:w-4" />
+              </Button>
+            )}
+            {onStartGroupVideoCall && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                onClick={onStartGroupVideoCall} 
+                title={tGroup('videoCallButton')}
+                className="w-10 h-10 md:w-8 md:h-8"
+              >
+                <Video className="h-5 w-5 md:h-4 md:w-4" />
+              </Button>
+            )}
+            
             <Button 
               size="icon" 
               variant="ghost" 

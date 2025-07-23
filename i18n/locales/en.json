@@ -163,6 +163,36 @@
     "unknownCaller": "Unknown caller"
   },
 
+  "GroupCall": {
+    "incomingCall": "Incoming Group Call",
+    "startingCall": "Starting group call...",
+    "connecting": "Connecting...",
+    "connected": "connected",
+    "connectionIssues": "connection issues",
+    "acceptCall": "Accept",
+    "declineCall": "Decline",
+    "endCall": "End call",  
+    "leaveCall": "Leave call",
+    "toggleVideo": "Toggle camera",
+    "toggleAudio": "Toggle microphone",
+    "toggleScreenShare": "Share screen",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "callStarted": "Group call has started",
+    "callEnded": "Group call has ended",
+    "participantJoined": "joined the call",
+    "participantLeft": "left the call",
+    "connectionIssue": "Connection issue",
+    "callDuration": "Call duration",
+    "you": "You",
+    "unknownUser": "Unknown User",
+    "groupVideoCall": "Group Video Call",
+    "groupVoiceCall": "Group Voice Call",
+    "isCalling": "is calling...",
+    "videoCallButton": "Video call",
+    "voiceCallButton": "Voice call"
+  },
+
   "Messenger": {
     "header": {
       "online": "Online",
