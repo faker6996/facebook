@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import { Video, VideoOff, Mic, MicOff, PhoneOff, Phone, Maximize, Minimize, Wifi, WifiOff, Signal } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
 import Button from "@/components/ui/Button";
+import { cn } from "@/lib/utils/cn";
+import { Maximize, Mic, MicOff, Minimize, Phone, PhoneOff, Signal, Video, VideoOff, Wifi, WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface VideoCallProps {
   isActive: boolean;
@@ -23,7 +23,7 @@ interface VideoCallProps {
   isFullscreen?: boolean;
   localStream?: MediaStream;
   remoteStream?: MediaStream;
-  connectionQuality?: 'excellent' | 'good' | 'poor' | 'disconnected';
+  connectionQuality?: "excellent" | "good" | "poor" | "disconnected";
   networkStats?: {
     rtt?: number;
     bandwidth?: number;
@@ -50,7 +50,7 @@ export default function VideoCall({
   isFullscreen = false,
   localStream,
   remoteStream,
-  connectionQuality = 'good',
+  connectionQuality = "good",
   networkStats,
   cameraError,
   isAudioOnlyFallback = false,
@@ -63,9 +63,6 @@ export default function VideoCall({
   const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [showNetworkInfo, setShowNetworkInfo] = useState(false);
-
-
-
 
   // Animation entrance effect
   useEffect(() => {
@@ -125,13 +122,13 @@ export default function VideoCall({
   // Connection quality indicator
   const getConnectionIcon = () => {
     switch (connectionQuality) {
-      case 'excellent':
+      case "excellent":
         return <Signal className="w-4 h-4 text-success" />;
-      case 'good':
+      case "good":
         return <Wifi className="w-4 h-4 text-success" />;
-      case 'poor':
+      case "poor":
         return <Wifi className="w-4 h-4 text-warning" />;
-      case 'disconnected':
+      case "disconnected":
         return <WifiOff className="w-4 h-4 text-destructive" />;
       default:
         return <Wifi className="w-4 h-4 text-success" />;
@@ -140,15 +137,15 @@ export default function VideoCall({
 
   const getConnectionColor = () => {
     switch (connectionQuality) {
-      case 'excellent':
-      case 'good':
-        return 'text-success';
-      case 'poor':
-        return 'text-warning';
-      case 'disconnected':
-        return 'text-destructive';
+      case "excellent":
+      case "good":
+        return "text-success";
+      case "poor":
+        return "text-warning";
+      case "disconnected":
+        return "text-destructive";
       default:
-        return 'text-success';
+        return "text-success";
     }
   };
 
@@ -170,25 +167,28 @@ export default function VideoCall({
       <div className="flex-1 relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-0 w-72 h-72 rounded-full bg-foreground/10 blur-3xl animate-pulse" style={{ animationDelay: '0s' }} />
-          <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full bg-foreground/5 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-foreground/8 blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+          <div className="absolute top-0 left-0 w-72 h-72 rounded-full bg-foreground/10 blur-3xl animate-pulse" style={{ animationDelay: "0s" }} />
+          <div className="absolute top-1/2 right-0 w-96 h-96 rounded-full bg-foreground/5 blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+          <div
+            className="absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-foreground/8 blur-3xl animate-pulse"
+            style={{ animationDelay: "4s" }}
+          />
         </div>
-        
+
         {/* Remote Video or Waiting UI */}
         <div className="absolute inset-0 backdrop-blur-sm">
           {remoteStream ? (
             <div className="relative w-full h-full">
-              <video 
-                ref={remoteVideoRef} 
-                autoPlay 
-                playsInline 
-                className="w-full h-full object-cover transition-all duration-300 hover:scale-105" 
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
                 aria-label={`${callerName || t("unknownCaller")} video stream`}
               />
               {/* Connection quality overlay */}
               <div className="absolute top-4 left-4">
-                <div 
+                <div
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/20 backdrop-blur-md border border-border/20 cursor-pointer transition-all duration-200 hover:bg-background/30"
                   onClick={() => setShowNetworkInfo(!showNetworkInfo)}
                 >
@@ -216,40 +216,56 @@ export default function VideoCall({
                   <div className="absolute inset-1 rounded-full bg-foreground/15 animate-ping" style={{ animationDelay: "0.5s" }}></div>
                   <div className="absolute inset-2 rounded-full bg-foreground/30 animate-pulse" style={{ animationDelay: "1s" }}></div>
                   <div className="absolute inset-3 rounded-full bg-foreground/10 animate-pulse" style={{ animationDelay: "1.5s" }}></div>
-                  
+
                   {/* Avatar container with enhanced styling */}
                   <div
                     className="relative w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground shadow-2xl border-4 border-border/50 backdrop-blur-sm transition-all duration-300 hover:scale-105 bg-gradient-to-br from-primary to-secondary"
-                    style={{ 
-                      boxShadow: `0 0 50px rgba(255,255,255,0.3), inset 0 0 20px rgba(255,255,255,0.1)`
+                    style={{
+                      boxShadow: `0 0 50px rgba(255,255,255,0.3), inset 0 0 20px rgba(255,255,255,0.1)`,
                     }}
                   >
                     {callerAvatar ? (
-                      <img 
-                        src={callerAvatar} 
-                        alt={`${callerName || t("unknownCaller")} avatar`} 
+                      <img
+                        src={callerAvatar}
+                        alt={`${callerName || t("unknownCaller")} avatar`}
                         className="w-full h-full rounded-full object-cover"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.nextElementSibling?.classList.remove("hidden");
                         }}
                         loading="lazy"
                       />
                     ) : null}
-                    <span className={callerAvatar ? 'hidden' : ''} aria-hidden="true">
+                    <span className={callerAvatar ? "hidden" : ""} aria-hidden="true">
                       {callerName ? callerName.charAt(0).toUpperCase() : "?"}
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-2 sm:space-y-3 px-4 sm:px-6">
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-wide transition-all duration-300" style={{ textShadow: "2px 2px 12px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.6)" }}>
+                  <h2
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-wide transition-all duration-300"
+                    style={{ textShadow: "2px 2px 12px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.6)" }}
+                  >
                     {callerName || t("unknownCaller")}
                   </h2>
-                  {isIncoming && <p className="text-foreground/95 text-lg sm:text-xl font-medium animate-pulse" style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>{t("incomingCall")}</p>}
-                  {isOutgoing && <p className="text-foreground/95 text-lg sm:text-xl font-medium" style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>{t("outgoingCall")}</p>}
+                  {isIncoming && (
+                    <p
+                      className="text-foreground/95 text-lg sm:text-xl font-medium animate-pulse"
+                      style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}
+                    >
+                      {t("incomingCall")}
+                    </p>
+                  )}
+                  {isOutgoing && (
+                    <p className="text-foreground/95 text-lg sm:text-xl font-medium" style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>
+                      {t("outgoingCall")}
+                    </p>
+                  )}
                   {!isIncoming && !isOutgoing && (
-                    <p className="text-foreground/95 text-lg sm:text-xl font-medium" style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>{formatDuration(callDuration)}</p>
+                    <p className="text-foreground/95 text-lg sm:text-xl font-medium" style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>
+                      {formatDuration(callDuration)}
+                    </p>
                   )}
                 </div>
               </div>
@@ -261,12 +277,12 @@ export default function VideoCall({
         {localStream && localStream.getVideoTracks().length > 0 && (
           <div className="absolute bottom-20 right-2 sm:bottom-24 sm:right-4 w-24 h-20 sm:w-32 sm:h-24 lg:w-40 lg:h-32 bg-muted rounded-lg overflow-hidden border-2 border-border/30 shadow-2xl transition-all duration-300 hover:scale-105 hover:border-border/50 group">
             {localStream.getVideoTracks().length > 0 ? (
-              <video 
-                ref={localVideoRef} 
-                autoPlay 
-                playsInline 
-                muted 
-                className="w-full h-full object-cover group-hover:brightness-110 transition-all duration-300" 
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover group-hover:brightness-110 transition-all duration-300"
                 aria-label="Your video stream"
               />
             ) : (
@@ -275,14 +291,10 @@ export default function VideoCall({
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            {isAudioOnlyFallback && (
-              <div className="absolute bottom-1 left-1 bg-orange-500 text-orange-50 text-xs px-1 rounded">
-                Audio Only
-              </div>
-            )}
+            {isAudioOnlyFallback && <div className="absolute bottom-1 left-1 bg-orange-500 text-orange-50 text-xs px-1 rounded">Audio Only</div>}
           </div>
         )}
-        
+
         {/* Camera Error Notification */}
         {cameraError && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-lg border border-destructive-foreground/20 shadow-lg backdrop-blur-md">
@@ -295,9 +307,16 @@ export default function VideoCall({
 
         {/* Enhanced Call Info with Mobile Responsiveness */}
         {remoteStream && (
-          <div className={cn("absolute top-2 right-2 sm:top-4 sm:right-4 transition-all duration-300 transform", showControls ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2")}>
+          <div
+            className={cn(
+              "absolute top-2 right-2 sm:top-4 sm:right-4 transition-all duration-300 transform",
+              showControls ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+            )}
+          >
             <div className="bg-background/80 backdrop-blur-md px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-border/50 shadow-lg hover:bg-background/90 transition-all duration-200">
-              <h3 className="text-sm sm:text-lg font-semibold text-foreground truncate max-w-[150px] sm:max-w-none">{callerName || t("unknownCaller")}</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-foreground truncate max-w-[150px] sm:max-w-none">
+                {callerName || t("unknownCaller")}
+              </h3>
               <p className="text-xs sm:text-sm text-muted-foreground">{formatDuration(callDuration)}</p>
             </div>
           </div>
@@ -306,19 +325,27 @@ export default function VideoCall({
 
       {/* Enhanced Controls with Better Responsiveness */}
       <div className="absolute bottom-4 sm:bottom-6 lg:bottom-10 left-1/2 transform -translate-x-1/2 w-full px-4 sm:px-6">
-        <div className={cn("transition-all duration-500 ease-out transform", !remoteStream || showControls ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95")}>
+        <div
+          className={cn(
+            "transition-all duration-500 ease-out transform",
+            !remoteStream || showControls ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-95"
+          )}
+        >
           {/* Enhanced Incoming Call Controls */}
           {isIncoming && (
             <div className="flex items-center justify-center gap-12 sm:gap-16 lg:gap-20">
               <div className="flex flex-col items-center gap-3 text-center">
                 <div className="relative">
                   <div className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-destructive/20 animate-ping"></div>
-                  <div className="absolute inset-1 w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-destructive/10 animate-ping" style={{ animationDelay: "0.3s" }}></div>
-                  <Button 
-                    size="icon" 
-                    variant="danger" 
-                    onClick={onDecline} 
-                    className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full hover:scale-110 transition-all duration-200 shadow-2xl border-2 border-border/30 focus:ring-4 focus:ring-destructive/50 focus:outline-none" 
+                  <div
+                    className="absolute inset-1 w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-destructive/10 animate-ping"
+                    style={{ animationDelay: "0.3s" }}
+                  ></div>
+                  <Button
+                    size="icon"
+                    variant="danger"
+                    onClick={onDecline}
+                    className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full hover:scale-110 transition-all duration-200 shadow-2xl border-2 border-border/30 focus:ring-4 focus:ring-destructive/50 focus:outline-none"
                     aria-label={t("declineCall")}
                     role="button"
                     tabIndex={0}
@@ -326,12 +353,20 @@ export default function VideoCall({
                     <PhoneOff className="w-6 h-6 sm:w-8 sm:h-8" />
                   </Button>
                 </div>
-                <span className="text-foreground font-medium text-sm sm:text-base mt-1" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.8)" }}>{t("declineCall")}</span>
+                <span className="text-foreground font-medium text-sm sm:text-base mt-1" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.8)" }}>
+                  {t("declineCall")}
+                </span>
               </div>
               <div className="flex flex-col items-center gap-3 text-center">
                 <div className="relative">
-                  <div className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-success/20 animate-ping" style={{ animationDelay: "0.5s" }}></div>
-                  <div className="absolute inset-1 w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-success/10 animate-ping" style={{ animationDelay: "0.8s" }}></div>
+                  <div
+                    className="absolute inset-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-success/20 animate-ping"
+                    style={{ animationDelay: "0.5s" }}
+                  ></div>
+                  <div
+                    className="absolute inset-1 w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-success/10 animate-ping"
+                    style={{ animationDelay: "0.8s" }}
+                  ></div>
                   <Button
                     size="icon"
                     onClick={onAccept}
@@ -343,7 +378,9 @@ export default function VideoCall({
                     <Phone className="w-6 h-6 sm:w-8 sm:h-8" />
                   </Button>
                 </div>
-                <span className="text-foreground font-medium text-sm sm:text-base mt-1" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.8)" }}>{t("acceptCall")}</span>
+                <span className="text-foreground font-medium text-sm sm:text-base mt-1" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.8)" }}>
+                  {t("acceptCall")}
+                </span>
               </div>
             </div>
           )}
@@ -354,27 +391,25 @@ export default function VideoCall({
               <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 bg-background/80 backdrop-blur-md rounded-full px-4 py-3 sm:px-6 sm:py-3 border border-border/50 shadow-2xl hover:bg-background/90 transition-all duration-300">
                 <Button
                   size="icon"
-                  variant={isVideoEnabled ? "ghost" : (isAudioOnlyFallback ? "outline" : "danger")}
+                  variant={isVideoEnabled ? "ghost" : isAudioOnlyFallback ? "outline" : "danger"}
                   onClick={onToggleVideo}
-                  disabled={cameraError !== null && cameraError?.includes('No camera devices')}
+                  disabled={cameraError !== null && cameraError?.includes("No camera devices")}
                   className={cn(
                     "w-10 h-10 sm:w-12 sm:h-12 rounded-full hover:scale-110 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:outline-none",
-                    cameraError?.includes('No camera devices') && "opacity-50 cursor-not-allowed",
+                    cameraError?.includes("No camera devices") && "opacity-50 cursor-not-allowed",
                     !isVideoEnabled && !isAudioOnlyFallback && "hover:bg-success/20 hover:border-success/30"
                   )}
                   aria-label={isVideoEnabled ? t("toggleVideo") : "Enable camera"}
                   aria-pressed={isVideoEnabled}
                   role="button"
                   tabIndex={0}
-                  title={
-                    cameraError?.includes('No camera devices') 
-                      ? 'Camera not available' 
-                      : isVideoEnabled 
-                        ? 'Turn off camera' 
-                        : 'Turn on camera'
-                  }
+                  title={cameraError?.includes("No camera devices") ? "Camera not available" : isVideoEnabled ? "Turn off camera" : "Turn on camera"}
                 >
-                  {isVideoEnabled ? <Video className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" /> : <VideoOff className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />}
+                  {isVideoEnabled ? (
+                    <Video className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />
+                  ) : (
+                    <VideoOff className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />
+                  )}
                 </Button>
                 <Button
                   size="icon"
@@ -386,7 +421,11 @@ export default function VideoCall({
                   role="button"
                   tabIndex={0}
                 >
-                  {isAudioEnabled ? <Mic className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" /> : <MicOff className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />}
+                  {isAudioEnabled ? (
+                    <Mic className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />
+                  ) : (
+                    <MicOff className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />
+                  )}
                 </Button>
                 <Button
                   size="icon"
@@ -398,13 +437,17 @@ export default function VideoCall({
                   role="button"
                   tabIndex={0}
                 >
-                  {isFullscreen ? <Minimize className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" /> : <Maximize className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />}
+                  {isFullscreen ? (
+                    <Minimize className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />
+                  ) : (
+                    <Maximize className="w-4 h-4 sm:w-6 sm:h-6" aria-hidden="true" />
+                  )}
                 </Button>
-                <Button 
-                  size="icon" 
-                  variant="danger" 
-                  onClick={onEnd} 
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full hover:scale-110 transition-all duration-200 shadow-lg border-2 border-border/20 focus:ring-4 focus:ring-destructive/50 focus:outline-none" 
+                <Button
+                  size="icon"
+                  variant="danger"
+                  onClick={onEnd}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full hover:scale-110 transition-all duration-200 shadow-lg border-2 border-border/20 focus:ring-4 focus:ring-destructive/50 focus:outline-none"
                   aria-label={t("endCall")}
                   role="button"
                   tabIndex={0}

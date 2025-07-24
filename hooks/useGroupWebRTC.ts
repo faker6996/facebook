@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { CallParticipant } from '@/lib/models/group-call';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseGroupWebRTCProps {
   localUserId: number;
@@ -10,12 +9,7 @@ interface UseGroupWebRTCProps {
   onRemoteStreamRemoved?: (participantId: number) => void;
 }
 
-export const useGroupWebRTC = ({
-  localUserId,
-  onConnectionStateChange,
-  onRemoteStream,
-  onRemoteStreamRemoved
-}: UseGroupWebRTCProps) => {
+export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteStream, onRemoteStreamRemoved }: UseGroupWebRTCProps) => {
   // State
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Map<number, MediaStream>>(new Map());
@@ -29,10 +23,7 @@ export const useGroupWebRTC = ({
 
   // WebRTC Configuration
   const rtcConfig: RTCConfiguration = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-    ],
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
   };
 
   // Initialize local media stream
@@ -44,147 +35,160 @@ export const useGroupWebRTC = ({
           noiseSuppression: true,
           autoGainControl: true,
         },
-        video: isVideo ? {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30 },
-        } : false,
+        video: isVideo
+          ? {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              frameRate: { ideal: 30 },
+            }
+          : false,
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setLocalStream(stream);
       setIsLocalAudioEnabled(true);
       setIsLocalVideoEnabled(isVideo);
-      
-      console.log('📹 Local stream initialized:', {
+
+      console.log("📹 Local stream initialized:", {
         audioTracks: stream.getAudioTracks().length,
-        videoTracks: stream.getVideoTracks().length
+        videoTracks: stream.getVideoTracks().length,
       });
-      
+
       return stream;
     } catch (error) {
-      console.error('❌ Failed to initialize local stream:', error);
+      console.error("❌ Failed to initialize local stream:", error);
       throw error;
     }
   }, []);
 
   // Create peer connection for a participant
-  const createPeerConnection = useCallback((participantId: number): RTCPeerConnection => {
-    console.log(`🔄 Creating peer connection for participant ${participantId}`);
-    
-    const pc = new RTCPeerConnection(rtcConfig);
-    
-    // Handle connection state changes
-    pc.onconnectionstatechange = () => {
-      console.log(`🔗 Connection state for ${participantId}:`, pc.connectionState);
-      setConnectionStates(prev => new Map(prev).set(participantId, pc.connectionState));
-      onConnectionStateChange?.(participantId, pc.connectionState);
-    };
+  const createPeerConnection = useCallback(
+    (participantId: number): RTCPeerConnection => {
+      console.log(`🔄 Creating peer connection for participant ${participantId}`);
 
-    // Handle remote stream
-    pc.ontrack = (event) => {
-      console.log(`📺 Received remote stream from participant ${participantId}`);
-      const remoteStream = event.streams[0];
-      
-      setRemoteStreams(prev => {
-        const newStreams = new Map(prev);
-        newStreams.set(participantId, remoteStream);
-        return newStreams;
-      });
-      
-      onRemoteStream?.(participantId, remoteStream);
-    };
+      const pc = new RTCPeerConnection(rtcConfig);
 
-    // Handle ICE candidates
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        console.log(`🧊 Generated ICE candidate for participant ${participantId}`);
-        // This will be sent via SignalR in the calling component
-        window.dispatchEvent(new CustomEvent('groupCallIceCandidate', {
-          detail: {
-            participantId,
-            candidate: event.candidate
-          }
-        }));
+      // Handle connection state changes
+      pc.onconnectionstatechange = () => {
+        console.log(`🔗 Connection state for ${participantId}:`, pc.connectionState);
+        setConnectionStates((prev) => new Map(prev).set(participantId, pc.connectionState));
+        onConnectionStateChange?.(participantId, pc.connectionState);
+      };
+
+      // Handle remote stream
+      pc.ontrack = (event) => {
+        console.log(`📺 Received remote stream from participant ${participantId}`);
+        const remoteStream = event.streams[0];
+
+        setRemoteStreams((prev) => {
+          const newStreams = new Map(prev);
+          newStreams.set(participantId, remoteStream);
+          return newStreams;
+        });
+
+        onRemoteStream?.(participantId, remoteStream);
+      };
+
+      // Handle ICE candidates
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log(`🧊 Generated ICE candidate for participant ${participantId}`);
+          // This will be sent via SignalR in the calling component
+          window.dispatchEvent(
+            new CustomEvent("groupCallIceCandidate", {
+              detail: {
+                participantId,
+                candidate: event.candidate,
+              },
+            })
+          );
+        }
+      };
+
+      // Add local stream tracks
+      if (localStream) {
+        localStream.getTracks().forEach((track) => {
+          pc.addTrack(track, localStream);
+        });
       }
-    };
 
-    // Add local stream tracks
-    if (localStream) {
-      localStream.getTracks().forEach(track => {
-        pc.addTrack(track, localStream);
-      });
-    }
-
-    peerConnections.current.set(participantId, pc);
-    return pc;
-  }, [localStream, onConnectionStateChange, onRemoteStream]);
+      peerConnections.current.set(participantId, pc);
+      return pc;
+    },
+    [localStream, onConnectionStateChange, onRemoteStream]
+  );
 
   // Create offer for a participant
-  const createOffer = useCallback(async (participantId: number): Promise<RTCSessionDescriptionInit> => {
-    const pc = peerConnections.current.get(participantId) || createPeerConnection(participantId);
-    
-    try {
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true,
-      });
-      
-      await pc.setLocalDescription(offer);
-      console.log(`📤 Created offer for participant ${participantId}`);
-      
-      return offer;
-    } catch (error) {
-      console.error(`❌ Failed to create offer for participant ${participantId}:`, error);
-      throw error;
-    }
-  }, [createPeerConnection]);
+  const createOffer = useCallback(
+    async (participantId: number): Promise<RTCSessionDescriptionInit> => {
+      const pc = peerConnections.current.get(participantId) || createPeerConnection(participantId);
+
+      try {
+        const offer = await pc.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        });
+
+        await pc.setLocalDescription(offer);
+        console.log(`📤 Created offer for participant ${participantId}`);
+
+        return offer;
+      } catch (error) {
+        console.error(`❌ Failed to create offer for participant ${participantId}:`, error);
+        throw error;
+      }
+    },
+    [createPeerConnection]
+  );
 
   // Handle incoming offer
-  const handleOffer = useCallback(async (participantId: number, offer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
-    const pc = peerConnections.current.get(participantId) || createPeerConnection(participantId);
-    
-    try {
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      
-      // Process pending ICE candidates
-      const pending = pendingCandidates.current.get(participantId) || [];
-      for (const candidate of pending) {
-        await pc.addIceCandidate(candidate);
+  const handleOffer = useCallback(
+    async (participantId: number, offer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
+      const pc = peerConnections.current.get(participantId) || createPeerConnection(participantId);
+
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        // Process pending ICE candidates
+        const pending = pendingCandidates.current.get(participantId) || [];
+        for (const candidate of pending) {
+          await pc.addIceCandidate(candidate);
+        }
+        pendingCandidates.current.delete(participantId);
+
+        console.log(`📥 Handled offer and created answer for participant ${participantId}`);
+
+        return answer;
+      } catch (error) {
+        console.error(`❌ Failed to handle offer from participant ${participantId}:`, error);
+        throw error;
       }
-      pendingCandidates.current.delete(participantId);
-      
-      console.log(`📥 Handled offer and created answer for participant ${participantId}`);
-      
-      return answer;
-    } catch (error) {
-      console.error(`❌ Failed to handle offer from participant ${participantId}:`, error);
-      throw error;
-    }
-  }, [createPeerConnection]);
+    },
+    [createPeerConnection]
+  );
 
   // Handle incoming answer
   const handleAnswer = useCallback(async (participantId: number, answer: RTCSessionDescriptionInit) => {
     const pc = peerConnections.current.get(participantId);
-    
+
     if (!pc) {
       console.error(`❌ No peer connection found for participant ${participantId}`);
       return;
     }
-    
+
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      
+
       // Process pending ICE candidates
       const pending = pendingCandidates.current.get(participantId) || [];
       for (const candidate of pending) {
         await pc.addIceCandidate(candidate);
       }
       pendingCandidates.current.delete(participantId);
-      
+
       console.log(`📥 Handled answer from participant ${participantId}`);
     } catch (error) {
       console.error(`❌ Failed to handle answer from participant ${participantId}:`, error);
@@ -194,7 +198,7 @@ export const useGroupWebRTC = ({
   // Handle ICE candidate
   const handleIceCandidate = useCallback(async (participantId: number, candidate: RTCIceCandidateInit) => {
     const pc = peerConnections.current.get(participantId);
-    
+
     if (!pc) {
       console.log(`⏳ Queueing ICE candidate for participant ${participantId}`);
       const pending = pendingCandidates.current.get(participantId) || [];
@@ -219,31 +223,34 @@ export const useGroupWebRTC = ({
   }, []);
 
   // Remove participant
-  const removeParticipant = useCallback((participantId: number) => {
-    const pc = peerConnections.current.get(participantId);
-    
-    if (pc) {
-      pc.close();
-      peerConnections.current.delete(participantId);
-    }
+  const removeParticipant = useCallback(
+    (participantId: number) => {
+      const pc = peerConnections.current.get(participantId);
 
-    setRemoteStreams(prev => {
-      const newStreams = new Map(prev);
-      newStreams.delete(participantId);
-      return newStreams;
-    });
+      if (pc) {
+        pc.close();
+        peerConnections.current.delete(participantId);
+      }
 
-    setConnectionStates(prev => {
-      const newStates = new Map(prev);
-      newStates.delete(participantId);
-      return newStates;
-    });
+      setRemoteStreams((prev) => {
+        const newStreams = new Map(prev);
+        newStreams.delete(participantId);
+        return newStreams;
+      });
 
-    pendingCandidates.current.delete(participantId);
-    onRemoteStreamRemoved?.(participantId);
-    
-    console.log(`🚪 Removed participant ${participantId}`);
-  }, [onRemoteStreamRemoved]);
+      setConnectionStates((prev) => {
+        const newStates = new Map(prev);
+        newStates.delete(participantId);
+        return newStates;
+      });
+
+      pendingCandidates.current.delete(participantId);
+      onRemoteStreamRemoved?.(participantId);
+
+      console.log(`🚪 Removed participant ${participantId}`);
+    },
+    [onRemoteStreamRemoved]
+  );
 
   // Toggle local audio
   const toggleLocalAudio = useCallback(() => {
@@ -251,14 +258,14 @@ export const useGroupWebRTC = ({
 
     const audioTracks = localStream.getAudioTracks();
     const newEnabled = !isLocalAudioEnabled;
-    
-    audioTracks.forEach(track => {
+
+    audioTracks.forEach((track) => {
       track.enabled = newEnabled;
     });
 
     setIsLocalAudioEnabled(newEnabled);
-    console.log(`🎤 Local audio ${newEnabled ? 'enabled' : 'disabled'}`);
-    
+    console.log(`🎤 Local audio ${newEnabled ? "enabled" : "disabled"}`);
+
     return newEnabled;
   }, [localStream, isLocalAudioEnabled]);
 
@@ -268,34 +275,34 @@ export const useGroupWebRTC = ({
 
     const videoTracks = localStream.getVideoTracks();
     const newEnabled = !isLocalVideoEnabled;
-    
-    videoTracks.forEach(track => {
+
+    videoTracks.forEach((track) => {
       track.enabled = newEnabled;
     });
 
     setIsLocalVideoEnabled(newEnabled);
-    console.log(`📹 Local video ${newEnabled ? 'enabled' : 'disabled'}`);
-    
+    console.log(`📹 Local video ${newEnabled ? "enabled" : "disabled"}`);
+
     return newEnabled;
   }, [localStream, isLocalVideoEnabled]);
 
   // Cleanup
   const cleanup = useCallback(() => {
-    console.log('🧹 Cleaning up WebRTC resources');
-    
+    console.log("🧹 Cleaning up WebRTC resources");
+
     // Close all peer connections
-    peerConnections.current.forEach(pc => pc.close());
+    peerConnections.current.forEach((pc) => pc.close());
     peerConnections.current.clear();
-    
+
     // Stop local stream
-    localStream?.getTracks().forEach(track => track.stop());
+    localStream?.getTracks().forEach((track) => track.stop());
     setLocalStream(null);
-    
+
     // Clear state
     setRemoteStreams(new Map());
     setConnectionStates(new Map());
     pendingCandidates.current.clear();
-    
+
     setIsLocalAudioEnabled(true);
     setIsLocalVideoEnabled(true);
   }, [localStream]);
@@ -309,16 +316,16 @@ export const useGroupWebRTC = ({
     // Streams
     localStream,
     remoteStreams,
-    
+
     // Connection states
     connectionStates,
-    
+
     // Media controls
     isLocalAudioEnabled,
     isLocalVideoEnabled,
     toggleLocalAudio,
     toggleLocalVideo,
-    
+
     // WebRTC methods
     initializeLocalStream,
     createOffer,
@@ -326,6 +333,6 @@ export const useGroupWebRTC = ({
     handleAnswer,
     handleIceCandidate,
     removeParticipant,
-    cleanup
+    cleanup,
   };
 };

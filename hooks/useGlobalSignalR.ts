@@ -13,10 +13,8 @@ export const useGlobalSignalR = (user: User | null) => {
 
   useEffect(() => {
     if (user) {
-      console.log("🔄 Setting user for global SignalR:", user.id);
       setUser(user);
     } else {
-      console.log("🔌 Clearing user from global SignalR");
       setUser(null);
     }
   }, [user, setUser]);
@@ -25,6 +23,6 @@ export const useGlobalSignalR = (user: User | null) => {
     isConnected,
     onlineUsers,
     joinGroup,
-    leaveGroup
+    leaveGroup,
   };
 };

@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Phone, PhoneOff, Mic, MicOff, Camera, CameraOff, Monitor, Users } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import Button from '@/components/ui/Button';
-import { Avatar } from '@/components/ui/Avatar';
-import { GroupCall, CallParticipant } from '@/lib/models/group-call';
-import { cn } from '@/lib/utils/cn';
+import React, { useEffect, useRef, useState } from "react";
+import { Phone, PhoneOff, Mic, MicOff, Camera, CameraOff, Monitor, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
+import Button from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
+import { GroupCall, CallParticipant } from "@/lib/models/group-call";
+import { cn } from "@/lib/utils/cn";
+import { VideoCallControls } from "./VideoCallControls";
+import { VideoCallWaitingScreen } from "./VideoCallWaitingScreen";
 
 interface GroupVideoCallProps {
   call: GroupCall;
@@ -30,6 +32,8 @@ interface VideoGridProps {
   localStream?: MediaStream;
   remoteStreams: Map<number, MediaStream>;
   connectionStates: Map<number, RTCPeerConnectionState>;
+  isLocalAudioEnabled: boolean;
+  isLocalVideoEnabled: boolean;
 }
 
 // Component for individual video stream
@@ -40,28 +44,62 @@ const VideoStreamComponent: React.FC<{
   isLocal?: boolean;
   isCurrentUser?: boolean;
 }> = ({ participant, stream, connectionState, isLocal = false, isCurrentUser = false }) => {
-  const t = useTranslations('GroupCall');
+  const t = useTranslations("GroupCall");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.play().then(() => {
-        setIsVideoPlaying(true);
-      }).catch(console.error);
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    // Reset playing state when stream changes
+    setIsVideoPlaying(false);
+
+    if (stream) {
+      // Clear previous stream if any
+      if (videoElement.srcObject) {
+        videoElement.srcObject = null;
+      }
+
+      videoElement.srcObject = stream;
+
+      // Handle play promise properly to avoid interruption errors
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsVideoPlaying(true);
+          })
+          .catch((error) => {
+            console.warn("Video play was interrupted:", error);
+            // Don't set isVideoPlaying to true if play failed
+          });
+      }
+    } else {
+      // Clear srcObject when no stream
+      videoElement.srcObject = null;
     }
+
+    // Cleanup function
+    return () => {
+      if (videoElement && videoElement.srcObject) {
+        videoElement.pause();
+        videoElement.srcObject = null;
+      }
+    };
   }, [stream]);
 
-  const showVideo = stream && participant.is_video_enabled && isVideoPlaying;
-  const showConnectionIssue = connectionState === 'failed' || connectionState === 'disconnected';
+  const showVideo = stream && participant.is_video_enabled && (isLocal || isVideoPlaying);
+  const showConnectionIssue = connectionState === "failed" || connectionState === "disconnected";
 
   return (
-    <div className={cn(
-      "relative rounded-lg overflow-hidden bg-card border-2",
-      showConnectionIssue ? "border-destructive" : "border-border",
-      isCurrentUser ? "border-primary" : ""
-    )}>
+    <div
+      className={cn(
+        "relative rounded-lg overflow-hidden bg-card border-2",
+        showConnectionIssue ? "border-destructive" : "border-border",
+        isCurrentUser ? "border-primary" : ""
+      )}
+    >
       {/* Video Element */}
       {showVideo ? (
         <video
@@ -74,52 +112,33 @@ const VideoStreamComponent: React.FC<{
       ) : (
         /* Avatar Placeholder */
         <div className="w-full h-full flex items-center justify-center bg-muted">
-          <Avatar
-            src={participant.avatar_url}
-            fallback={participant.user_name?.charAt(0) || '?'}
-            size="lg"
-            className="w-16 h-16"
-          />
+          <Avatar src={participant.avatar_url} fallback={participant.user_name?.charAt(0) || "?"} size="lg" className="w-16 h-16" />
         </div>
       )}
 
       {/* Participant Info Overlay */}
       <div className="absolute bottom-2 left-2 right-2">
         <div className="bg-card/80 backdrop-blur-sm text-card-foreground text-sm px-2 py-1 rounded flex items-center justify-between border border-border/20 shadow-sm">
-          <span className="truncate font-medium text-card-foreground">
-            {isCurrentUser ? t('you') : participant.user_name || t('unknownUser')}
-          </span>
+          <span className="truncate font-medium text-card-foreground">{isCurrentUser ? t("you") : participant.user_name || t("unknownUser")}</span>
           <div className="flex items-center gap-1 ml-2">
             {/* Audio Status */}
-            {participant.is_audio_enabled ? (
-              <Mic className="w-3 h-3 text-success" />
-            ) : (
-              <MicOff className="w-3 h-3 text-destructive" />
-            )}
-            
+            {participant.is_audio_enabled ? <Mic className="w-3 h-3 text-success" /> : <MicOff className="w-3 h-3 text-destructive" />}
+
             {/* Video Status */}
-            {participant.is_video_enabled ? (
-              <Camera className="w-3 h-3 text-success" />
-            ) : (
-              <CameraOff className="w-3 h-3 text-destructive" />
-            )}
+            {participant.is_video_enabled ? <Camera className="w-3 h-3 text-success" /> : <CameraOff className="w-3 h-3 text-destructive" />}
 
             {/* Connection Quality Indicator */}
-            <div className={cn(
-              "w-2 h-2 rounded-full",
-              connectionState === 'connected' ? "bg-success" :
-              connectionState === 'connecting' ? "bg-warning" :
-              "bg-destructive"
-            )} />
+            <div
+              className={cn(
+                "w-2 h-2 rounded-full",
+                connectionState === "connected" ? "bg-success" : connectionState === "connecting" ? "bg-warning" : "bg-destructive"
+              )}
+            />
           </div>
         </div>
 
         {/* Connection Issue Warning */}
-        {showConnectionIssue && (
-          <div className="text-xs text-destructive mt-1 text-center">
-            {t('connectionIssue')}
-          </div>
-        )}
+        {showConnectionIssue && <div className="text-xs text-destructive mt-1 text-center">{t("connectionIssue")}</div>}
       </div>
     </div>
   );
@@ -132,26 +151,50 @@ const VideoGrid: React.FC<VideoGridProps> = ({
   localStream,
   remoteStreams,
   connectionStates,
+  isLocalAudioEnabled,
+  isLocalVideoEnabled,
 }) => {
-  const gridCols = Math.min(participants.length, 3); // Max 3 columns
-  const gridRows = Math.ceil(participants.length / 3);
+  // Create local participant if not already in the list
+  const hasLocalParticipant = participants.some((p) => p.user_id === currentUserId);
+  const allParticipants = hasLocalParticipant
+    ? participants
+    : [
+        {
+          user_id: currentUserId,
+          user_name: "You",
+          avatar_url: "",
+          is_audio_enabled: isLocalAudioEnabled,
+          is_video_enabled: isLocalVideoEnabled,
+          connection_quality: "good" as const,
+          joined_at: new Date().toISOString(),
+        },
+        ...participants,
+      ];
+
+  const gridCols = Math.min(allParticipants.length, 3); // Max 3 columns
+  const gridRows = Math.ceil(allParticipants.length / 3);
 
   const gridClass = cn(
     "grid gap-2 h-full",
-    participants.length === 1 ? "grid-cols-1" :
-    participants.length === 2 ? "grid-cols-2" :
-    participants.length <= 4 ? "grid-cols-2 grid-rows-2" :
-    participants.length <= 6 ? "grid-cols-3 grid-rows-2" :
-    participants.length <= 9 ? "grid-cols-3 grid-rows-3" :
-    "grid-cols-4 auto-rows-fr" // For more than 9 participants
+    allParticipants.length === 1
+      ? "grid-cols-1"
+      : allParticipants.length === 2
+      ? "grid-cols-2"
+      : allParticipants.length <= 4
+      ? "grid-cols-2 grid-rows-2"
+      : allParticipants.length <= 6
+      ? "grid-cols-3 grid-rows-2"
+      : allParticipants.length <= 9
+      ? "grid-cols-3 grid-rows-3"
+      : "grid-cols-4 auto-rows-fr" // For more than 9 participants
   );
 
   return (
     <div className={gridClass}>
-      {participants.map((participant) => {
+      {allParticipants.map((participant) => {
         const isCurrentUser = participant.user_id === currentUserId;
         const stream = isCurrentUser ? localStream : remoteStreams.get(participant.user_id);
-        const connectionState = connectionStates.get(participant.user_id);
+        const connectionState = connectionStates.get(participant.user_id) || "connected";
 
         return (
           <VideoStreamComponent
@@ -184,7 +227,7 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
   onToggleScreenShare,
   className,
 }) => {
-  const t = useTranslations('GroupCall');
+  const t = useTranslations("GroupCall");
   const [callDuration, setCallDuration] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -206,29 +249,31 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
     const secs = seconds % 60;
 
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const activeParticipants = call.participants.filter(p => connectionStates.get(p.user_id) !== 'failed');
-  const connectionIssues = call.participants.filter(p => 
-    connectionStates.get(p.user_id) === 'failed' || connectionStates.get(p.user_id) === 'disconnected'
+  const activeParticipants = call.participants.filter((p) => connectionStates.get(p.user_id) !== "failed");
+  const connectionIssues = call.participants.filter(
+    (p) => connectionStates.get(p.user_id) === "failed" || connectionStates.get(p.user_id) === "disconnected"
   ).length;
 
   if (isMinimized) {
     return (
-      <div className={cn(
-        "fixed bottom-4 right-4 bg-card border border-border rounded-lg p-3 shadow-lg z-50 video-call-backdrop",
-        "flex items-center gap-3 min-w-64",
-        className
-      )}>
+      <div
+        className={cn(
+          "fixed bottom-4 right-4 bg-card border border-border rounded-lg p-3 shadow-lg z-50 video-call-backdrop",
+          "flex items-center gap-3 min-w-64",
+          className
+        )}
+      >
         <div className="flex -space-x-2">
           {call.participants.slice(0, 3).map((participant) => (
             <Avatar
               key={participant.user_id}
               src={participant.avatar_url}
-              fallback={participant.user_name?.charAt(0) || '?'}
+              fallback={participant.user_name?.charAt(0) || "?"}
               size="sm"
               className="border-2 border-card"
             />
@@ -239,7 +284,7 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
             </div>
           )}
         </div>
-        
+
         <div className="flex-1 text-foreground">
           <div className="text-sm font-medium truncate">{call.group_name}</div>
           <div className="text-xs text-muted-foreground">{formatDuration(callDuration)}</div>
@@ -267,12 +312,7 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
             <Monitor className="w-4 h-4" />
           </Button>
 
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onEndCall}
-            className="w-8 h-8 p-0 text-destructive hover:text-destructive/80 video-call-button"
-          >
+          <Button size="sm" variant="ghost" onClick={onEndCall} className="w-8 h-8 p-0 text-destructive hover:text-destructive/80 video-call-button">
             <PhoneOff className="w-4 h-4" />
           </Button>
         </div>
@@ -280,117 +320,36 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
     );
   }
 
-  // Show waiting screen when connecting or no participants yet
-  const showWaitingScreen = callState?.isConnecting || call.participants.length === 0;
+  // Show waiting screen only when actively connecting
+  // If this component is rendered, call is considered active
+  const showWaitingScreen = callState?.isConnecting === true;
 
   return (
-    <div className={cn(
-      "fixed inset-0 bg-background z-50 flex flex-col video-call-container",
-      className
-    )}>
+    <div className={cn("fixed inset-0 bg-background z-50 flex flex-col video-call-container", className)}>
       {showWaitingScreen ? (
-        /* Waiting/Connecting Screen - Similar to VideoCall.tsx */
-        <div className="w-full h-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-background via-muted/50 to-background">
-          {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-success/5 to-info/5 opacity-60"></div>
-          
-          <div className="text-center z-10 relative flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-            <div className="relative mb-6 sm:mb-8 w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 flex items-center justify-center">
-              {/* Multi-layer animation rings */}
-              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
-              <div className="absolute inset-1 rounded-full bg-success/15 animate-ping" style={{ animationDelay: "0.5s" }}></div>
-              <div className="absolute inset-2 rounded-full bg-info/20 animate-pulse" style={{ animationDelay: "1s" }}></div>
-              <div className="absolute inset-3 rounded-full bg-primary/10 animate-pulse" style={{ animationDelay: "1.5s" }}></div>
-              
-              {/* Group avatar container */}
-              <div
-                className="relative w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full flex items-center justify-center text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground shadow-2xl border-4 border-border/50 backdrop-blur-sm transition-all duration-300 bg-gradient-to-br from-primary via-success to-info"
-                style={{ 
-                  boxShadow: `0 0 50px rgba(var(--primary), 0.3), inset 0 0 20px rgba(var(--background), 0.1)`
-                }}
-              >
-                <Users className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 animate-pulse" />
-              </div>
-            </div>
+        <div className="relative w-full h-full">
+          {/* Enhanced Waiting Screen - Using shared component */}
+          <VideoCallWaitingScreen
+            title={call.group_name}
+            subtitle={!callState?.isConnecting ? `${formatDuration(callDuration)} • ${t("groupVideoCall")}` : undefined}
+            isConnecting={callState?.isConnecting}
+            callDuration={callDuration}
+            fallbackIcon={<Users className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 animate-pulse" />}
+            localStream={localStream}
+            isLocalVideoEnabled={isLocalVideoEnabled}
+            currentUserName={t("you")}
+          />
 
-            <div className="space-y-2 sm:space-y-3 px-4 sm:px-6">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-wide transition-all duration-300" style={{ textShadow: "2px 2px 12px rgba(0,0,0,0.1)" }}>
-                {call.group_name}
-              </h2>
-              {callState?.isConnecting && (
-                <p className="text-foreground/95 text-lg sm:text-xl font-medium animate-pulse" style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.1)" }}>
-                  {t('connecting')}
-                </p>
-              )}
-              {!callState?.isConnecting && (
-                <p className="text-foreground/95 text-lg sm:text-xl font-medium" style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.1)" }}>
-                  {formatDuration(callDuration)} • {t('groupVideoCall')}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Local video preview - similar to VideoCall */}
-          {localStream && (
-            <div className="absolute bottom-20 right-2 sm:bottom-24 sm:right-4 w-24 h-20 sm:w-32 sm:h-24 lg:w-40 lg:h-32 bg-muted rounded-lg overflow-hidden border-2 border-border/30 shadow-2xl transition-all duration-300 hover:scale-105 hover:border-border/50 group">
-              <video 
-                ref={(ref) => {
-                  if (ref && localStream) {
-                    ref.srcObject = localStream;
-                    ref.play().catch(console.error);
-                  }
-                }}
-                autoPlay 
-                playsInline 
-                muted 
-                className="w-full h-full object-cover group-hover:brightness-110 transition-all duration-300" 
-                aria-label="Your video stream"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </div>
-          )}
-
-          {/* Controls overlay */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center gap-4">
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={onToggleAudio}
-                className={cn(
-                  "w-12 h-12 rounded-full video-call-button",
-                  isLocalAudioEnabled 
-                    ? "bg-accent text-foreground hover:bg-accent/80" 
-                    : "bg-destructive text-destructive-foreground hover:bg-destructive/80"
-                )}
-              >
-                {isLocalAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-              </Button>
-
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={onToggleVideo}
-                className={cn(
-                  "w-12 h-12 rounded-full video-call-button",
-                  isLocalVideoEnabled 
-                    ? "bg-accent text-foreground hover:bg-accent/80" 
-                    : "bg-destructive text-destructive-foreground hover:bg-destructive/80"
-                )}
-              >
-                {isLocalVideoEnabled ? <Camera className="w-5 h-5" /> : <CameraOff className="w-5 h-5" />}
-              </Button>
-
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={onEndCall}
-                className="w-12 h-12 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80 video-call-button"
-              >
-                <PhoneOff className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
+          {/* Enhanced Controls - Using shared component */}
+          <VideoCallControls
+            isAudioEnabled={isLocalAudioEnabled}
+            isVideoEnabled={isLocalVideoEnabled}
+            onToggleAudio={onToggleAudio}
+            onToggleVideo={onToggleVideo}
+            onEndCall={onEndCall}
+            onToggleScreenShare={onToggleScreenShare}
+            variant="waiting"
+          />
         </div>
       ) : (
         /* Main call screen with participants */
@@ -404,22 +363,20 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
                   <span>{formatDuration(callDuration)}</span>
                   <span className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    {activeParticipants.length} {t('connected')}
+                    {activeParticipants.length} {t("connected")}
                   </span>
                   {connectionIssues > 0 && (
-                    <span className="text-destructive">{connectionIssues} {t('connectionIssues')}</span>
+                    <span className="text-destructive">
+                      {connectionIssues} {t("connectionIssues")}
+                    </span>
                   )}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => setIsMinimized(true)}
-                className="text-foreground hover:bg-accent video-call-button"
-              >
-                {t('minimize')}
+              <Button variant="ghost" onClick={() => setIsMinimized(true)} className="text-foreground hover:bg-accent video-call-button">
+                {t("minimize")}
               </Button>
             </div>
           </div>
@@ -432,65 +389,21 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
               localStream={localStream}
               remoteStreams={remoteStreams}
               connectionStates={connectionStates}
+              isLocalAudioEnabled={isLocalAudioEnabled}
+              isLocalVideoEnabled={isLocalVideoEnabled}
             />
           </div>
 
-          {/* Controls */}
-          <div className="bg-card/80 backdrop-blur-sm border-t border-border p-4 video-call-backdrop">
-            <div className="flex items-center justify-center gap-4">
-              {/* Audio Toggle */}
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={onToggleAudio}
-                className={cn(
-                  "w-12 h-12 rounded-full video-call-button",
-                  isLocalAudioEnabled 
-                    ? "bg-accent text-foreground hover:bg-accent/80" 
-                    : "bg-destructive text-destructive-foreground hover:bg-destructive/80"
-                )}
-              >
-                {isLocalAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-              </Button>
-
-              {/* Video Toggle */}
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={onToggleVideo}
-                className={cn(
-                  "w-12 h-12 rounded-full video-call-button",
-                  isLocalVideoEnabled 
-                    ? "bg-accent text-foreground hover:bg-accent/80" 
-                    : "bg-destructive text-destructive-foreground hover:bg-destructive/80"
-                )}
-              >
-                {isLocalVideoEnabled ? <Camera className="w-5 h-5" /> : <CameraOff className="w-5 h-5" />}
-              </Button>
-
-              {/* Screen Share */}
-              {onToggleScreenShare && (
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  onClick={onToggleScreenShare}
-                  className="w-12 h-12 rounded-full bg-accent text-foreground hover:bg-accent/80 video-call-button"
-                >
-                  <Monitor className="w-5 h-5" />
-                </Button>
-              )}
-
-              {/* End Call */}
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={onEndCall}
-                className="w-12 h-12 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/80 video-call-button"
-              >
-                <PhoneOff className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
+          {/* Enhanced Controls - Using shared component */}
+          <VideoCallControls
+            isAudioEnabled={isLocalAudioEnabled}
+            isVideoEnabled={isLocalVideoEnabled}
+            onToggleAudio={onToggleAudio}
+            onToggleVideo={onToggleVideo}
+            onEndCall={onEndCall}
+            onToggleScreenShare={onToggleScreenShare}
+            variant="active"
+          />
         </>
       )}
     </div>

@@ -21,11 +21,9 @@ export const SignalRInit: React.FC = () => {
       try {
         const user = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
         if (user) {
-          console.log("🚀 SignalRInit: Found logged in user:", user.id);
           setCurrentUser(user);
         }
       } catch (error) {
-        console.log("📝 SignalRInit: No logged in user found");
         setCurrentUser(null);
       }
     };
@@ -34,23 +32,21 @@ export const SignalRInit: React.FC = () => {
 
     // Listen cho auth changes (có thể từ login/logout events)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth_change') {
-        console.log("🔄 Auth change detected, refreshing user...");
+      if (e.key === "auth_change") {
         getCurrentUser();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
+    window.addEventListener("storage", handleStorageChange);
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
   // Log connection status for debugging
   useEffect(() => {
     if (currentUser) {
-      console.log(`🔗 SignalR connection status for user ${currentUser.id}:`, isConnected ? "CONNECTED" : "DISCONNECTED");
     }
   }, [currentUser, isConnected]);
 
@@ -64,6 +60,6 @@ export const SignalRInit: React.FC = () => {
  */
 export const triggerAuthChange = () => {
   // Trigger storage event để SignalRInit refresh user
-  localStorage.setItem('auth_change', Date.now().toString());
-  localStorage.removeItem('auth_change');
+  localStorage.setItem("auth_change", Date.now().toString());
+  localStorage.removeItem("auth_change");
 };

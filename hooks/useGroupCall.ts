@@ -20,16 +20,18 @@ interface UseGroupCallProps {
   currentUser: User;
   onCallStateChange?: (isActive: boolean) => void;
   onError?: (error: string) => void;
+  isGlobal?: boolean; // Add isGlobal flag like 2-person call
 }
 
 export const useGroupCall = ({
   currentUser,
   onCallStateChange,
-  onError
+  onError,
+  isGlobal = false
 }: UseGroupCallProps) => {
   // Debug: Add unique instance ID
   const instanceId = useRef(Math.random().toString(36).substr(2, 9));
-  console.log('📞 useGroupCall instance:', instanceId.current);
+  console.log('📞 useGroupCall instance:', instanceId.current, 'isGlobal:', isGlobal);
   // State
   const [callState, setCallState] = useState<GroupCallState>({
     isActive: false,
@@ -46,6 +48,10 @@ export const useGroupCall = ({
 
   const [currentCall, setCurrentCall] = useState<GroupCall | null>(null);
   const [incomingCallData, setIncomingCallData] = useState<any>(null);
+  
+  // Add error handling states like 2-person call
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isAudioOnlyFallback, setIsAudioOnlyFallback] = useState(false);
 
   // Refs
 
@@ -138,6 +144,16 @@ export const useGroupCall = ({
             
             setCurrentCall(activeCall);
             onCallStateChange?.(true);
+            
+            // IMPORTANT: Still need to notify other group members about the active call
+            console.log(`📞 [${instanceId.current}] Notifying group members about existing active call`);
+            try {
+              await signalR.connection?.invoke("StartGroupCall", groupId.toString(), activeCall.call_type);
+              console.log(`📞 [${instanceId.current}] StartGroupCall notification sent for existing call`);
+            } catch (signalRError) {
+              console.error(`📞 [${instanceId.current}] Failed to notify group about existing call:`, signalRError);
+            }
+            
             return;
           } else {
             // User is not initiator, need to join the call
@@ -157,8 +173,38 @@ export const useGroupCall = ({
         console.log('📞 No active call found, starting new call');
       }
 
-      // Initialize local media stream
-      const localStream = await groupWebRTC.initializeLocalStream(callType === 'video');
+      // Initialize local media stream with error handling like 2-person call
+      let localStream: MediaStream | null = null;
+      try {
+        console.log('📞 Initializing local media stream for', callType, 'call...');
+        localStream = await groupWebRTC.initializeLocalStream(callType === 'video');
+        console.log('📞 Local stream initialized successfully:', {
+          hasVideo: localStream?.getVideoTracks().length > 0,
+          hasAudio: localStream?.getAudioTracks().length > 0,
+          tracks: localStream?.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled }))
+        });
+        setCameraError(null);
+        setIsAudioOnlyFallback(false);
+      } catch (error) {
+        console.error('📞 Failed to initialize media stream:', error);
+        
+        // Try audio-only fallback like 2-person call
+        if (callType === 'video') {
+          console.log('📞 Attempting audio-only fallback');
+          try {
+            localStream = await groupWebRTC.initializeLocalStream(false);
+            setIsAudioOnlyFallback(true);
+            setCameraError('Camera not available, using audio only');
+          } catch (audioError) {
+            console.error('📞 Audio-only fallback also failed:', audioError);
+            setCameraError('Unable to access camera or microphone');
+            throw audioError;
+          }
+        } else {
+          setCameraError('Unable to access microphone');
+          throw error;
+        }
+      }
       
       // API call to start group call
       const request: StartGroupCallRequest = { 
@@ -242,7 +288,13 @@ export const useGroupCall = ({
       }));
 
       // Initialize local media stream  
+      console.log('📞 JOIN: Initializing local media stream for', callState.callType, 'call...');
       const localStream = await groupWebRTC.initializeLocalStream(callState.callType === 'video');
+      console.log('📞 JOIN: Local stream initialized:', {
+        hasVideo: localStream?.getVideoTracks().length > 0,
+        hasAudio: localStream?.getAudioTracks().length > 0,
+        tracks: localStream?.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled }))
+      });
 
       // API call to join group call
       const request: JoinGroupCallRequest = {
@@ -250,14 +302,23 @@ export const useGroupCall = ({
         is_video_enabled: callState.isLocalVideoEnabled,
         offer_data: undefined
       };
-      await callApi(
+      console.log('📞 JOIN: Making API call to join group call...');
+      const joinResponse = await callApi(
         API_ROUTES.CHAT_SERVER.JOIN_GROUP_CALL(callId),
         HTTP_METHOD_ENUM.POST,
         request
       );
+      console.log('📞 JOIN: API response:', joinResponse);
 
       // SignalR call to join
+      console.log('📞 JOIN: Sending SignalR JoinGroupCall...');
       await signalR.connection?.invoke("JoinGroupCall", callId);
+
+      // Set current call from incoming data
+      if (incomingCallData?.call) {
+        console.log('📞 JOIN: Setting currentCall from incomingCallData');
+        setCurrentCall(incomingCallData.call);
+      }
 
       setCallState(prev => ({
         ...prev,
@@ -268,6 +329,7 @@ export const useGroupCall = ({
         localStream
       }));
 
+      console.log('📞 JOIN: Call state updated, calling onCallStateChange');
       onCallStateChange?.(true);
     } catch (error) {
       console.error('❌ Failed to join group call:', error);
@@ -340,11 +402,30 @@ export const useGroupCall = ({
       // SignalR call
       await signalR.connection?.invoke("EndGroupCall", callId);
 
+      // Clean up local state immediately
+      groupWebRTC.cleanup();
+      
+      setCallState({
+        isActive: false,
+        callType: 'video',
+        isIncomingCall: false,
+        isOutgoingCall: false,
+        isConnecting: false,
+        participants: new Map(),
+        remoteStreams: new Map(),
+        isLocalAudioEnabled: true,
+        isLocalVideoEnabled: true,
+        connectionQuality: 'good'
+      });
+      
+      setCurrentCall(null);
+      onCallStateChange?.(false);
+
     } catch (error) {
       console.error('❌ Failed to end group call:', error);
       onError?.(`Failed to end group call: ${error}`);
     }
-  }, [callState.callId, signalR.connection, onError]);
+  }, [callState.callId, signalR.connection, groupWebRTC, onError, onCallStateChange]);
 
   // Toggle media
   const toggleMedia = useCallback(async (mediaType: 'audio' | 'video') => {
@@ -439,14 +520,23 @@ export const useGroupCall = ({
         callInitiatorId: callEvent?.call?.initiator_id,
         currentUserId: currentUser.id,
         isIncomingCall: callEvent?.call?.initiator_id !== currentUser.id,
-        hasSignalRConnection: !!signalR.connection
+        hasSignalRConnection: !!signalR.connection,
+        isGlobalInstance: isGlobal,
+        fullCallEvent: JSON.stringify(callEvent, null, 2)
       });
       
       // Check if this is an incoming call (not initiated by current user)
       if (callEvent?.call?.initiator_id !== currentUser.id) {
         console.log(`📞 [${instanceId.current}] HOOK: Setting incoming call data:`, callEvent);
         setIncomingCallData(callEvent);
-        setCallState(prev => ({ ...prev, isIncomingCall: true }));
+        setCallState(prev => ({ 
+          ...prev, 
+          isIncomingCall: true,
+          callType: callEvent?.call?.call_type || 'video' 
+        }));
+        
+        // Global handling is now done by GlobalGroupVideoCallManager
+        console.log(`📞 [${instanceId.current}] Incoming call handled by ${isGlobal ? 'GLOBAL' : 'LOCAL'} instance`);
       } else {
         console.log(`📞 [${instanceId.current}] HOOK: Ignoring own call start event`);
       }
@@ -624,10 +714,14 @@ export const useGroupCall = ({
     currentCall,
     incomingCallData,
     
-    // Local stream and controls
-    localStream: groupWebRTC.localStream,
+    // Local stream and controls - Use from callState if available, fallback to groupWebRTC
+    localStream: callState.localStream || groupWebRTC.localStream,
     remoteStreams: callState.remoteStreams,
     connectionStates: groupWebRTC.connectionStates,
+    
+    // Error handling states like 2-person call
+    cameraError,
+    isAudioOnlyFallback,
     
     // Actions
     startGroupCall,

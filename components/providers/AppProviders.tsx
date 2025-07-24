@@ -5,6 +5,7 @@ import { SignalRProvider } from "@/contexts/SignalRContext";
 import { SignalRInit } from "./SignalRInit";
 import GlobalVideoCallManager from "./GlobalVideoCallManager";
 import { GlobalLoading } from "@/components/ui/GlobalLoading";
+import { GlobalGroupVideoCallManager } from "./GlobalGroupVideoCallManager";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
       <SignalRProvider>
         <SignalRInit />
         <GlobalVideoCallManager />
+        <GlobalGroupVideoCallManager />
         {/* Global Loading - tự động lắng nghe loading.show() / loading.hide() */}
         <GlobalLoading />
         {children}
