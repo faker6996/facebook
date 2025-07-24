@@ -20,18 +20,16 @@ interface UseGroupCallProps {
   currentUser: User;
   onCallStateChange?: (isActive: boolean) => void;
   onError?: (error: string) => void;
-  isGlobal?: boolean; // Add isGlobal flag like 2-person call
 }
 
 export const useGroupCall = ({
   currentUser,
   onCallStateChange,
-  onError,
-  isGlobal = false
+  onError
 }: UseGroupCallProps) => {
   // Debug: Add unique instance ID
   const instanceId = useRef(Math.random().toString(36).substr(2, 9));
-  console.log('📞 useGroupCall instance:', instanceId.current, 'isGlobal:', isGlobal);
+  console.log('📞 useGroupCall instance:', instanceId.current);
   // State
   const [callState, setCallState] = useState<GroupCallState>({
     isActive: false,
@@ -129,7 +127,7 @@ export const useGroupCall = ({
             // Initialize local media stream first
             const localStream = await groupWebRTC.initializeLocalStream(activeCall.call_type === 'video');
             
-            // Set call state directly without calling join API
+            // Set call state but keep connecting for a brief moment to show waiting screen
             setCallState(prev => ({
               ...prev,
               isActive: true,
@@ -138,9 +136,17 @@ export const useGroupCall = ({
               groupName: activeCall.group_name,
               callType: activeCall.call_type,
               isOutgoingCall: false,
-              isConnecting: false,
+              isConnecting: true, // Keep true initially to show waiting screen
               localStream
             }));
+
+            // Set connecting to false after a brief delay to show waiting screen
+            setTimeout(() => {
+              setCallState(prev => ({
+                ...prev,
+                isConnecting: false
+              }));
+            }, 1500); // Show waiting screen for 1.5 seconds
             
             setCurrentCall(activeCall);
             onCallStateChange?.(true);
@@ -221,6 +227,7 @@ export const useGroupCall = ({
         console.log('📞 Group call started:', response);
         setCurrentCall(response);
         
+        // Set call state but keep connecting for a brief moment to show waiting screen
         setCallState(prev => ({
           ...prev,
           isActive: true,
@@ -228,9 +235,17 @@ export const useGroupCall = ({
           groupId: response.group_id,
           groupName: response.group_name,
           isOutgoingCall: false,
-          isConnecting: false,
+          isConnecting: true, // Keep true initially to show waiting screen
           localStream
         }));
+
+        // Set connecting to false after a brief delay to show waiting screen
+        setTimeout(() => {
+          setCallState(prev => ({
+            ...prev,
+            isConnecting: false
+          }));
+        }, 1500); // Show waiting screen for 1.5 seconds
 
         // SignalR call to notify participants
         console.log(`📞 [${instanceId.current}] Sending StartGroupCall SignalR event:`, {
@@ -280,8 +295,49 @@ export const useGroupCall = ({
   // Join group call
   const joinGroupCall = useCallback(async (callId: string) => {
     try {
-      console.log(`📞 [${instanceId.current}] Joining group call ${callId}`);
+      console.log(`📞 [${instanceId.current}] === JOIN GROUP CALL START ===`);
+      console.log(`📞 [${instanceId.current}] Attempting to join call ${callId}`);
+      console.log(`📞 [${instanceId.current}] Current user:`, currentUser.id);
+      console.log(`📞 [${instanceId.current}] Current call state:`, {
+        isActive: callState.isActive,
+        currentCallId: callState.callId,
+        isConnecting: callState.isConnecting,
+        isIncomingCall: callState.isIncomingCall,
+        isOutgoingCall: callState.isOutgoingCall
+      });
       
+      // Check if already in this call to avoid "User already in call" error
+      if (callState.isActive && callState.callId === callId) {
+        console.log(`📞 [${instanceId.current}] ❌ SKIP: Already in call ${callId}`);
+        return;
+      }
+      
+      // Check if already connecting to avoid duplicate joins
+      if (callState.isConnecting) {
+        console.log(`📞 [${instanceId.current}] ❌ SKIP: Already connecting to a call`);
+        return;
+      }
+
+      // Check current call data
+      if (currentCall) {
+        console.log(`📞 [${instanceId.current}] Current call data:`, {
+          callId: currentCall.id,
+          initiatorId: currentCall.initiator_id,
+          participants: currentCall.participants?.map((p: any) => ({
+            userId: p.user_id,
+            name: p.user_name
+          }))
+        });
+        
+        // Check if current user is already in participants
+        const isAlreadyParticipant = currentCall.participants?.some((p: any) => p.user_id === currentUser.id);
+        if (isAlreadyParticipant) {
+          console.log(`📞 [${instanceId.current}] ❌ SKIP: User ${currentUser.id} already in participants list`);
+          return;
+        }
+      }
+      
+      console.log(`📞 [${instanceId.current}] ✅ PROCEEDING with join...`);
       setCallState(prev => ({ 
         ...prev, 
         isConnecting: true 
@@ -302,13 +358,21 @@ export const useGroupCall = ({
         is_video_enabled: callState.isLocalVideoEnabled,
         offer_data: undefined
       };
-      console.log('📞 JOIN: Making API call to join group call...');
-      const joinResponse = await callApi(
-        API_ROUTES.CHAT_SERVER.JOIN_GROUP_CALL(callId),
-        HTTP_METHOD_ENUM.POST,
-        request
-      );
-      console.log('📞 JOIN: API response:', joinResponse);
+      console.log(`📞 [${instanceId.current}] Making API call to join group call...`);
+      console.log(`📞 [${instanceId.current}] Join request:`, request);
+      console.log(`📞 [${instanceId.current}] API URL:`, API_ROUTES.CHAT_SERVER.JOIN_GROUP_CALL(callId));
+      
+      try {
+        const joinResponse = await callApi(
+          API_ROUTES.CHAT_SERVER.JOIN_GROUP_CALL(callId),
+          HTTP_METHOD_ENUM.POST,
+          request
+        );
+        console.log(`📞 [${instanceId.current}] ✅ API SUCCESS:`, joinResponse);
+      } catch (apiError) {
+        console.error(`📞 [${instanceId.current}] ❌ API ERROR:`, apiError);
+        throw apiError; // Re-throw to be caught by outer catch
+      }
 
       // SignalR call to join
       console.log('📞 JOIN: Sending SignalR JoinGroupCall...');
@@ -466,14 +530,22 @@ export const useGroupCall = ({
     
     console.log('📞 Accepting incoming call with data:', incomingCallData);
     
-    // Set call as connecting first
-    setCallState(prev => ({ ...prev, isConnecting: true, isIncomingCall: false }));
-    
     // Use call.id from the nested call object, not callId directly
     const callId = incomingCallData.call?.id || incomingCallData.callId;
     console.log('📞 Using callId for join:', callId);
     
     if (callId) {
+      // Check if already in this call (maybe already joined via other mechanism)
+      if (callState.isActive && callState.callId === callId) {
+        console.log('📞 Already in this call, just clearing incoming state');
+        setIncomingCallData(null);
+        setCallState(prev => ({ ...prev, isIncomingCall: false }));
+        return;
+      }
+      
+      // Set call as connecting first
+      setCallState(prev => ({ ...prev, isConnecting: true, isIncomingCall: false }));
+      
       try {
         // Set current call data before joining
         setCurrentCall(incomingCallData.call);
@@ -491,7 +563,7 @@ export const useGroupCall = ({
       console.error('📞 No valid callId found in incoming call data');
       setCallState(prev => ({ ...prev, isConnecting: false }));
     }
-  }, [incomingCallData, joinGroupCall]);
+  }, [incomingCallData, joinGroupCall, callState.isActive, callState.callId]);
 
   // Decline incoming call
   const declineIncomingCall = useCallback(() => {
@@ -500,7 +572,7 @@ export const useGroupCall = ({
     setCallState(prev => ({ ...prev, isIncomingCall: false }));
   }, []);
 
-  // SignalR Event Handlers
+  // SignalR Event Handlers - Optimized dependencies
   useEffect(() => {
     console.log(`📞 [${instanceId.current}] HOOK: Setting up SignalR event handlers:`, {
       hasConnection: !!signalR.connection,
@@ -515,88 +587,95 @@ export const useGroupCall = ({
 
     // Group call started
     signalR.onGroupCallStarted?.((callEvent) => {
-      console.log(`📞 [${instanceId.current}] HOOK: Group call started event:`, {
-        callEvent,
+      console.log(`📞 [${instanceId.current}] === SIGNALR: GROUP CALL STARTED ===`);
+      console.log(`📞 [${instanceId.current}] Event data:`, {
+        callId: callEvent?.call?.id,
         callInitiatorId: callEvent?.call?.initiator_id,
         currentUserId: currentUser.id,
-        isIncomingCall: callEvent?.call?.initiator_id !== currentUser.id,
-        hasSignalRConnection: !!signalR.connection,
-        isGlobalInstance: isGlobal,
-        fullCallEvent: JSON.stringify(callEvent, null, 2)
+        isInitiator: callEvent?.call?.initiator_id === currentUser.id,
+        hasSignalRConnection: !!signalR.connection
       });
+      console.log(`📞 [${instanceId.current}] Call participants:`, callEvent?.call?.participants?.map((p: any) => ({
+        userId: p.user_id,
+        name: p.user_name
+      })));
       
       // Check if this is an incoming call (not initiated by current user)
       if (callEvent?.call?.initiator_id !== currentUser.id) {
-        console.log(`📞 [${instanceId.current}] HOOK: Setting incoming call data:`, callEvent);
+        console.log(`📞 [${instanceId.current}] 🔔 INCOMING CALL: Setting incoming call data`);
         setIncomingCallData(callEvent);
         setCallState(prev => ({ 
           ...prev, 
           isIncomingCall: true,
           callType: callEvent?.call?.call_type || 'video' 
         }));
-        
-        // Global handling is now done by GlobalGroupVideoCallManager
-        console.log(`📞 [${instanceId.current}] Incoming call handled by ${isGlobal ? 'GLOBAL' : 'LOCAL'} instance`);
       } else {
-        console.log(`📞 [${instanceId.current}] HOOK: Ignoring own call start event`);
+        console.log(`📞 [${instanceId.current}] 🚫 IGNORING: User is initiator, not an incoming call`);
       }
     });
 
     // Group call ended
     signalR.onGroupCallEnded?.((endEvent) => {
-      console.log('📞 Group call ended event:', endEvent);
+      console.log(`📞 [${instanceId.current}] Group call ended event:`, endEvent);
       
-      if (endEvent.call_id === callState.callId) {
-        groupWebRTC.cleanup();
-        setCallState({
-          isActive: false,
-          callType: 'video',
-          isIncomingCall: false,
-          isOutgoingCall: false,
-          isConnecting: false,
-          participants: new Map(),
-          remoteStreams: new Map(),
-          isLocalAudioEnabled: true,
-          isLocalVideoEnabled: true,
-          connectionQuality: 'good'
-        });
-        setCurrentCall(null);
-        onCallStateChange?.(false);
-      }
+      setCallState(prev => {
+        if (endEvent.call_id === prev.callId) {
+          groupWebRTC.cleanup();
+          onCallStateChange?.(false);
+          setCurrentCall(null);
+          return {
+            isActive: false,
+            callType: 'video',
+            isIncomingCall: false,
+            isOutgoingCall: false,
+            isConnecting: false,
+            participants: new Map(),
+            remoteStreams: new Map(),
+            isLocalAudioEnabled: true,
+            isLocalVideoEnabled: true,
+            connectionQuality: 'good'
+          };
+        }
+        return prev;
+      });
     });
 
     // Participant joined
     signalR.onGroupCallParticipantJoined?.((joinEvent) => {
-      console.log('👥 Participant joined:', joinEvent);
+      console.log(`📞 [${instanceId.current}] Participant joined:`, joinEvent);
       
-      if (joinEvent.call_id === callState.callId) {
-        setCallState(prev => ({
-          ...prev,
-          participants: new Map(prev.participants).set(joinEvent.participant.user_id, joinEvent.participant)
-        }));
-      }
+      setCallState(prev => {
+        if (joinEvent.call_id === prev.callId) {
+          return {
+            ...prev,
+            participants: new Map(prev.participants).set(joinEvent.participant.user_id, joinEvent.participant)
+          };
+        }
+        return prev;
+      });
     });
 
     // Participant left
     signalR.onGroupCallParticipantLeft?.((leaveEvent) => {
-      console.log('🚪 Participant left:', leaveEvent);
+      console.log(`📞 [${instanceId.current}] Participant left:`, leaveEvent);
       
-      if (leaveEvent.call_id === callState.callId) {
-        groupWebRTC.removeParticipant(leaveEvent.user_id);
-        setCallState(prev => {
+      setCallState(prev => {
+        if (leaveEvent.call_id === prev.callId) {
+          groupWebRTC.removeParticipant(leaveEvent.user_id);
           const newParticipants = new Map(prev.participants);
           newParticipants.delete(leaveEvent.user_id);
           return { ...prev, participants: newParticipants };
-        });
-      }
+        }
+        return prev;
+      });
     });
 
     // Media toggled
     signalR.onGroupCallMediaToggled?.((mediaEvent) => {
-      console.log('🎛️ Media toggled:', mediaEvent);
+      console.log(`📞 [${instanceId.current}] Media toggled:`, mediaEvent);
       
-      if (mediaEvent.call_id === callState.callId) {
-        setCallState(prev => {
+      setCallState(prev => {
+        if (mediaEvent.call_id === prev.callId) {
           const newParticipants = new Map(prev.participants);
           const participant = newParticipants.get(mediaEvent.user_id);
           if (participant) {
@@ -608,44 +687,60 @@ export const useGroupCall = ({
             newParticipants.set(mediaEvent.user_id, updatedParticipant);
           }
           return { ...prev, participants: newParticipants };
-        });
-      }
+        }
+        return prev;
+      });
     });
 
     // WebRTC Signaling Events
     signalR.onReceiveGroupCallOffer?.((data) => {
-      console.log('📤 Received group call offer:', data);
+      console.log(`📞 [${instanceId.current}] Received group call offer:`, data);
       
-      if (data.call_id === callState.callId && data.target_user_id === currentUser.id) {
-        groupWebRTC.handleOffer(data.from_user_id, JSON.parse(data.offer_data))
-          .then(answer => {
-            // Send answer back
-            return signalR.connection?.invoke(
-              "SendGroupCallAnswer", 
-              data.call_id, 
-              data.from_user_id, 
-              JSON.stringify(answer)
-            );
-          })
-          .catch(console.error);
+      if (data.target_user_id === currentUser.id) {
+        setCallState(prev => {
+          if (data.call_id === prev.callId) {
+            groupWebRTC.handleOffer(data.from_user_id, JSON.parse(data.offer_data))
+              .then(answer => {
+                // Send answer back
+                return signalR.connection?.invoke(
+                  "SendGroupCallAnswer", 
+                  data.call_id, 
+                  data.from_user_id, 
+                  JSON.stringify(answer)
+                );
+              })
+              .catch(console.error);
+          }
+          return prev;
+        });
       }
     });
 
     signalR.onReceiveGroupCallAnswer?.((data) => {
       console.log('📥 Received group call answer:', data);
       
-      if (data.call_id === callState.callId && data.target_user_id === currentUser.id) {
-        groupWebRTC.handleAnswer(data.from_user_id, JSON.parse(data.answer_data))
-          .catch(console.error);
+      if (data.target_user_id === currentUser.id) {
+        setCallState(prev => {
+          if (data.call_id === prev.callId) {
+            groupWebRTC.handleAnswer(data.from_user_id, JSON.parse(data.answer_data))
+              .catch(console.error);
+          }
+          return prev;
+        });
       }
     });
 
     signalR.onReceiveGroupIceCandidate?.((data) => {
       console.log('🧊 Received ICE candidate:', data);
       
-      if (data.call_id === callState.callId && data.target_user_id === currentUser.id) {
-        groupWebRTC.handleIceCandidate(data.from_user_id, JSON.parse(data.candidate_data))
-          .catch(console.error);
+      if (data.target_user_id === currentUser.id) {
+        setCallState(prev => {
+          if (data.call_id === prev.callId) {
+            groupWebRTC.handleIceCandidate(data.from_user_id, JSON.parse(data.candidate_data))
+              .catch(console.error);
+          }
+          return prev;
+        });
       }
     });
 
@@ -661,7 +756,7 @@ export const useGroupCall = ({
       signalR.onReceiveGroupCallAnswer?.(undefined);
       signalR.onReceiveGroupIceCandidate?.(undefined);
     };
-  }, [signalR, currentUser.id, callState.callId, groupWebRTC, onCallStateChange]);
+  }, [signalR.connection, currentUser.id, groupWebRTC, onCallStateChange]);
 
   // Handle WebRTC ICE candidates
   useEffect(() => {
@@ -698,6 +793,22 @@ export const useGroupCall = ({
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [callState.isActive, callState.callId, leaveGroupCall]);
+
+  // Sync participants from currentCall to callState
+  useEffect(() => {
+    if (currentCall && currentCall.participants) {
+      console.log(`📞 [${instanceId.current}] Syncing participants from currentCall:`, currentCall.participants);
+      const participantsMap = new Map();
+      currentCall.participants.forEach(participant => {
+        participantsMap.set(participant.user_id, participant);
+      });
+      
+      setCallState(prev => ({
+        ...prev,
+        participants: participantsMap
+      }));
+    }
+  }, [currentCall]);
 
   // Cleanup on component unmount
   useEffect(() => {

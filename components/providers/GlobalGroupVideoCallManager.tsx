@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSignalR } from "@/contexts/SignalRContext";
 import { GroupVideoCall } from "@/components/video-call/GroupVideoCall";
 import { useGroupCall } from "@/hooks/useGroupCall";
@@ -36,30 +36,31 @@ export function GlobalGroupVideoCallManager() {
     setCurrentUser(user);
   }, []);
 
-  // Group call events following same pattern as 2-person call
-  const groupCallEvents = {
-    onIncomingCall: (groupId: number, groupName: string, callId: string) => {
-      console.log("🌐 Global incoming group call:", { groupName, groupId, callId });
-
-      setGlobalCallState({
-        isCallActive: true,
-        isIncomingCall: true,
-        isOutgoingCall: false,
-        groupName,
-        groupId,
-        callId,
-      });
-    },
+  // Use group call hook - now the only instance
+  const groupCall = useGroupCall({
+    currentUser,
     onCallStateChange: (isActive: boolean) => {
       console.log("🌐 Global group call state changed:", isActive);
 
-      if (!isActive) {
-        // Call ended - reset state
+      if (isActive) {
+        // Call started - notify all messenger containers with groupId (async to avoid setState in render)
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('globalGroupCallStarted', {
+            detail: { groupId: groupCall.currentCall?.group_id }
+          }));
+        }, 0);
+      } else {
+        // Call ended - reset state and notify with groupId (async to avoid setState in render)
         setGlobalCallState({
           isCallActive: false,
           isIncomingCall: false,
           isOutgoingCall: false,
         });
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('globalGroupCallEnded', {
+            detail: { groupId: groupCall.currentCall?.group_id || globalCallState.groupId }
+          }));
+        }, 0);
       }
     },
     onError: (error: string) => {
@@ -71,34 +72,44 @@ export function GlobalGroupVideoCallManager() {
         isOutgoingCall: false,
       });
     },
-  };
-
-  // Use group call hook with global flag
-  const groupCall = useGroupCall({
-    currentUser,
-    onCallStateChange: groupCallEvents.onCallStateChange,
-    onError: groupCallEvents.onError,
-    isGlobal: true, // This prevents duplicate event handling
   });
 
-  // Listen for incoming calls and show modal
+  // Listen for incoming calls and show modal - optimized to reduce re-renders
   useEffect(() => {
     if (groupCall.callState.isIncomingCall && groupCall.incomingCallData) {
       console.log("🌐 Global incoming call detected:", groupCall.incomingCallData);
-      setIncomingCallData(groupCall.incomingCallData);
-      setGlobalCallState((prev) => ({
-        ...prev,
-        isIncomingCall: true,
-        groupName: groupCall.incomingCallData?.call?.group_name,
-        groupId: groupCall.incomingCallData?.group_id,
-        callId: groupCall.incomingCallData?.call?.id,
-      }));
+      
+      // Only update if different from current state
+      setIncomingCallData((prevData: any) => {
+        if (prevData?.call?.id !== groupCall.incomingCallData?.call?.id) {
+          return groupCall.incomingCallData;
+        }
+        return prevData;
+      });
+      
+      setGlobalCallState((prev) => {
+        const newCallId = groupCall.incomingCallData?.call?.id;
+        const newGroupName = groupCall.incomingCallData?.call?.group_name;
+        const newGroupId = groupCall.incomingCallData?.group_id;
+        
+        // Only update if values have changed
+        if (prev.callId !== newCallId || prev.groupName !== newGroupName || !prev.isIncomingCall) {
+          return {
+            ...prev,
+            isIncomingCall: true,
+            groupName: newGroupName,
+            groupId: newGroupId,
+            callId: newCallId,
+          };
+        }
+        return prev;
+      });
     } else {
       console.log("🌐 Incoming call condition not met");
     }
   }, [groupCall.callState.isIncomingCall, groupCall.incomingCallData]);
 
-  // Listen for call state changes from hook
+  // Listen for call state changes from hook - optimized
   useEffect(() => {
     // If hook says call is active but global state doesn't, sync it
     if (groupCall.callState.isActive && groupCall.currentCall && !globalCallState.isCallActive) {
@@ -107,6 +118,16 @@ export function GlobalGroupVideoCallManager() {
         ...prev,
         isCallActive: true,
         isIncomingCall: false,
+      }));
+    }
+    // Also handle the reverse case - hook says not active but global state says active
+    else if (!groupCall.callState.isActive && globalCallState.isCallActive) {
+      console.log("🌐 Syncing global state with hook state - call is not active");
+      setGlobalCallState((prev) => ({
+        ...prev,
+        isCallActive: false,
+        isIncomingCall: false,
+        isOutgoingCall: false,
       }));
     }
   }, [groupCall.callState.isActive, groupCall.currentCall, globalCallState.isCallActive]);
@@ -131,31 +152,68 @@ export function GlobalGroupVideoCallManager() {
       groupCall.startGroupCall(groupId, callType);
     };
 
+    const handleJoinGroupCall = (event: any) => {
+      const { callId, groupId, groupName, callType } = event.detail;
+      console.log("🌐 Joining global group call:", { callId, groupId, groupName, callType });
+
+      // Set connecting state
+      setGlobalCallState({
+        isCallActive: true,
+        isIncomingCall: false,
+        isOutgoingCall: false,
+        groupName,
+        groupId,
+        callId,
+      });
+
+      // Join the call using the hook
+      groupCall.joinGroupCall(callId);
+    };
+
     window.addEventListener("startGlobalGroupCall", handleStartGroupCall);
+    window.addEventListener("joinGlobalGroupCall", handleJoinGroupCall);
 
     return () => {
       window.removeEventListener("startGlobalGroupCall", handleStartGroupCall);
+      window.removeEventListener("joinGlobalGroupCall", handleJoinGroupCall);
     };
   }, [isConnected, groupCall]);
 
   // Handle accept incoming call
   const handleAcceptCall = async () => {
+    console.log("🌐 HandleAcceptCall called with incomingCallData:", {
+      hasIncomingCallData: !!incomingCallData,
+      callId: incomingCallData?.call?.id,
+      groupName: incomingCallData?.call?.group_name
+    });
+    
     if (incomingCallData?.call?.id) {
       try {
         console.log("🌐 Starting joinGroupCall...");
         await groupCall.joinGroupCall(incomingCallData.call.id);
         console.log("🌐 joinGroupCall completed, checking state...");
-
+        
+        // Check state immediately
+        console.log("🌐 Immediate post-join state:", {
+          hookCallActive: groupCall.callState.isActive,
+          hookIsConnecting: groupCall.callState.isConnecting,
+          currentCall: !!groupCall.currentCall,
+          participantsCount: groupCall.currentCall?.participants?.length || 0,
+          globalState: globalCallState,
+        });
+        
         // Wait a bit for state to update
         setTimeout(() => {
-          console.log("🌐 Post-join state check:", {
+          console.log("🌐 Delayed post-join state check:", {
             hookCallActive: groupCall.callState.isActive,
+            hookIsConnecting: groupCall.callState.isConnecting,
             currentCall: !!groupCall.currentCall,
+            participantsCount: groupCall.currentCall?.participants?.length || 0,
             globalState: globalCallState,
           });
-        }, 500);
+        }, 1000);
 
-        console.log("🌐 Successfully joined group call, updating state");
+        console.log("🌐 Successfully joined group call, updating global state");
 
         // Clear incoming call state and set as active
         setIncomingCallData(null);
@@ -173,6 +231,8 @@ export function GlobalGroupVideoCallManager() {
         setIncomingCallData(null);
         setGlobalCallState((prev) => ({ ...prev, isIncomingCall: false }));
       }
+    } else {
+      console.error("🌐 No call ID found in incoming call data");
     }
   };
 

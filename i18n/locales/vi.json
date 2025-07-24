@@ -190,7 +190,10 @@
     "groupVoiceCall": "Gọi thoại nhóm",
     "isCalling": "đang gọi...",
     "videoCallButton": "Gọi video",
-    "voiceCallButton": "Gọi thoại"
+    "voiceCallButton": "Gọi thoại",
+    "waitingForOthersToJoin": "Đang chờ người khác tham gia...",
+    "joinCall": "Tham gia cuộc gọi",
+    "reconnectCall": "Quay lại cuộc gọi"
   },
 
   "Messenger": {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Phone, PhoneOff, Mic, MicOff, Camera, CameraOff, Monitor, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Button from "@/components/ui/Button";
@@ -46,50 +46,22 @@ const VideoStreamComponent: React.FC<{
 }> = ({ participant, stream, connectionState, isLocal = false, isCurrentUser = false }) => {
   const t = useTranslations("GroupCall");
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    // Reset playing state when stream changes
-    setIsVideoPlaying(false);
-
     if (stream) {
-      // Clear previous stream if any
-      if (videoElement.srcObject) {
-        videoElement.srcObject = null;
-      }
-
+      // Simple approach like 2-person call - just set srcObject
       videoElement.srcObject = stream;
-
-      // Handle play promise properly to avoid interruption errors
-      const playPromise = videoElement.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsVideoPlaying(true);
-          })
-          .catch((error) => {
-            console.warn("Video play was interrupted:", error);
-            // Don't set isVideoPlaying to true if play failed
-          });
-      }
     } else {
       // Clear srcObject when no stream
       videoElement.srcObject = null;
     }
-
-    // Cleanup function
-    return () => {
-      if (videoElement && videoElement.srcObject) {
-        videoElement.pause();
-        videoElement.srcObject = null;
-      }
-    };
   }, [stream]);
 
-  const showVideo = stream && participant.is_video_enabled && (isLocal || isVideoPlaying);
+  // Simplify video display logic like 2-person call
+  const showVideo = stream && participant.is_video_enabled;
   const showConnectionIssue = connectionState === "failed" || connectionState === "disconnected";
 
   return (
@@ -144,8 +116,8 @@ const VideoStreamComponent: React.FC<{
   );
 };
 
-// Grid layout for video streams
-const VideoGrid: React.FC<VideoGridProps> = ({
+// Grid layout for video streams - memoized for performance
+const VideoGrid: React.FC<VideoGridProps> = React.memo(({
   participants,
   currentUserId,
   localStream,
@@ -154,9 +126,13 @@ const VideoGrid: React.FC<VideoGridProps> = ({
   isLocalAudioEnabled,
   isLocalVideoEnabled,
 }) => {
-  // Create local participant if not already in the list
-  const hasLocalParticipant = participants.some((p) => p.user_id === currentUserId);
-  const allParticipants = hasLocalParticipant
+  // Create local participant if not already in the list - memoized
+  const hasLocalParticipant = useMemo(() => 
+    participants.some((p) => p.user_id === currentUserId),
+    [participants, currentUserId]
+  );
+  
+  const allParticipants = useMemo(() => hasLocalParticipant
     ? participants
     : [
         {
@@ -169,12 +145,24 @@ const VideoGrid: React.FC<VideoGridProps> = ({
           joined_at: new Date().toISOString(),
         },
         ...participants,
-      ];
+      ], [hasLocalParticipant, participants, currentUserId, isLocalAudioEnabled, isLocalVideoEnabled]);
 
-  const gridCols = Math.min(allParticipants.length, 3); // Max 3 columns
-  const gridRows = Math.ceil(allParticipants.length / 3);
+  console.log('🎥 VideoGrid debug:', {
+    originalParticipants: participants.length,
+    hasLocalParticipant,
+    currentUserId,
+    allParticipants: allParticipants.length,
+    localStreamAvailable: !!localStream,
+    participants: allParticipants.map(p => ({
+      id: p.user_id,
+      name: p.user_name,
+      isLocal: p.user_id === currentUserId,
+      videoEnabled: p.is_video_enabled
+    }))
+  });
 
-  const gridClass = cn(
+  // Memoize grid class calculation
+  const gridClass = useMemo(() => cn(
     "grid gap-2 h-full",
     allParticipants.length === 1
       ? "grid-cols-1"
@@ -187,7 +175,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({
       : allParticipants.length <= 9
       ? "grid-cols-3 grid-rows-3"
       : "grid-cols-4 auto-rows-fr" // For more than 9 participants
-  );
+  ), [allParticipants.length]);
 
   return (
     <div className={gridClass}>
@@ -209,7 +197,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({
       })}
     </div>
   );
-};
+});
 
 // Main Group Video Call Component
 export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
@@ -231,19 +219,42 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
   const [callDuration, setCallDuration] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
 
-  // Calculate call duration
+  // Check if there are other participants (memoized to prevent recalculation)
+  const hasOtherParticipants = useMemo(() => 
+    call.participants.some(p => p.user_id !== currentUserId), 
+    [call.participants, currentUserId]
+  );
+
+  // Memoize other participants for duration calculation
+  const otherParticipants = useMemo(() => 
+    call.participants.filter(p => p.user_id !== currentUserId),
+    [call.participants, currentUserId]
+  );
+
+  // Calculate call duration - only start counting when someone else joins
   useEffect(() => {
-    const startTime = new Date(call.started_at).getTime();
+    // Only start timer when there are other participants (not just initiator)
+    if (!hasOtherParticipants) {
+      setCallDuration(0);
+      return;
+    }
+
+    // Find the earliest join time among other participants
+    const earliestJoinTime = otherParticipants.length > 0 
+      ? Math.min(...otherParticipants.map(p => new Date(p.joined_at).getTime()))
+      : Date.now();
+
     const timer = setInterval(() => {
       const now = Date.now();
-      const duration = Math.floor((now - startTime) / 1000);
-      setCallDuration(duration);
+      const duration = Math.floor((now - earliestJoinTime) / 1000);
+      setCallDuration(Math.max(0, duration));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [call.started_at]);
+  }, [hasOtherParticipants, otherParticipants]);
 
-  const formatDuration = (seconds: number) => {
+  // Memoize format duration function
+  const formatDuration = useCallback((seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -252,12 +263,20 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
       return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     }
     return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  };
+  }, []);
 
-  const activeParticipants = call.participants.filter((p) => connectionStates.get(p.user_id) !== "failed");
-  const connectionIssues = call.participants.filter(
-    (p) => connectionStates.get(p.user_id) === "failed" || connectionStates.get(p.user_id) === "disconnected"
-  ).length;
+  // Memoize expensive calculations
+  const activeParticipants = useMemo(() => 
+    call.participants.filter((p) => connectionStates.get(p.user_id) !== "failed"),
+    [call.participants, connectionStates]
+  );
+  
+  const connectionIssues = useMemo(() => 
+    call.participants.filter(
+      (p) => connectionStates.get(p.user_id) === "failed" || connectionStates.get(p.user_id) === "disconnected"
+    ).length,
+    [call.participants, connectionStates]
+  );
 
   if (isMinimized) {
     return (
@@ -320,9 +339,32 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
     );
   }
 
-  // Show waiting screen only when actively connecting
-  // If this component is rendered, call is considered active
-  const showWaitingScreen = callState?.isConnecting === true;
+  // Show waiting screen when connecting OR when no other participants have joined yet - memoized
+  // For group calls, we should show waiting screen until at least one other person joins
+  const showWaitingScreen = useMemo(() => 
+    callState?.isConnecting === true || !hasOtherParticipants,
+    [callState?.isConnecting, hasOtherParticipants]
+  );
+
+  // Debug logging
+  console.log('🎥 GroupVideoCall render debug:', {
+    participantsCount: call.participants.length,
+    hasLocalStream: !!localStream,
+    localStreamTracks: localStream?.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled })),
+    isConnecting: callState?.isConnecting,
+    currentUserId,
+    isLocalVideoEnabled,
+    isLocalAudioEnabled,
+    callId: call.id,
+    groupName: call.group_name,
+    hasOtherParticipants,
+    showWaitingScreen,
+    participants: call.participants.map(p => ({
+      id: p.user_id,
+      name: p.user_name,
+      isCurrentUser: p.user_id === currentUserId
+    }))
+  });
 
   return (
     <div className={cn("fixed inset-0 bg-background z-50 flex flex-col video-call-container", className)}>
@@ -331,7 +373,13 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
           {/* Enhanced Waiting Screen - Using shared component */}
           <VideoCallWaitingScreen
             title={call.group_name}
-            subtitle={!callState?.isConnecting ? `${formatDuration(callDuration)} • ${t("groupVideoCall")}` : undefined}
+            subtitle={
+              callState?.isConnecting 
+                ? t("startingCall")
+                : hasOtherParticipants 
+                  ? `${formatDuration(callDuration)} • ${t("groupVideoCall")}`
+                  : t("waitingForOthersToJoin")
+            }
             isConnecting={callState?.isConnecting}
             callDuration={callDuration}
             fallbackIcon={<Users className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 animate-pulse" />}

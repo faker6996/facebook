@@ -109,7 +109,6 @@ export const VideoCallWaitingScreen: React.FC<VideoCallWaitingScreenProps> = ({
             ref={(ref) => {
               if (ref && localStream) {
                 ref.srcObject = localStream;
-                ref.play().catch(console.error);
               }
             }}
             autoPlay 
