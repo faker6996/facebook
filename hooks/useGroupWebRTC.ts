@@ -49,11 +49,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
       setIsLocalAudioEnabled(true);
       setIsLocalVideoEnabled(isVideo);
 
-      console.log("📹 Local stream initialized:", {
-        audioTracks: stream.getAudioTracks().length,
-        videoTracks: stream.getVideoTracks().length,
-      });
-
       return stream;
     } catch (error) {
       console.error("❌ Failed to initialize local stream:", error);
@@ -64,20 +59,16 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
   // Create peer connection for a participant
   const createPeerConnection = useCallback(
     (participantId: number): RTCPeerConnection => {
-      console.log(`🔄 Creating peer connection for participant ${participantId}`);
-
       const pc = new RTCPeerConnection(rtcConfig);
 
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
-        console.log(`🔗 Connection state for ${participantId}:`, pc.connectionState);
         setConnectionStates((prev) => new Map(prev).set(participantId, pc.connectionState));
         onConnectionStateChange?.(participantId, pc.connectionState);
       };
 
       // Handle remote stream
       pc.ontrack = (event) => {
-        console.log(`📺 Received remote stream from participant ${participantId}`);
         const remoteStream = event.streams[0];
 
         setRemoteStreams((prev) => {
@@ -92,7 +83,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
       // Handle ICE candidates
       pc.onicecandidate = (event) => {
         if (event.candidate) {
-          console.log(`🧊 Generated ICE candidate for participant ${participantId}`);
           // This will be sent via SignalR in the calling component
           window.dispatchEvent(
             new CustomEvent("groupCallIceCandidate", {
@@ -130,7 +120,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
         });
 
         await pc.setLocalDescription(offer);
-        console.log(`📤 Created offer for participant ${participantId}`);
 
         return offer;
       } catch (error) {
@@ -159,8 +148,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
         }
         pendingCandidates.current.delete(participantId);
 
-        console.log(`📥 Handled offer and created answer for participant ${participantId}`);
-
         return answer;
       } catch (error) {
         console.error(`❌ Failed to handle offer from participant ${participantId}:`, error);
@@ -188,8 +175,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
         await pc.addIceCandidate(candidate);
       }
       pendingCandidates.current.delete(participantId);
-
-      console.log(`📥 Handled answer from participant ${participantId}`);
     } catch (error) {
       console.error(`❌ Failed to handle answer from participant ${participantId}:`, error);
     }
@@ -200,7 +185,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
     const pc = peerConnections.current.get(participantId);
 
     if (!pc) {
-      console.log(`⏳ Queueing ICE candidate for participant ${participantId}`);
       const pending = pendingCandidates.current.get(participantId) || [];
       pending.push(new RTCIceCandidate(candidate));
       pendingCandidates.current.set(participantId, pending);
@@ -210,9 +194,7 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
     try {
       if (pc.remoteDescription) {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log(`🧊 Added ICE candidate for participant ${participantId}`);
       } else {
-        console.log(`⏳ Queueing ICE candidate for participant ${participantId} (no remote description)`);
         const pending = pendingCandidates.current.get(participantId) || [];
         pending.push(new RTCIceCandidate(candidate));
         pendingCandidates.current.set(participantId, pending);
@@ -246,8 +228,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
 
       pendingCandidates.current.delete(participantId);
       onRemoteStreamRemoved?.(participantId);
-
-      console.log(`🚪 Removed participant ${participantId}`);
     },
     [onRemoteStreamRemoved]
   );
@@ -264,7 +244,6 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
     });
 
     setIsLocalAudioEnabled(newEnabled);
-    console.log(`🎤 Local audio ${newEnabled ? "enabled" : "disabled"}`);
 
     return newEnabled;
   }, [localStream, isLocalAudioEnabled]);
@@ -281,15 +260,12 @@ export const useGroupWebRTC = ({ localUserId, onConnectionStateChange, onRemoteS
     });
 
     setIsLocalVideoEnabled(newEnabled);
-    console.log(`📹 Local video ${newEnabled ? "enabled" : "disabled"}`);
 
     return newEnabled;
   }, [localStream, isLocalVideoEnabled]);
 
   // Cleanup
   const cleanup = useCallback(() => {
-    console.log("🧹 Cleaning up WebRTC resources");
-
     // Close all peer connections
     peerConnections.current.forEach((pc) => pc.close());
     peerConnections.current.clear();

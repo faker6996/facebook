@@ -31,7 +31,6 @@ export const useMessagePagination = ({
   // Load Messages Function
   const loadMessages = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
     if (!conversation?.conversation_id) {
-      console.log("🆕 New conversation - no messages to load");
       onSetMessages([]);
       setIsInitialLoad(false);
       return;
@@ -41,7 +40,6 @@ export const useMessagePagination = ({
     setLoadError(null); // Clear previous errors
     
     try {
-      console.log("🔥 Loading messages for conversation:", conversation.conversation_id, "page:", page);
       const response = await callApi<{
         messages: any[];
         hasMore: boolean;
@@ -57,23 +55,17 @@ export const useMessagePagination = ({
         }
       );
       
-      console.log("✅ Raw API Response:", response);
-
       if (response) {
-        console.log("🔄 Mapping response to Message objects...");
         const mappedMessages = response.messages
           ?.map((m, index) => {
-            console.log(`📝 Processing message ${index}:`, m);
             try {
               return new Message(m);
             } catch (err) {
-              console.error(`❌ Error processing message ${index}:`, err, m);
+              console.error('Lỗi khi map message:', err, m);
               return null;
             }
           })
           .filter((m): m is Message => m !== null) ?? [];
-
-        console.log("🎯 Final mapped messages:", mappedMessages.length);
         
         if (isLoadMore) {
           // Thêm messages cũ hơn vào đầu danh sách
@@ -89,17 +81,11 @@ export const useMessagePagination = ({
         
         // Chỉ scroll xuống cuối cho lần đầu load conversation (initial load)
         if (!isLoadMore && isInitialLoad) {
-          console.log("🎯 Auto-scrolling to bottom after initial load", {
-            messagesCount: mappedMessages.length,
-            conversation_id: conversation?.conversation_id
-          });
           // Delay để đảm bảo DOM đã render
           setTimeout(() => onScrollToBottom(0, 'initial-load'), 100);
         }
       }
     } catch (err) {
-      console.error("❌ Lỗi tải tin nhắn:", err);
-      
       // Handle different types of errors
       let errorMessage = "Không thể tải tin nhắn";
       if (err instanceof Error) {
@@ -111,7 +97,7 @@ export const useMessagePagination = ({
           errorMessage = err.message;
         }
       }
-      
+      console.error('Lỗi khi load messages:', err);
       setLoadError(errorMessage);
       
       // Don't reset hasMoreMessages on error for load more
@@ -132,7 +118,6 @@ export const useMessagePagination = ({
     if (!hasMoreMessages || isLoadingMessages) return;
     
     const nextPage = currentPage + 1;
-    console.log("📄 Loading more messages, page:", nextPage);
     setHasUserLoadedMore(true); // Mark that user has manually loaded more
     await loadMessages(nextPage, true);
   }, [hasMoreMessages, isLoadingMessages, currentPage, loadMessages]);
@@ -140,7 +125,6 @@ export const useMessagePagination = ({
   // Retry loading messages
   const retryLoadMessages = useCallback(async () => {
     if (isLoadingMessages) return;
-    console.log("🔄 Retrying to load messages...");
     await loadMessages(currentPage, true);
   }, [isLoadingMessages, currentPage, loadMessages]);
 
