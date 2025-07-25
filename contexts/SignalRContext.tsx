@@ -157,13 +157,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     // Global message listener - nhận tất cả tin nhắn
     conn.on("ReceiveMessage", (newMsg: any) => {
-      console.log("📨 Global: Received new message:", newMsg);
-      console.log("🔍 DEBUG Global: Message routing key debug:", {
-        message_type: newMsg.message_type,
-        conversation_id: newMsg.conversation_id,
-        sender_id: newMsg.sender_id,
-        target_id: newMsg.target_id
-      });
       
       // Hiển thị toast notification nếu không đang trong conversation đó
       const messageObj = new Message(newMsg);
@@ -184,7 +177,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     // Group message listener - nhận tin nhắn nhóm
     conn.on("ReceiveGroupMessage", (data: any) => {
-      console.log("📨 Global: Received GROUP message:", data);
       
       // Handle different backend message formats
       let messageData;
@@ -199,12 +191,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
         messageData = data;
       }
       
-      console.log("🔍 DEBUG Global: Group message processed:", {
-        message_type: messageData.message_type,
-        conversation_id: messageData.conversation_id,
-        sender_id: messageData.sender_id,
-        target_id: messageData.target_id
-      });
       
       // Hiển thị toast notification nếu không đang trong conversation đó
       const messageObj = new Message(messageData);
@@ -227,23 +213,19 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     // Global reaction listener
     conn.on("ReceiveReaction", (data: any) => {
-      console.log("🎭 Global: Received reaction:", data);
       // Có thể hiển thị notification hoặc xử lý global
     });
 
     conn.on("RemoveReaction", (data: any) => {
-      console.log("🎭 Global: Removed reaction:", data);
     });
 
     // Online/Offline status listeners
     conn.on("UserOnline", (userId: string) => {
-      console.log(`👤 User ${userId} is now ONLINE`);
       setOnlineUsers(prev => new Set([...prev, userId]));
       userOnlineHandlerRef.current?.(userId);
     });
 
     conn.on("UserOffline", (userId: string) => {
-      console.log(`👤 User ${userId} is now OFFLINE`);
       setOnlineUsers(prev => {
         const newSet = new Set(prev);
         newSet.delete(userId);
@@ -254,7 +236,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     // Group event listeners
     conn.on("GroupMemberAdded", (data: any) => {
-      console.log("👥 Global: Member added to group:", data);
       groupEventHandlerRef.current?.("member_added", data);
       
       if (data.member?.user_id !== user.id) {
@@ -268,7 +249,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.on("GroupMemberRemoved", (data: any) => {
-      console.log("👥 Global: Member removed from group:", data);
       groupEventHandlerRef.current?.("member_removed", data);
       
       if (data.userId !== user.id) {
@@ -282,7 +262,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.on("GroupMemberPromoted", (data: any) => {
-      console.log("👑 Global: Member promoted:", data);
       groupEventHandlerRef.current?.("member_promoted", data);
       
       addToast({
@@ -294,7 +273,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.on("GroupUpdated", (data: any) => {
-      console.log("📝 Global: Group updated:", data);
       groupEventHandlerRef.current?.("group_updated", data);
       
       addToast({
@@ -307,8 +285,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
     // Group call event listeners
     conn.on("GroupCallStarted", (callEvent: any) => {
-      console.log("📞 Global: Group call started:", callEvent);
-      
       groupCallStartedHandlerRef.current?.(callEvent);
       
       addToast({
@@ -320,8 +296,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.on("GroupCallEnded", (endEvent: any) => {
-      console.log("📞 Global: Group call ended:", endEvent);
-      
       groupCallEndedHandlerRef.current?.(endEvent);
       
       addToast({
@@ -333,8 +307,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.on("GroupCallParticipantJoined", (joinEvent: any) => {
-      console.log("👤 Global: Participant joined call:", joinEvent);
-      
       groupCallParticipantJoinedHandlerRef.current?.(joinEvent);
       
       addToast({
@@ -346,8 +318,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.on("GroupCallParticipantLeft", (leaveEvent: any) => {
-      console.log("👤 Global: Participant left call:", leaveEvent);
-      
       groupCallParticipantLeftHandlerRef.current?.(leaveEvent);
       
       addToast({
@@ -359,46 +329,37 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.on("GroupCallMediaToggled", (mediaEvent: any) => {
-      console.log("🎥 Global: Media toggled in call:", mediaEvent);
-      
       groupCallMediaToggledHandlerRef.current?.(mediaEvent);
     });
 
     conn.on("ReceiveGroupCallOffer", (data: any) => {
-      console.log("📡 Global: Received group call offer:", data);
       receiveGroupCallOfferHandlerRef.current?.(data);
     });
 
     conn.on("ReceiveGroupCallAnswer", (data: any) => {
-      console.log("📡 Global: Received group call answer:", data);
       receiveGroupCallAnswerHandlerRef.current?.(data);
     });
 
     conn.on("ReceiveGroupIceCandidate", (data: any) => {
-      console.log("🧊 Global: Received group ICE candidate:", data);
       receiveGroupIceCandidateHandlerRef.current?.(data);
     });
 
     // Connection event handlers
     conn.onreconnecting((error) => {
-      console.log("🟡 Global SignalR reconnecting...", error);
       setIsConnected(false);
     });
 
     conn.onreconnected(async (connectionId) => {
-      console.log("🟢 Global SignalR reconnected:", connectionId);
       setIsConnected(true);
       
       // Sync missed messages
       try {
-        console.log("🔄 Syncing missed messages...");
         const missed = await callApi<Message[]>(
           `${API_ROUTES.MESSENGER.SYNC}?lastMessageId=0`,
           HTTP_METHOD_ENUM.GET
         );
         
         if (missed?.length) {
-          console.log(`📨 Found ${missed.length} missed messages`);
           // Có thể emit event để các component khác xử lý
         }
       } catch (error) {
@@ -407,7 +368,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     });
 
     conn.onclose((error) => {
-      console.log("🔴 Global SignalR connection closed:", error);
       setIsConnected(false);
       
       if (error) {
@@ -423,7 +383,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     // Start connection
     try {
       await conn.start();
-      console.log("✅ Global SignalR connected successfully");
       setIsConnected(true);
       setConnection(conn);
       connectionRef.current = conn;
@@ -452,14 +411,11 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
   const joinGroup = async (groupId: string) => {
     if (!connectionRef.current || connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      console.warn("⚠️ Cannot join group - no active connection");
       return;
     }
 
     try {
-      console.log("🏠 Global: Joining group:", groupId);
       await connectionRef.current.invoke("JoinGroup", groupId);
-      console.log("✅ Global: Successfully joined group:", groupId);
     } catch (error) {
       console.error("❌ Global: Failed to join group:", error);
       throw error;
@@ -468,14 +424,11 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
 
   const leaveGroup = async (groupId: string) => {
     if (!connectionRef.current || connectionRef.current.state !== signalR.HubConnectionState.Connected) {
-      console.warn("⚠️ Cannot leave group - no active connection");
       return;
     }
 
     try {
-      console.log("🚪 Global: Leaving group:", groupId);
       await connectionRef.current.invoke("LeaveGroup", groupId);
-      console.log("✅ Global: Successfully left group:", groupId);
     } catch (error) {
       console.error("❌ Global: Failed to leave group:", error);
       throw error;
@@ -485,14 +438,12 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
   // Initialize connection when user is set
   useEffect(() => {
     if (currentUser) {
-      console.log("🚀 Initializing SignalR for user:", currentUser.id);
       createConnection(currentUser).catch(error => {
         console.error("❌ Failed to initialize SignalR:", error);
       });
     } else {
       // Disconnect when user logs out
       if (connectionRef.current) {
-        console.log("🔌 Disconnecting SignalR - user logged out");
         connectionRef.current.stop();
         connectionRef.current = null;
         setConnection(null);
@@ -504,7 +455,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     // Cleanup on unmount
     return () => {
       if (connectionRef.current) {
-        console.log("🔌 Cleaning up SignalR connection");
         connectionRef.current.stop();
       }
     };

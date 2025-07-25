@@ -54,13 +54,6 @@ export const useGlobalSignalRConnection = ({
         newMsg = data;
       }
       
-      console.log("🔍 DEBUG: Received message for group check:", {
-        newMsg_conversationId: newMsg.conversation_id,
-        current_conversationId: conversation.conversation_id,
-        isGroup,
-        original_data: data,
-        processed_message: newMsg
-      });
       
       let isForCurrent = false;
       
@@ -75,7 +68,6 @@ export const useGlobalSignalRConnection = ({
       }
       
       if (isForCurrent) {
-        console.log('📨 Messenger: Received message for current conversation:', newMsg);
         
         setMessages((prev) => {
           // Check if this is replacing an optimistic message (temp ID)
@@ -226,15 +218,6 @@ export const useGlobalSignalRConnection = ({
       const otherUserId = conversation.other_user_id.toString();
       const isOnlineFromSignalR = onlineUsers.has(otherUserId);
       
-      console.log('🟢 Online status check:', {
-        other_user_id: conversation.other_user_id,
-        otherUserIdString: otherUserId,
-        onlineUsers: Array.from(onlineUsers),
-        onlineUsersSize: onlineUsers.size,
-        isOnlineFromSignalR,
-        isConnected,
-        conversation_name: conversation.other_user_name
-      });
       
       // If SignalR has online users data, use it
       // Otherwise fall back to connection status (better than always showing offline)
@@ -252,13 +235,13 @@ export const useGlobalSignalRConnection = ({
     
     // Join group
     joinGroup(groupId).catch(error => {
-      console.error("❌ Failed to join group:", error);
+      console.error("Failed to join group:", error);
     });
 
     // Leave group on cleanup
     return () => {
       leaveGroup(groupId).catch(error => {
-        console.error("❌ Failed to leave group:", error);
+        console.error("Failed to leave group:", error);
       });
     };
   }, [conversation.conversation_id, isGroup, isConnected]);

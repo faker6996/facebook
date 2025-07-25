@@ -28,7 +28,7 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
           setIceServers(response.iceServers);
         }
       } catch (error) {
-        console.warn("Failed to fetch ICE servers, using defaults:", error);
+        // Failed to fetch ICE servers, using defaults
       }
     };
 
@@ -52,7 +52,6 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
           const callType = isVideoCall ? "video" : "audio";
           connection
             .invoke("SendCallOffer", targetUserId, offerString, callType)
-            .then(() => console.log("📞 Call offer sent successfully"))
             .catch((err) => console.error("Error sending call offer:", err));
         } else {
         }
@@ -61,10 +60,8 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
       onCallAnswer: (answer: RTCSessionDescriptionInit, targetUserId: string) => {
         if (connection && isConnected) {
           const answerString = JSON.stringify(answer);
-          console.log("📞 Answer string:", answerString);
           connection
             .invoke("SendCallAnswer", targetUserId, answerString)
-            .then(() => console.log("📞 Call answer sent successfully"))
             .catch((err) => console.error("Error sending call answer:", err));
         } else {
           console.error("📞 Cannot send call answer - SignalR not connected");
@@ -76,7 +73,6 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
           const candidateString = JSON.stringify(candidate);
           connection
             .invoke("SendIceCandidate", targetUserId, candidateString)
-            .then(() => console.log("🧊 ICE candidate sent successfully"))
             .catch((err) => console.error("Error sending ICE candidate:", err));
         } else {
           console.error("🧊 Cannot send ICE candidate - SignalR not connected");
@@ -87,7 +83,6 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
         if (connection && isConnected) {
           connection
             .invoke("EndCall", targetUserId)
-            .then(() => console.log("📞 Call ended successfully"))
             .catch((err) => console.error("Error ending call:", err));
         } else {
           console.error("📞 Cannot end call - SignalR not connected");
@@ -107,7 +102,6 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
   // Setup SignalR event listeners
   useEffect(() => {
     if (!connection || !isConnected) {
-      console.log("📞 SignalR not ready:", { connection: !!connection, isConnected });
       return;
     }
 
@@ -125,7 +119,7 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
           const userResponse = await callApi<any>(`/api/users?id=${callerId}`, HTTP_METHOD_ENUM.GET);
           callerName = userResponse?.name || userResponse?.user_name || userResponse?.email || callerId;
         } catch (error) {
-          console.warn("Failed to fetch caller info:", error);
+          // Failed to fetch caller info
         }
 
         const isVideoCall = callType === "video";
@@ -134,8 +128,6 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
         // Only trigger onIncomingCall for new calls, not renegotiation
         if (!isRenegotiation) {
           events?.onIncomingCall?.(callerId, callerName, undefined);
-        } else {
-          console.log(`📞 ${listenerPrefix} - Renegotiation handled, NOT triggering new call UI`);
         }
       } catch (error) {
         console.error("Error handling call offer:", error);
@@ -246,8 +238,6 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
   // Enhanced accept call
   const acceptCall = useCallback(async () => {
     try {
-      console.log("📞 Accepting call...");
-
       // Reset error states
       setCameraError(null);
       setIsAudioOnlyFallback(false);
@@ -292,7 +282,6 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
       // Use EndCall for now since DeclineCall might not be implemented
       connection
         .invoke("EndCall", webRTC.callState.callerId)
-        .then(() => console.log("📞 Call declined successfully"))
         .catch((err) => console.error("Error sending call decline:", err));
     }
 

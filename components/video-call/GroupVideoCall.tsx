@@ -147,19 +147,6 @@ const VideoGrid: React.FC<VideoGridProps> = React.memo(({
         ...participants,
       ], [hasLocalParticipant, participants, currentUserId, isLocalAudioEnabled, isLocalVideoEnabled]);
 
-  console.log('🎥 VideoGrid debug:', {
-    originalParticipants: participants.length,
-    hasLocalParticipant,
-    currentUserId,
-    allParticipants: allParticipants.length,
-    localStreamAvailable: !!localStream,
-    participants: allParticipants.map(p => ({
-      id: p.user_id,
-      name: p.user_name,
-      isLocal: p.user_id === currentUserId,
-      videoEnabled: p.is_video_enabled
-    }))
-  });
 
   // Memoize grid class calculation
   const gridClass = useMemo(() => cn(
@@ -346,25 +333,6 @@ export const GroupVideoCall: React.FC<GroupVideoCallProps> = ({
     [callState?.isConnecting, hasOtherParticipants]
   );
 
-  // Debug logging
-  console.log('🎥 GroupVideoCall render debug:', {
-    participantsCount: call.participants.length,
-    hasLocalStream: !!localStream,
-    localStreamTracks: localStream?.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled })),
-    isConnecting: callState?.isConnecting,
-    currentUserId,
-    isLocalVideoEnabled,
-    isLocalAudioEnabled,
-    callId: call.id,
-    groupName: call.group_name,
-    hasOtherParticipants,
-    showWaitingScreen,
-    participants: call.participants.map(p => ({
-      id: p.user_id,
-      name: p.user_name,
-      isCurrentUser: p.user_id === currentUserId
-    }))
-  });
 
   return (
     <div className={cn("fixed inset-0 bg-background z-50 flex flex-col video-call-container", className)}>

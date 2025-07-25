@@ -83,21 +83,11 @@ export const messengerRepo = {
       ORDER BY lm.last_message_at DESC NULLS LAST, ci.conversation_id DESC
     `;
 
-    console.log("🔍 Getting conversations for user:", userId);
     const data = await safeQuery(sql, [userId]);
     
     if (!data || !data.rows) {
       return [];
     }
-    
-    console.log("✅ Retrieved conversations count:", data.rows.length);
-    
-    // Debug member counts
-    data.rows.forEach(row => {
-      if (row.is_group) {
-        console.log(`📊 Group "${row.name}" member_count from query:`, row.member_count);
-      }
-    });
     
     // Map results to proper format
     return data.rows.map(row => ({
@@ -186,9 +176,6 @@ export const messengerRepo = {
       LIMIT $2 OFFSET $3
     `;
 
-    console.log("🔍 SQL Pagination Query:", sql);
-    console.log("🔍 Count Query:", countSql);
-    console.log("🔍 Parameters:", { conversationId, limit, offset, page });
 
     try {
       // Get total count first
@@ -197,13 +184,6 @@ export const messengerRepo = {
       
       // Get paginated messages
       const messages = await safeQuery(sql, [conversationId, limit, offset]);
-      console.log("✅ Query result:", {
-        messagesCount: messages?.rows?.length,
-        totalCount,
-        page,
-        limit,
-        offset
-      });
       
       if (!messages || !messages.rows) {
         return {

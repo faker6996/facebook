@@ -30,7 +30,6 @@ export default function HomeContainer({ menus }: HomeContainerProps) {
         return res;
       } catch (error) {
         // Silently handle authentication error - user will be redirected by middleware
-        console.log("User not authenticated, skipping profile fetch");
       }
     };
     fetchUserProfile();

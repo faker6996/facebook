@@ -40,7 +40,6 @@ export function GlobalGroupVideoCallManager() {
   const groupCall = useGroupCall({
     currentUser,
     onCallStateChange: (isActive: boolean) => {
-      console.log("🌐 Global group call state changed:", isActive);
 
       if (isActive) {
         // Call started - notify all messenger containers with groupId (async to avoid setState in render)
@@ -77,7 +76,6 @@ export function GlobalGroupVideoCallManager() {
   // Listen for incoming calls and show modal - optimized to reduce re-renders
   useEffect(() => {
     if (groupCall.callState.isIncomingCall && groupCall.incomingCallData) {
-      console.log("🌐 Global incoming call detected:", groupCall.incomingCallData);
       
       // Only update if different from current state
       setIncomingCallData((prevData: any) => {
@@ -105,7 +103,6 @@ export function GlobalGroupVideoCallManager() {
         return prev;
       });
     } else {
-      console.log("🌐 Incoming call condition not met");
     }
   }, [groupCall.callState.isIncomingCall, groupCall.incomingCallData]);
 
@@ -113,7 +110,6 @@ export function GlobalGroupVideoCallManager() {
   useEffect(() => {
     // If hook says call is active but global state doesn't, sync it
     if (groupCall.callState.isActive && groupCall.currentCall && !globalCallState.isCallActive) {
-      console.log("🌐 Syncing global state with hook state - call is active");
       setGlobalCallState((prev) => ({
         ...prev,
         isCallActive: true,
@@ -122,7 +118,6 @@ export function GlobalGroupVideoCallManager() {
     }
     // Also handle the reverse case - hook says not active but global state says active
     else if (!groupCall.callState.isActive && globalCallState.isCallActive) {
-      console.log("🌐 Syncing global state with hook state - call is not active");
       setGlobalCallState((prev) => ({
         ...prev,
         isCallActive: false,
@@ -138,7 +133,6 @@ export function GlobalGroupVideoCallManager() {
 
     const handleStartGroupCall = (event: any) => {
       const { groupId, groupName, callType } = event.detail;
-      console.log("🌐 Starting global group call:", { groupId, groupName, callType });
 
       setGlobalCallState({
         isCallActive: true,
@@ -154,7 +148,6 @@ export function GlobalGroupVideoCallManager() {
 
     const handleJoinGroupCall = (event: any) => {
       const { callId, groupId, groupName, callType } = event.detail;
-      console.log("🌐 Joining global group call:", { callId, groupId, groupName, callType });
 
       // Set connecting state
       setGlobalCallState({
@@ -181,39 +174,13 @@ export function GlobalGroupVideoCallManager() {
 
   // Handle accept incoming call
   const handleAcceptCall = async () => {
-    console.log("🌐 HandleAcceptCall called with incomingCallData:", {
-      hasIncomingCallData: !!incomingCallData,
-      callId: incomingCallData?.call?.id,
-      groupName: incomingCallData?.call?.group_name
-    });
     
     if (incomingCallData?.call?.id) {
       try {
-        console.log("🌐 Starting joinGroupCall...");
         await groupCall.joinGroupCall(incomingCallData.call.id);
-        console.log("🌐 joinGroupCall completed, checking state...");
         
-        // Check state immediately
-        console.log("🌐 Immediate post-join state:", {
-          hookCallActive: groupCall.callState.isActive,
-          hookIsConnecting: groupCall.callState.isConnecting,
-          currentCall: !!groupCall.currentCall,
-          participantsCount: groupCall.currentCall?.participants?.length || 0,
-          globalState: globalCallState,
-        });
         
-        // Wait a bit for state to update
-        setTimeout(() => {
-          console.log("🌐 Delayed post-join state check:", {
-            hookCallActive: groupCall.callState.isActive,
-            hookIsConnecting: groupCall.callState.isConnecting,
-            currentCall: !!groupCall.currentCall,
-            participantsCount: groupCall.currentCall?.participants?.length || 0,
-            globalState: globalCallState,
-          });
-        }, 1000);
 
-        console.log("🌐 Successfully joined group call, updating global state");
 
         // Clear incoming call state and set as active
         setIncomingCallData(null);
@@ -226,19 +193,18 @@ export function GlobalGroupVideoCallManager() {
           callId: incomingCallData.call.id,
         }));
       } catch (error) {
-        console.error("🌐 Failed to join group call:", error);
+        console.error("Failed to join group call:", error);
         // Reset state on error
         setIncomingCallData(null);
         setGlobalCallState((prev) => ({ ...prev, isIncomingCall: false }));
       }
     } else {
-      console.error("🌐 No call ID found in incoming call data");
+      console.error("No call ID found in incoming call data");
     }
   };
 
   // Handle decline incoming call
   const handleDeclineCall = () => {
-    console.log("🌐 Declining incoming group call");
     setIncomingCallData(null);
     setGlobalCallState((prev) => ({ ...prev, isIncomingCall: false }));
   };
@@ -337,7 +303,6 @@ export function GlobalGroupVideoCallManager() {
 
   // TypeScript guard - ensure currentCall exists
   if (!groupCall.currentCall) {
-    console.log("🌐 No currentCall available, cannot render GroupVideoCall");
     return null;
   }
 
@@ -354,17 +319,10 @@ export function GlobalGroupVideoCallManager() {
       onEndCall={() => {
         // Check if current user is the initiator (like 2-person call pattern)
         const isInitiator = groupCall.currentCall?.initiator_id === currentUser.id;
-        console.log("🌐 Global end call action:", {
-          isInitiator,
-          initiatorId: groupCall.currentCall?.initiator_id,
-          currentUserId: currentUser.id,
-        });
 
         if (isInitiator) {
-          console.log("🌐 Ending call as initiator");
           groupCall.endGroupCall();
         } else {
-          console.log("🌐 Leaving call as participant");
           groupCall.leaveGroupCall();
         }
       }}

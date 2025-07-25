@@ -45,9 +45,6 @@ export async function callApi<T>(
     silent?: boolean; // Add silent option
   }
 ): Promise<T> {
-  console.log(`🔥 API Call: ${method} ${url}`, data);
-  
-  
   try {
     const res = await api.request({
       url,
@@ -55,8 +52,6 @@ export async function callApi<T>(
       ...(method === "GET" ? { params: data } : { data }),
       ...config,
     });
-
-    console.log(`✅ API Response: ${method} ${url}`, res.data);
 
     // Backend chuẩn hóa { success, message, data }
     const { success, message, data: payload } = res.data;

@@ -10,12 +10,6 @@ async function getHandler(req: NextRequest) {
   const page = searchParams.get("page") || "1";
   const limit = searchParams.get("limit") || "30";
 
-  console.log("🚀 API /api/messenger/messages called with:", {
-    conversationId,
-    page,
-    limit
-  });
-
   if (!conversationId) {
     console.error("❌ Missing conversationId parameter");
     return NextResponse.json({ error: "Missing conversationId" }, { status: 400 });
@@ -34,24 +28,11 @@ async function getHandler(req: NextRequest) {
   }
 
   try {
-    console.log("🔄 Calling messengerApp.getMessagesByConversationId with:", {
-      conversationId: Number(conversationId),
-      page: pageNum,
-      limit: limitNum
-    });
-    
     const result = await messengerApp.getMessagesByConversationId(
       Number(conversationId), 
       pageNum, 
       limitNum
     );
-    
-    console.log("✅ Retrieved messages:", {
-      count: result?.messages?.length,
-      hasMore: result?.hasMore,
-      totalCount: result?.totalCount,
-      page: pageNum
-    });
     
     return createResponse(result, "Thành công");
   } catch (error) {
