@@ -18,6 +18,7 @@
     "docker:prod-down": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml down"
   },
   "dependencies": {
+    "@floating-ui/react": "^0.27.15",
     "@microsoft/signalr": "^8.0.7",
     "@reduxjs/toolkit": "^2.7.0",
     "@tailwindcss/postcss": "^4.1.7",

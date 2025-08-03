@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   description?: string;
   footer?: React.ReactNode;
@@ -10,7 +10,6 @@ interface CardProps {
   children?: React.ReactNode;
   hoverable?: boolean;
   clickable?: boolean;
-  onClick?: () => void;
 }
 
 const Card = ({ 
@@ -21,7 +20,8 @@ const Card = ({
   className, 
   hoverable = false,
   clickable = false,
-  onClick 
+  onClick,
+  ...rest 
 }: CardProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -38,6 +38,7 @@ const Card = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      {...rest}
     >
       <div className="relative overflow-hidden rounded-xl">
         {(hoverable || clickable) && (

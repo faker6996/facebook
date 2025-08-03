@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { ToastProvider } from "@/components/ui/Toast";
 import { SignalRProvider } from "@/contexts/SignalRContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SignalRInit } from "./SignalRInit";
 import GlobalVideoCallManager from "./GlobalVideoCallManager";
 import { GlobalLoading } from "@/components/ui/GlobalLoading";
@@ -27,8 +28,9 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
                       pathname?.includes('/reset-password');
 
   return (
-    <ToastProvider position="top-right" maxToasts={5}>
-      <SignalRProvider>
+    <ThemeProvider>
+      <ToastProvider position="top-right" maxToasts={5}>
+        <SignalRProvider>
         {isPublicPage ? (
           // Public pages: Only basic providers, NO auth-related components
           <>
@@ -45,7 +47,8 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
             {children}
           </SessionGuardProvider>
         )}
-      </SignalRProvider>
-    </ToastProvider>
+        </SignalRProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 };

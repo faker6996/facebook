@@ -1,31 +1,36 @@
 import React from "react";
 import { cn } from "@/lib/utils/cn";
+import { Check, X, Clock, AlertTriangle } from "lucide-react";
 
 interface ProgressProps {
   value: number;
   max?: number;
   className?: string;
   variant?: "default" | "primary" | "success" | "warning" | "danger" | "info";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   showValue?: boolean;
   label?: string;
   animated?: boolean;
   striped?: boolean;
+  indeterminate?: boolean;
+  description?: string;
+  status?: "normal" | "error" | "complete";
 }
 
 const variantStyles = {
   default: "bg-muted-foreground",
-  primary: "bg-primary",
-  success: "bg-success", 
-  warning: "bg-warning",
-  danger: "bg-destructive",
-  info: "bg-info"
+  primary: "bg-gradient-to-r from-primary via-primary/90 to-primary",
+  success: "bg-gradient-to-r from-success via-success/90 to-success shadow-sm shadow-success/20", 
+  warning: "bg-gradient-to-r from-warning via-warning/90 to-warning shadow-sm shadow-warning/20",
+  danger: "bg-gradient-to-r from-destructive via-destructive/90 to-destructive shadow-sm shadow-destructive/20",
+  info: "bg-gradient-to-r from-info via-info/90 to-info shadow-sm shadow-info/20"
 };
 
 const sizeStyles = {
-  sm: "h-1",
-  md: "h-2",
-  lg: "h-3"
+  sm: "h-1.5",
+  md: "h-2.5",
+  lg: "h-3.5",
+  xl: "h-4"
 };
 
 export const Progress: React.FC<ProgressProps> = ({
@@ -37,37 +42,73 @@ export const Progress: React.FC<ProgressProps> = ({
   showValue = false,
   label,
   animated = false,
-  striped = false
+  striped = false,
+  indeterminate = false,
+  description,
+  status = "normal"
 }) => {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  const isComplete = status === "complete" || percentage >= 100;
+  const isError = status === "error";
+
+  // Status icon
+  const getStatusIcon = () => {
+    if (isComplete) return <Check className="w-4 h-4 text-success" />;
+    if (isError) return <X className="w-4 h-4 text-destructive" />;
+    if (animated || indeterminate) return <Clock className="w-4 h-4 text-muted-foreground animate-spin" />;
+    return null;
+  };
 
   return (
-    <div className={cn("w-full space-y-2", className)}>
-      {(label || showValue) && (
-        <div className="flex justify-between items-center text-sm">
-          {label && <span className="font-medium text-foreground">{label}</span>}
-          {showValue && (
-            <span className="text-muted-foreground">
-              {Math.round(percentage)}%
-            </span>
+    <div className={cn("w-full space-y-3", className)}>
+      {/* Header */}
+      {(label || showValue || description) && (
+        <div className="space-y-1">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              {label && <span className="font-medium text-foreground">{label}</span>}
+              {getStatusIcon()}
+            </div>
+            {showValue && !indeterminate && (
+              <span className={cn(
+                "text-sm font-medium",
+                isComplete ? "text-success" : isError ? "text-destructive" : "text-muted-foreground"
+              )}>
+                {isComplete ? "Complete" : isError ? "Error" : `${Math.round(percentage)}%`}
+              </span>
+            )}
+          </div>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
           )}
         </div>
       )}
       
+      {/* Progress Bar */}
       <div
         className={cn(
-          "w-full bg-muted rounded-full overflow-hidden",
+          "w-full bg-muted/50 rounded-full overflow-hidden backdrop-blur-sm",
+          "border border-border/50",
           sizeStyles[size]
         )}
       >
         <div
           className={cn(
-            "transition-all duration-500 ease-out rounded-full",
-            variantStyles[variant],
-            striped && "bg-stripes",
-            animated && "bg-animated-stripes"
+            "h-full transition-all duration-700 ease-out rounded-full relative",
+            "before:absolute before:inset-0 before:rounded-full before:opacity-30",
+            indeterminate && "animate-pulse",
+            !indeterminate && variantStyles[variant],
+            isComplete && "bg-gradient-to-r from-success via-success/90 to-success shadow-sm shadow-success/20",
+            isError && "bg-gradient-to-r from-destructive via-destructive/90 to-destructive shadow-sm shadow-destructive/20",
+            striped && "bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent bg-[length:1rem_1rem]",
+            animated && !indeterminate && "before:animate-pulse",
+            // Shimmer effect for indeterminate
+            indeterminate && "bg-gradient-to-r from-muted via-primary/50 to-muted bg-[length:200%_100%] animate-[shimmer_2s_infinite]"
           )}
-          style={{ width: `${percentage}%` }}
+          style={{ 
+            width: indeterminate ? "100%" : `${percentage}%`,
+            backgroundImage: striped ? "linear-gradient(45deg, hsl(var(--foreground) / 0.15) 25%, transparent 25%, transparent 50%, hsl(var(--foreground) / 0.15) 50%, hsl(var(--foreground) / 0.15) 75%, transparent 75%, transparent)" : undefined
+          }}
         />
       </div>
     </div>
@@ -84,6 +125,9 @@ interface CircularProgressProps {
   variant?: "default" | "primary" | "success" | "warning" | "danger" | "info";
   showValue?: boolean;
   children?: React.ReactNode;
+  indeterminate?: boolean;
+  status?: "normal" | "error" | "complete";
+  trackColor?: string;
 }
 
 export const CircularProgress: React.FC<CircularProgressProps> = ({
@@ -94,12 +138,17 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   className,
   variant = "primary",
   showValue = false,
-  children
+  children,
+  indeterminate = false,
+  status = "normal",
+  trackColor = "stroke-muted/20"
 }) => {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * Math.PI * 2;
   const offset = circumference - (percentage / 100) * circumference;
+  const isComplete = status === "complete" || percentage >= 100;
+  const isError = status === "error";
 
   const variantColors = {
     default: "stroke-muted-foreground",
@@ -110,12 +159,22 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
     info: "stroke-info"
   };
 
+  const getContentIcon = () => {
+    if (isComplete) return <Check className="w-5 h-5 text-success" />;
+    if (isError) return <X className="w-5 h-5 text-destructive" />;
+    return null;
+  };
+
   return (
     <div className={cn("relative inline-flex items-center justify-center", className)}>
       <svg
         width={size}
         height={size}
-        className="transform -rotate-90"
+        className={cn(
+          "transform -rotate-90",
+          indeterminate && "animate-spin"
+        )}
+        style={{ animationDuration: indeterminate ? "2s" : undefined }}
       >
         {/* Background circle */}
         <circle
@@ -125,8 +184,9 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           stroke="currentColor"
           strokeWidth={strokeWidth}
           fill="transparent"
-          className="text-muted opacity-20"
+          className={trackColor}
         />
+        
         {/* Progress circle */}
         <circle
           cx={size / 2}
@@ -135,22 +195,41 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          strokeDashoffset={indeterminate ? circumference * 0.25 : offset}
           className={cn(
-            "transition-all duration-500 ease-out",
-            variantColors[variant]
+            "transition-all duration-700 ease-out",
+            isComplete ? "stroke-success" : isError ? "stroke-destructive" : variantColors[variant],
+            "drop-shadow-sm"
           )}
           strokeLinecap="round"
+          style={{
+            filter: `drop-shadow(0 0 4px ${
+              isComplete ? "hsl(var(--success) / 0.3)" : 
+              isError ? "hsl(var(--destructive) / 0.3)" : 
+              "hsl(var(--primary) / 0.2)"
+            })`
+          }}
         />
       </svg>
       
       {/* Content */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {children || (showValue && (
-          <span className="text-sm font-medium text-foreground">
-            {Math.round(percentage)}%
-          </span>
-        ))}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        {children ? children : (
+          <>
+            {getContentIcon()}
+            {showValue && !indeterminate && (
+              <span className={cn(
+                "text-sm font-semibold",
+                isComplete ? "text-success" : isError ? "text-destructive" : "text-foreground"
+              )}>
+                {isComplete ? "✓" : isError ? "✗" : `${Math.round(percentage)}%`}
+              </span>
+            )}
+            {indeterminate && (
+              <Clock className="w-4 h-4 text-muted-foreground animate-pulse" />
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -195,26 +274,25 @@ export const StepProgress: React.FC<StepProgressProps> = ({
               {/* Step Circle */}
               <div
                 className={cn(
-                  "rounded-full border-2 flex items-center justify-center font-medium transition-all duration-200",
+                  "rounded-full border-2 flex items-center justify-center font-medium transition-all duration-300",
+                  "shadow-sm hover:shadow-md",
                   stepSizes[size],
                   status === "completed" && [
-                    "border-transparent",
-                    variantStyles[variant],
-                    "text-white"
+                    "border-success bg-success text-success-foreground",
+                    "shadow-success/20"
                   ],
                   status === "current" && [
-                    `border-${variant}`,
-                    `text-${variant}`,
-                    "bg-background"
+                    "border-primary bg-primary/10 text-primary",
+                    "ring-2 ring-primary/20 ring-offset-2",
+                    "shadow-primary/20"
                   ],
                   status === "upcoming" && [
-                    "border-muted",
-                    "text-muted-foreground",
-                    "bg-background"
+                    "border-muted-foreground/30 text-muted-foreground bg-background",
+                    "hover:border-muted-foreground/50"
                   ]
                 )}
               >
-                {status === "completed" ? "✓" : index + 1}
+                {status === "completed" ? <Check className="w-3 h-3" /> : index + 1}
               </div>
               
               {/* Step Label */}
@@ -242,6 +320,220 @@ export const StepProgress: React.FC<StepProgressProps> = ({
           );
         })}
       </div>
+    </div>
+  );
+};
+
+// Mini Progress - compact version for tight spaces
+interface MiniProgressProps {
+  value: number;
+  max?: number;
+  className?: string;
+  variant?: "default" | "primary" | "success" | "warning" | "danger" | "info";
+  showValue?: boolean;
+}
+
+export const MiniProgress: React.FC<MiniProgressProps> = ({
+  value,
+  max = 100,
+  className,
+  variant = "primary",
+  showValue = false
+}) => {
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
+        <div
+          className={cn(
+            "h-full transition-all duration-500 ease-out rounded-full",
+            variantStyles[variant]
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      {showValue && (
+        <span className="text-xs font-medium text-muted-foreground min-w-[2.5rem] text-right">
+          {Math.round(percentage)}%
+        </span>
+      )}
+    </div>
+  );
+};
+
+// Battery Progress - for battery/power indicators
+interface BatteryProgressProps {
+  value: number;
+  max?: number;
+  className?: string;
+  charging?: boolean;
+  showValue?: boolean;
+}
+
+export const BatteryProgress: React.FC<BatteryProgressProps> = ({
+  value,
+  max = 100,
+  className,
+  charging = false,
+  showValue = false
+}) => {
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  const getVariant = () => {
+    if (charging) return "info";
+    if (percentage <= 20) return "danger";
+    if (percentage <= 50) return "warning";
+    return "success";
+  };
+
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <div className="relative">
+        {/* Battery outline */}
+        <div className="w-6 h-3 border-2 border-foreground/20 rounded-sm relative">
+          <div className="absolute -right-1 top-0.5 w-0.5 h-1 bg-foreground/20 rounded-r-sm" />
+          {/* Battery fill */}
+          <div
+            className={cn(
+              "h-full transition-all duration-500 ease-out rounded-sm",
+              variantStyles[getVariant()],
+              charging && "animate-pulse"
+            )}
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
+        {charging && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 text-info-foreground">⚡</div>
+          </div>
+        )}
+      </div>
+      {showValue && (
+        <span className={cn(
+          "text-xs font-medium",
+          percentage <= 20 ? "text-destructive" : "text-muted-foreground"
+        )}>
+          {Math.round(percentage)}%
+        </span>
+      )}
+    </div>
+  );
+};
+
+// Segmented Progress - for multi-segment indicators
+interface SegmentedProgressProps {
+  segments: number;
+  activeSegments: number;
+  className?: string;
+  variant?: "default" | "primary" | "success" | "warning" | "danger" | "info";
+  size?: "sm" | "md" | "lg";
+}
+
+export const SegmentedProgress: React.FC<SegmentedProgressProps> = ({
+  segments,
+  activeSegments,
+  className,
+  variant = "primary",
+  size = "md"
+}) => {
+  const segmentSizes = {
+    sm: "h-1",
+    md: "h-2", 
+    lg: "h-3"
+  };
+
+  return (
+    <div className={cn("flex gap-1", className)}>
+      {Array.from({ length: segments }, (_, index) => (
+        <div
+          key={index}
+          className={cn(
+            "flex-1 rounded-full transition-all duration-300",
+            segmentSizes[size],
+            index < activeSegments 
+              ? variantStyles[variant]
+              : "bg-muted/50"
+          )}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Loading Progress - for file uploads, downloads etc
+interface LoadingProgressProps {
+  value: number;
+  max?: number;
+  className?: string;
+  variant?: "default" | "primary" | "success" | "warning" | "danger" | "info";
+  label?: string;
+  status?: "loading" | "complete" | "error" | "paused";
+  speed?: string;
+  timeRemaining?: string;
+}
+
+export const LoadingProgress: React.FC<LoadingProgressProps> = ({
+  value,
+  max = 100,
+  className,
+  variant = "primary",
+  label,
+  status = "loading",
+  speed,
+  timeRemaining
+}) => {
+  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  
+  const getStatusIcon = () => {
+    switch (status) {
+      case "complete": return <Check className="w-4 h-4 text-success" />;
+      case "error": return <X className="w-4 h-4 text-destructive" />;
+      case "paused": return <Clock className="w-4 h-4 text-warning" />;
+      default: return <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />;
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case "complete": return "success";
+      case "error": return "danger";
+      case "paused": return "warning";
+      default: return variant;
+    }
+  };
+
+  return (
+    <div className={cn("w-full space-y-2", className)}>
+      {/* Header */}
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2">
+          {getStatusIcon()}
+          {label && <span className="font-medium text-foreground">{label}</span>}
+        </div>
+        <span className="text-muted-foreground">
+          {status === "complete" ? "Complete" : `${Math.round(percentage)}%`}
+        </span>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full h-2 bg-muted/50 rounded-full overflow-hidden">
+        <div
+          className={cn(
+            "h-full transition-all duration-300 ease-out rounded-full",
+            variantStyles[getStatusColor()],
+            status === "loading" && "animate-pulse"
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      {/* Footer */}
+      {(speed || timeRemaining) && (
+        <div className="flex justify-between text-xs text-muted-foreground">
+          {speed && <span>{speed}</span>}
+          {timeRemaining && <span>{timeRemaining}</span>}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,17 +1,41 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
+import { 
+  useFloating, 
+  autoUpdate, 
+  offset, 
+  flip, 
+  shift, 
+  useClick, 
+  useDismiss, 
+  useRole, 
+  useInteractions,
+  useMergeRefs,
+  FloatingFocusManager,
+  useListNavigation
+} from "@floating-ui/react";
 import { cn } from "@/lib/utils/cn";
 import { ChevronDown, Check } from "lucide-react";
 
 interface DropdownMenuProps {
-  trigger: React.ReactNode;
-  children: React.ReactNode;
+  trigger: React.ReactElement;
+  children?: React.ReactNode;
   className?: string;
   contentClassName?: string;
-  align?: "start" | "center" | "end";
-  side?: "top" | "bottom" | "left" | "right";
+  placement?: "top" | "bottom" | "left" | "right" | "top-start" | "bottom-start" | "top-end" | "bottom-end";
   closeOnSelect?: boolean;
+  disabled?: boolean;
+  // Alternative API props
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  items?: Array<{
+    label: string;
+    icon?: React.ComponentType<any>;
+    onClick: () => void;
+    disabled?: boolean;
+    destructive?: boolean;
+  }>;
 }
 
 export const DropdownMenu: React.FC<DropdownMenuProps> = ({
@@ -19,79 +43,132 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   children,
   className,
   contentClassName,
-  align = "start",
-  side = "bottom",
-  closeOnSelect = true
+  placement = "bottom-start",
+  closeOnSelect = true,
+  disabled = false,
+  isOpen,
+  onOpenChange,
+  items
 }) => {
   const [open, setOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const listRef = React.useRef<Array<HTMLElement | null>>([]);
+  
+  const actualOpen = isOpen !== undefined ? isOpen : open;
+  const handleOpenChange = onOpenChange || setOpen;
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
+  const { refs, floatingStyles, context } = useFloating({
+    open: actualOpen,
+    onOpenChange: handleOpenChange,
+    placement,
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip({ padding: 8 }),
+      shift({ padding: 8 }),
+    ],
+  });
 
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
-    };
+  const click = useClick(context, {
+    enabled: !disabled,
+  });
+  const dismiss = useDismiss(context);
+  const role = useRole(context, { role: "menu" });
+  
+  const listNavigation = useListNavigation(context, {
+    listRef,
+    activeIndex,
+    onNavigate: setActiveIndex,
+    loop: true,
+  });
+  
+  const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
+    click,
+    dismiss,
+    role,
+    listNavigation,
+  ]);
 
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [open]);
-
-  const alignmentClasses = {
-    start: "left-0",
-    center: "left-1/2 transform -translate-x-1/2",
-    end: "right-0"
-  };
-
-  const sideClasses = {
-    top: "bottom-full mb-2",
-    bottom: "top-full mt-2", 
-    left: "right-full mr-2 top-0",
-    right: "left-full ml-2 top-0"
-  };
+  // Merge refs with child's ref if it exists
+  const ref = useMergeRefs([refs.setReference, (trigger as any).ref]);
 
   return (
-    <div className={cn("relative inline-block", className)} ref={dropdownRef}>
-      <div onClick={() => setOpen(!open)}>
-        {trigger}
-      </div>
-      
-      {open && (
-        <div
-          className={cn(
-            "absolute z-50 min-w-[8rem] rounded-md border bg-popover text-popover-foreground shadow-md transition-all duration-200 ease-out",
-            "backdrop-blur-sm bg-white/95 dark:bg-neutral-900/95",
-            "border-gray-200/60 dark:border-gray-800/60",
-            "animate-in fade-in-0 zoom-in-95 duration-200",
-            alignmentClasses[align],
-            sideClasses[side],
-            contentClassName
-          )}
-          onClick={closeOnSelect ? () => setOpen(false) : undefined}
-        >
-          {children}
-        </div>
+    <>
+      {React.cloneElement(trigger, {
+        ref,
+        ...getReferenceProps(),
+        className: cn((trigger.props as any)?.className, className),
+      } as any)}
+      {actualOpen && (
+        <FloatingFocusManager context={context} modal={false}>
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className={cn(
+              "z-[9999] min-w-[8rem] rounded-md border bg-popover text-popover-foreground shadow-lg",
+              "backdrop-blur-sm bg-popover/95 border-border/60",
+              "py-1",
+              contentClassName
+            )}
+          >
+            {items ? (
+              items.map((item, index) => (
+                <DropdownMenuItem
+                  key={index}
+                  ref={(node) => {
+                    listRef.current[index] = node;
+                  }}
+                  {...getItemProps({
+                    onClick() {
+                      item.onClick();
+                      if (closeOnSelect) {
+                        handleOpenChange(false);
+                      }
+                    },
+                  })}
+                  disabled={item.disabled}
+                  destructive={item.destructive}
+                  icon={item.icon}
+                  className={cn(
+                    index === activeIndex && "bg-accent text-accent-foreground"
+                  )}
+                >
+                  {item.label}
+                </DropdownMenuItem>
+              ))
+            ) : (
+              React.Children.map(children, (child, index) => {
+                if (React.isValidElement(child)) {
+                  return React.cloneElement(child as React.ReactElement<any>, {
+                    ...getItemProps({
+                      onClick() {
+                        (child.props as any).onClick?.();
+                        if (closeOnSelect) {
+                          handleOpenChange(false);
+                        }
+                      },
+                    }),
+                    className: cn(
+                      (child.props as any).className,
+                      index === activeIndex && "bg-accent text-accent-foreground"
+                    ),
+                  });
+                }
+                return child;
+              })
+            )}
+          </div>
+        </FloatingFocusManager>
       )}
-    </div>
+    </>
   );
 };
 
 interface DropdownMenuItemProps {
   children: React.ReactNode;
   onClick?: () => void;
+  ref?: React.Ref<HTMLDivElement>;
   disabled?: boolean;
   className?: string;
   destructive?: boolean;
@@ -99,7 +176,7 @@ interface DropdownMenuItemProps {
   shortcut?: string;
 }
 
-export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
+export const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownMenuItemProps>(({
   children,
   onClick,
   disabled = false,
@@ -107,9 +184,10 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
   destructive = false,
   icon: Icon,
   shortcut
-}) => {
+}, ref) => {
   return (
     <div
+      ref={ref}
       className={cn(
         "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
         "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
@@ -128,7 +206,7 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
       )}
     </div>
   );
-};
+});
 
 export const DropdownMenuSeparator: React.FC<{ className?: string }> = ({ className }) => {
   return <div className={cn("-mx-1 my-1 h-px bg-border", className)} />;
@@ -175,7 +253,6 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
   values = [],
   onValuesChange
 }) => {
-  const [open, setOpen] = useState(false);
   
   const selectedOption = options.find(opt => opt.value === value);
   const selectedOptions = options.filter(opt => values.includes(opt.value));
@@ -188,7 +265,6 @@ export const SelectDropdown: React.FC<SelectDropdownProps> = ({
       onValuesChange?.(newValues);
     } else {
       onValueChange?.(optionValue);
-      setOpen(false);
     }
   };
 

@@ -9,7 +9,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(({ classNa
   return (
     <div
       ref={ref}
-      className={cn("overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400 scrollbar-track-transparent", className)}
+      className={cn("overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-border scrollbar-track-transparent", className)}
       {...props}
     >
       {children}
