@@ -5,6 +5,7 @@ import { UserInfoSsoGg } from "@/lib/models/user";
 import { ssoGoogleApp } from "@/lib/modules/auth/sso_google/applications/sso_google_app";
 import { ApiError } from "@/lib/utils/error";
 import { signJwt } from "@/lib/utils/jwt";
+import { sessionManager } from "@/lib/utils/session-manager";
 import { withApiHandler } from "@/lib/utils/withApiHandler";
 import { serialize } from "cookie";
 import { NextRequest, NextResponse } from "next/server";
@@ -76,16 +77,17 @@ async function getHandler(req: NextRequest) {
 
   // 4. Kiểm tra/tạo user trong DB
   const user = await ssoGoogleApp.handleAfterSso(userInfo);
-  // Create JWT
-  const token = signJwt(
-    {
-      sub: user.id!.toString(),
-      email: user.email,
-      name: user.name,
-      id: user.id!,
-    },
-    "2h"
-  );
+  
+  // 5. Tạo Single Session với database
+  const sessionResult = await sessionManager.createSingleSession({
+    userId: user.id!,
+    deviceInfo: { browser: 'Google SSO', platform: 'Web' },
+    ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+    userAgent: req.headers.get('user-agent') || 'Google SSO',
+    rememberMe: false
+  });
+
+  const token = sessionResult.sessionToken;
   // Redirect with cookie
   const response = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
   response.headers.set(

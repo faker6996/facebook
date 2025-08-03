@@ -43,8 +43,22 @@ export default function Header() {
     const cachedUser = loadFromLocalStorage("user", User);
     setUser(cachedUser);
     
-    // Then fetch fresh data from API
+    // Then fetch fresh data from API - only if authenticated
     const fetchUserData = async () => {
+      // Skip API call on public pages
+      if (typeof window !== 'undefined' && 
+          (window.location.pathname.includes('/login') || 
+           window.location.pathname.includes('/register') ||
+           window.location.pathname.includes('/forgot-password') ||
+           window.location.pathname.includes('/reset-password'))) {
+        return;
+      }
+
+      // Check if user is authenticated before calling API
+      if (typeof document !== 'undefined' && !document.cookie.includes('access_token=')) {
+        return;
+      }
+
       try {
         const freshUser = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
         if (freshUser) {

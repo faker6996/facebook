@@ -22,6 +22,11 @@ export default function useVideoCall(events?: VideoCallEvents, isGlobal: boolean
   // Fetch ICE servers from API
   useEffect(() => {
     const fetchIceServers = async () => {
+      // Check if user is authenticated before fetching TURN credentials
+      if (typeof document !== 'undefined' && !document.cookie.includes('access_token=')) {
+        return; // Don't fetch TURN creds if not authenticated
+      }
+
       try {
         const response = await callApi<{ iceServers: RTCIceServer[] }>("/api/turn-cred", HTTP_METHOD_ENUM.GET);
         if (response?.iceServers) {

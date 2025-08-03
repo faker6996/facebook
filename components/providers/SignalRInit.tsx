@@ -18,12 +18,29 @@ export const SignalRInit: React.FC = () => {
   // Lấy thông tin user hiện tại
   useEffect(() => {
     const getCurrentUser = async () => {
+      // Skip API call on public pages
+      if (typeof window !== 'undefined' && 
+          (window.location.pathname.includes('/login') || 
+           window.location.pathname.includes('/register') ||
+           window.location.pathname.includes('/forgot-password') ||
+           window.location.pathname.includes('/reset-password'))) {
+        setCurrentUser(null);
+        return;
+      }
+
+      // Check if user is authenticated before calling /api/auth/me
+      if (typeof document !== 'undefined' && !document.cookie.includes('access_token=')) {
+        setCurrentUser(null);
+        return;
+      }
+
       try {
         const user = await callApi<User>(API_ROUTES.AUTH.ME, HTTP_METHOD_ENUM.GET);
         if (user) {
           setCurrentUser(user);
         }
       } catch (error) {
+        console.log('SignalRInit: Failed to get current user:', error);
         setCurrentUser(null);
       }
     };

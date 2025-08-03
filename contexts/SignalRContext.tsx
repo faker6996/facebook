@@ -234,6 +234,29 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
       userOfflineHandlerRef.current?.(userId);
     });
 
+    // Session invalidation listener
+    conn.on("SessionInvalidated", (data: { reason: string; message: string; timestamp: string }) => {
+      console.log('🚨 Session invalidated via SignalR:', data);
+      
+      // Clear cookie immediately
+      if (typeof document !== 'undefined') {
+        document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      }
+      
+      // Show toast notification
+      addToast({
+        type: 'error',
+        title: 'Phiên đăng nhập hết hạn',
+        message: data.message || 'Tài khoản này đã được đăng nhập từ thiết bị khác.',
+        duration: 0 // Persistent until manually closed
+      });
+
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        window.location.href = '/login?reason=session_invalidated_signalr';
+      }, 2000);
+    });
+
     // Group event listeners
     conn.on("GroupMemberAdded", (data: any) => {
       groupEventHandlerRef.current?.("member_added", data);

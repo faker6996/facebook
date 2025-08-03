@@ -18,12 +18,11 @@ export function withApiHandler(handler: (req: NextRequest) => Promise<NextRespon
     } catch (err) {
       /* ---------- ①  LỖI NGHIỆP VỤ ---------- */
       if (err instanceof ApiError) {
-        // ⚠️  HTTP 200 nhưng success=false
-        //     Nếu muốn giữ mã 4xx, đặt status = err.status
+        // ✅ Giữ nguyên status code để frontend xử lý đúng (401, 403, etc.)
         return createResponse(
           err.data ?? null,
           err.message,
-          200, // luôn 200
+          err.status, // Dùng status từ ApiError
           false // success = false
         );
       }

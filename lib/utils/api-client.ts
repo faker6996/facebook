@@ -3,15 +3,15 @@ import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
 // Function to get JWT token from cookie
 function getJwtToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  
-  const cookies = document.cookie.split(';');
-  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('access_token='));
-  
+  if (typeof window === "undefined") return null;
+
+  const cookies = document.cookie.split(";");
+  const tokenCookie = cookies.find((cookie) => cookie.trim().startsWith("access_token="));
+
   if (tokenCookie) {
-    return tokenCookie.split('=')[1];
+    return tokenCookie.split("=")[1];
   }
-  
+
   return null;
 }
 
@@ -31,6 +31,52 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Global flag to prevent multiple redirects
+let isRedirecting = false;
+
+// Function to handle session expiry redirect
+function handleSessionExpiry(message: string) {
+  // Prevent multiple redirects
+  if (isRedirecting) {
+    console.log("🛑 Already redirecting, skipping...");
+    return;
+  }
+
+  // Check for session expired message
+  if (message.includes("hết hạn") || message.includes("không hợp lệ") || message.includes("expired")) {
+    console.log("🚨 Session expired detected:", message);
+
+    // Clear the token cookie
+    if (typeof window !== "undefined") {
+      document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      console.log("🗑️ Cookie cleared");
+
+      debugger;
+      // Only redirect if we're not already on login page
+      const currentPath = window.location.pathname;
+      console.log("📍 Current path:", currentPath);
+
+      if (!currentPath.includes("/login")) {
+        // Set flag to prevent multiple redirects
+        isRedirecting = true;
+
+        // Get current locale from URL
+        const pathSegments = currentPath.split("/").filter(Boolean);
+        const locale = pathSegments[0] === "vi" || pathSegments[0] === "en" ? pathSegments[0] : "vi";
+
+        console.log("🌐 Detected locale:", locale);
+        const redirectUrl = `/${locale}/login?reason=session_expired&redirect=${encodeURIComponent(currentPath)}`;
+        console.log("🔄 Redirecting to:", redirectUrl);
+
+        // Immediate redirect
+        window.location.replace(redirectUrl);
+      } else {
+        console.log("⚠️ Already on login page, skipping redirect");
+      }
+    }
+  }
+}
+
 /**
  * Gửi request và **chỉ** trả `payload` (data) khi backend trả `success: true`.
  * Nếu backend trả `success: false` (lỗi nghiệp vụ) **hoặc** gặp lỗi hệ thống (network/5xx):
@@ -41,7 +87,7 @@ export async function callApi<T>(
   url: string,
   method: "GET" | "POST" | "PUT" | "DELETE",
   data?: any,
-  config?: AxiosRequestConfig & { 
+  config?: AxiosRequestConfig & {
     silent?: boolean; // Add silent option
   }
 ): Promise<T> {
@@ -57,10 +103,13 @@ export async function callApi<T>(
     const { success, message, data: payload } = res.data;
 
     // Don't show alert for auth endpoints or when silent flag is set
-    const isAuthEndpoint = url.includes('/auth/');
+    const isAuthEndpoint = url.includes("/auth/");
     const shouldShowAlert = !config?.silent && !isAuthEndpoint;
-    
+
     if (!success) {
+      // Handle session expiry before showing alert or throwing error
+      handleSessionExpiry(message);
+
       if (shouldShowAlert) {
         alert(message);
       }
@@ -78,7 +127,7 @@ export async function callApi<T>(
     console.error(`❌ API Error: ${method} ${url}`, err);
     console.error("Error response:", axiosErr.response?.data);
     console.error("Error status:", axiosErr.response?.status);
-    
+
     throw new Error(msg);
   }
 }
