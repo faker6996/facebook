@@ -12,11 +12,11 @@ interface LeftSidebarProps {
 
 export default function LeftSidebar({ menus, className }: LeftSidebarProps) {
   return (
-    <aside className={cn("w-64 bg-gray-800 text-white", className)}>
+    <aside className={cn("w-64 bg-card border-r border-border text-card-foreground", className)}>
       <nav>
         <ul>
           {menus?.map((m) => (
-            <li key={m.id} className="px-4 py-2 hover:bg-gray-700">
+            <li key={m.id} className="px-4 py-2 hover:bg-accent hover:text-accent-foreground transition-colors">
               <a href={m.slug} className="flex items-center space-x-2">
                 <MenuIcon iconCode={m.icon ?? ""} className="w-6 h-6" />
                 <span>{m.name}</span>
