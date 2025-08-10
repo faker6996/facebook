@@ -37,24 +37,15 @@ class Logger {
   }
 
   debug(message: string, data?: any) {
-    if (this.shouldLog('debug')) {
-      const [msg, ...args] = this.formatMessage('debug', message, data);
-      console.log(`🐛 ${msg}`, ...args);
-    }
+    // Debug logging removed
   }
 
   info(message: string, data?: any) {
-    if (this.shouldLog('info')) {
-      const [msg, ...args] = this.formatMessage('info', message, data);
-      console.info(`ℹ️ ${msg}`, ...args);
-    }
+    // Info logging removed
   }
 
   warn(message: string, data?: any) {
-    if (this.shouldLog('warn')) {
-      const [msg, ...args] = this.formatMessage('warn', message, data);
-      console.warn(`⚠️ ${msg}`, ...args);
-    }
+    // Warning logging removed
   }
 
   error(message: string, data?: any) {

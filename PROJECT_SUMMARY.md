@@ -54,8 +54,13 @@
 │   ├── layout/                # Layout components (Header, Sidebar)
 │   ├── home/                  # Trang chủ components
 │   ├── login/                 # Đăng nhập components
+│   ├── video-call/            # Video calling components 🆕 MỚI
+│   │   ├── VideoCall.tsx      # 2-person video call interface
+│   │   └── GroupVideoCall.tsx # Group video call interface với professional design
 │   └── messenger/             # Chat components
-│       ├── MessengerContainer.tsx         # Main chat interface
+│       ├── MessengerContainer.tsx         # Main chat interface với group call integration
+│       ├── MessengerHeader.tsx            # Header với group call buttons 🆕 MỚI
+│       ├── MessengerContent.tsx           # Message content display
 │       ├── MessengerDropdown.tsx          # Chat dropdown với group filtering
 │       ├── MessageList.tsx                # Message display với group support
 │       ├── MessageInput.tsx               # Message input component
@@ -66,13 +71,16 @@
 ├── contexts/                    # React Contexts ⭐ MỚI
 │   └── SignalRContext.tsx     # Global SignalR context management
 ├── hooks/                      # Custom React Hooks ⭐ MỚI
-│   └── useGlobalSignalR.ts    # Auto SignalR initialization hook
+│   ├── useGlobalSignalR.ts    # Auto SignalR initialization hook
+│   ├── useGroupCall.ts        # Group call state management 🆕 MỚI
+│   └── useGroupWebRTC.ts      # WebRTC peer connections cho group calls 🆕 MỚI
 ├── lib/                       # Business Logic
 │   ├── models/                # Database models
 │   │   ├── user.ts           # User model
 │   │   ├── message.ts        # Message model với attachments/reactions
 │   │   ├── messenger_review.ts # MessengerPreview với group support
-│   │   └── group.ts          # Group models (Group, GroupMember, etc.) ⭐ MỚI
+│   │   ├── group.ts          # Group models (Group, GroupMember, etc.) ⭐ MỚI
+│   │   └── group-call.ts     # Group call models (GroupCall, CallParticipant, etc.) 🆕 MỚI
 │   ├── modules/              # Business modules
 │   │   ├── auth/             # Authentication logic
 │   │   ├── messenger/        # Chat logic
@@ -120,6 +128,17 @@
   - Invite link generation
   - Real-time group events (member join/leave, role changes)
   - Group info modal với member list và permissions
+- **Group Video/Audio Calling** 🆕 **MỚI**:
+  - Group video calls với WebRTC và SignalR signaling
+  - Professional call interface tương tự 2-person calls
+  - Group audio calls với mute/unmute controls
+  - Multi-participant video grid layout
+  - Call waiting screen với animation rings
+  - Local video preview trong waiting screen
+  - Connection quality indicators cho mỗi participant
+  - Minimized call view cho multitasking
+  - Internationalization (English/Vietnamese) support
+  - System color consistency với design tokens
 - **Architecture**:
   - Frontend: React components với SignalR hooks
   - Backend: Separate chat server với API integration
@@ -216,6 +235,15 @@
 - `GET /api/groups/{id}/requests` - Get pending join requests
 - `PUT /api/groups/{groupId}/requests/{requestId}` - Handle join request
 - `POST /api/groups/join/{inviteCode}` - Join via invite link
+
+**Group Calls** 🆕 **MỚI**:
+
+- `POST /api/groups/{id}/calls` - Start group call
+- `GET /api/groups/{id}/calls/active` - Get active group call
+- `POST /api/groupcalls/{callId}/join` - Join group call
+- `DELETE /api/groupcalls/{callId}/leave` - Leave group call
+- `DELETE /api/groupcalls/{callId}/end` - End group call (admin only)
+- `PUT /api/groupcalls/{callId}/media` - Toggle audio/video
 
 **Real-time Features:**
 
@@ -317,7 +345,102 @@ npm run docker:*     # Docker operations cho các environments
 - **Theme Support**: Responsive color scheme cho dark/light mode
 - **Component Reusability**: Extensible UI component architecture
 
-Đây là một Facebook clone hoàn chỉnh với đầy đủ tính năng social media, messaging system, **comprehensive group chat functionality**, **advanced UI component library**, và **global real-time system**, sẵn sàng cho production deployment.
+## Group Video Call Features 🆕 **MỚI**
+
+### **Professional Call Interface**
+
+- **GroupVideoCall Component**:
+  - Professional call screen tương tự 2-person call design
+  - Multi-participant video grid layout (supports up to 9+ participants)
+  - Responsive grid system (1-4 participants: 2x2, 5-6: 3x2, 7-9: 3x3)
+  - Connection quality indicators cho mỗi participant
+  - Minimized call view với participant avatars
+  - Smooth animations và transitions
+
+- **Call Waiting Screen**:
+  - Multi-layer animation rings với staggered timing
+  - Group avatar với Users icon
+  - Local video preview trong bottom-right corner
+  - Professional gradient backgrounds
+  - Connecting state với loading animations
+  - Call duration timer và participant count
+
+- **Video Stream Management**:
+  - Individual video components cho mỗi participant
+  - Audio/video status indicators (Mic, Camera icons)
+  - Connection state visualization (Connected/Connecting/Failed)
+  - Fallback avatars khi video disabled
+  - Muted local video để prevent echo
+
+### **WebRTC Integration**
+
+- **useGroupWebRTC Hook**:
+  - Peer-to-peer connections management
+  - ICE candidate handling
+  - Offer/Answer signaling
+  - Stream management (local/remote)
+  - Connection state tracking
+
+- **useGroupCall Hook**:
+  - Call state management (active, connecting, incoming)
+  - API integration cho group calls
+  - SignalR event handling
+  - Media controls (audio/video toggle)
+  - Call cleanup và error handling
+
+### **SignalR Real-time Events**
+
+- **Group Call Events**:
+  - `GroupCallStarted` - New group call initiated
+  - `GroupCallEnded` - Call terminated
+  - `GroupCallParticipantJoined/Left` - Member join/leave events
+  - `GroupCallMediaToggled` - Audio/video state changes
+  - `ReceiveGroupCallOffer/Answer` - WebRTC signaling
+  - `ReceiveGroupIceCandidate` - ICE candidate exchange
+
+### **UI/UX Features**
+
+- **Professional Design**:
+  - System color tokens consistency (no hard-coded colors)
+  - Glass morphism effects với backdrop blur
+  - Smooth hover animations và scale transforms
+  - Professional control buttons với proper states
+  - Shadow effects và border styling
+
+- **Internationalization**:
+  - Full English/Vietnamese translation support
+  - GroupCall translation namespace
+  - Context-aware text (connecting, you, unknown user, etc.)
+  - Professional call terminology
+
+- **State Management**:
+  - Fixed modal disappearing issue khi accepting calls
+  - Proper state transitions (incoming → connecting → active)
+  - Call state persistence và cleanup
+  - Error handling với user feedback
+
+### **Call Controls**
+
+- **Audio/Video Toggle**:
+  - Real-time media stream control
+  - Visual state indicators (enabled/disabled colors)
+  - API sync với backend state
+  - SignalR broadcast cho other participants
+
+- **Call Management**:
+  - End call functionality
+  - Leave call vs End call (admin only)
+  - Connection quality monitoring
+  - Automatic cleanup on page unload
+
+### **Integration Points**
+
+- **MessengerHeader**: Group call buttons cho video/audio calls
+- **MessengerContainer**: Incoming call modal với professional design
+- **SignalRContext**: Global event handling cho group calls
+- **API Integration**: Complete CRUD operations cho group calls
+
+Đây là một Facebook clone hoàn chỉnh với đầy đủ tính năng social media, messaging system, **comprehensive group chat functionality**, **professional group video/audio calling**, **advanced UI component library**, và **global real-time system**, sẵn sàng cho production deployment.
 
 ## UI Component Library ⭐ **MỚI**
 
@@ -1102,3 +1225,18 @@ docker run -p 5000:80 chat-server   # Run container
 ✅ **Group Statistics** - Member counts, activity analytics
 
 **All features are production-ready với comprehensive API documentation, real-time SignalR events, và Clean Architecture implementation!**
+
+### **Group Video/Audio Calling System** 🆕 **LATEST**
+
+✅ **Professional Call Interface** - Group video calls với design tương tự 2-person calls  
+✅ **Multi-participant Support** - Video grid layout cho up to 9+ participants  
+✅ **WebRTC Integration** - Peer-to-peer connections với ICE candidate handling  
+✅ **SignalR Real-time Events** - Group call signaling và participant management  
+✅ **Professional Waiting Screen** - Animation rings, local video preview, gradient backgrounds  
+✅ **Audio/Video Controls** - Real-time media toggle với visual state indicators  
+✅ **Connection Quality** - Per-participant connection monitoring  
+✅ **System Color Consistency** - No hard-coded colors, full design system compliance  
+✅ **Internationalization** - Full English/Vietnamese support cho group calls  
+✅ **State Management** - Fixed modal disappearing issue, proper state transitions  
+✅ **Call Management** - End/Leave call functionality với proper cleanup  
+✅ **Minimized View** - Multitasking support với participant avatars

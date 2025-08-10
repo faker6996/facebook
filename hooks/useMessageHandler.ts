@@ -45,8 +45,6 @@ export const useMessageHandler = ({
         }
 
         const result = await response.json();
-        console.log("Upload response:", result);
-        console.log("Upload response data:", result.data);
 
         // Xử lý format response từ chat server
         return {
@@ -87,9 +85,6 @@ export const useMessageHandler = ({
       body.conversation_id = conversation.conversation_id;
     }
 
-    console.log("Sending message:", body);
-    console.log("Attachments detail:", JSON.stringify(attachments, null, 2));
-
     try {
       const res = await callApi<Message>(
         API_ROUTES.CHAT_SERVER.SENT_MESSAGE, 
@@ -97,7 +92,6 @@ export const useMessageHandler = ({
         body, 
         { silent: true } // Disable global loading for send message
       );
-      console.log("✅ Message sent successfully:", res);
 
       setMessages((prev) =>
         prev.map((m) => {
@@ -105,7 +99,6 @@ export const useMessageHandler = ({
             // Preserve replied_message from optimistic if server doesn't return it
             const serverMessage = new Message(res);
             if (!serverMessage.replied_message && m.replied_message) {
-              console.log("📨 Preserving replied_message from optimistic update");
               serverMessage.replied_message = m.replied_message;
             }
             return serverMessage;
@@ -246,7 +239,6 @@ export const useMessageHandler = ({
     };
 
     try {
-      console.log("🎭 Adding reaction:", body);
       await callApi(`${API_ROUTES.CHAT_SERVER.ADD_REACTION}`, HTTP_METHOD_ENUM.POST, body);
       // Chat server sẽ broadcast ReceiveReaction event
     } catch (error) {
@@ -295,7 +287,6 @@ export const useMessageHandler = ({
     };
 
     try {
-      console.log("🎭 Removing reaction:", body);
       await callApi(`${API_ROUTES.CHAT_SERVER.REMOVE_REACTION}`, HTTP_METHOD_ENUM.POST, body);
       // Chat server sẽ broadcast RemoveReaction event
     } catch (error) {

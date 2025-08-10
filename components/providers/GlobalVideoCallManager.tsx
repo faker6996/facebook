@@ -25,21 +25,16 @@ export default function GlobalVideoCallManager() {
     isOutgoingCall: false,
   });
 
-  console.log('🔔 GlobalVideoCallManager - current callState:', callState);
-
   const videoCallEvents = {
     onIncomingCall: async (callerId: string, callerName: string, conversationId?: string) => {
-      console.log('🔔 Global incoming call from:', callerName);
-      
       // Get caller info if needed
       let displayName = callerName;
       if (!displayName && callerId) {
         try {
           const userResponse = await callApi<any>(`${API_ROUTES.USER.LIST}?id=${callerId}`, HTTP_METHOD_ENUM.GET);
-          displayName = userResponse?.name || userResponse?.user_name || userResponse?.email || 'Unknown User';
+          displayName = userResponse?.name || userResponse?.user_name || userResponse?.email || "Unknown User";
         } catch (error) {
-          console.error('Failed to get caller info:', error);
-          displayName = 'Unknown User';
+          displayName = "Unknown User";
         }
       }
 
@@ -54,8 +49,7 @@ export default function GlobalVideoCallManager() {
     },
 
     onCallAccepted: () => {
-      console.log('📞 Call accepted globally');
-      setCallState(prev => ({
+      setCallState((prev) => ({
         ...prev,
         isIncomingCall: false,
         isOutgoingCall: false,
@@ -63,7 +57,6 @@ export default function GlobalVideoCallManager() {
     },
 
     onCallEnded: () => {
-      console.log('📴 Call ended globally');
       setCallState({
         isCallActive: false,
         isIncomingCall: false,
@@ -72,34 +65,32 @@ export default function GlobalVideoCallManager() {
     },
 
     onCallDeclined: () => {
-      console.log('📵 Call declined globally');
       setCallState({
         isCallActive: false,
         isIncomingCall: false,
         isOutgoingCall: false,
       });
-    }
+    },
   };
 
-  const { 
-    acceptCall: originalAcceptCall, 
-    declineCall, 
-    endCall, 
-    toggleAudio, 
-    toggleVideo, 
+  const {
+    acceptCall: originalAcceptCall,
+    declineCall,
+    endCall,
+    toggleAudio,
+    toggleVideo,
     callState: webRTCCallState,
     localStream,
     remoteStream,
-    startCall
+    startCall,
   } = useVideoCall(videoCallEvents, true); // Mark as global
 
   // Custom accept call wrapper
   const acceptCall = async () => {
-    console.log('🔔 GlobalVideoCallManager accepting call...');
     await originalAcceptCall();
-    
+
     // Update local state to active call (not incoming anymore)
-    setCallState(prev => ({
+    setCallState((prev) => ({
       ...prev,
       isIncomingCall: false,
       isOutgoingCall: false,
@@ -110,29 +101,28 @@ export default function GlobalVideoCallManager() {
   useEffect(() => {
     const handleStartCall = (event: CustomEvent) => {
       const { targetUserId, isVideoCall, callerName } = event.detail;
-      console.log('🌐 Global manager starting call:', { targetUserId, isVideoCall, callerName });
-      
+
       // Update local state for outgoing call
       setCallState({
         isCallActive: true,
         isIncomingCall: false,
         isOutgoingCall: true,
-        callerName: callerName || 'Unknown',
+        callerName: callerName || "Unknown",
         callerId: targetUserId,
       });
-      
+
       // Start the actual call
       startCall(targetUserId, isVideoCall);
     };
-    
-    window.addEventListener('startVideoCall', handleStartCall as EventListener);
-    return () => window.removeEventListener('startVideoCall', handleStartCall as EventListener);
+
+    window.addEventListener("startVideoCall", handleStartCall as EventListener);
+    return () => window.removeEventListener("startVideoCall", handleStartCall as EventListener);
   }, [startCall]);
 
   // Sync WebRTC call state with local state
   useEffect(() => {
     if (webRTCCallState) {
-      setCallState(prev => ({
+      setCallState((prev) => ({
         ...prev,
         isCallActive: webRTCCallState.isCallActive || prev.isCallActive,
       }));
@@ -144,29 +134,20 @@ export default function GlobalVideoCallManager() {
     return null;
   }
 
-  console.log('🔔 GlobalVideoCallManager rendering with state:', {
-    isCallActive: callState.isCallActive,
-    isIncomingCall: callState.isIncomingCall,
-    isOutgoingCall: callState.isOutgoingCall,
-    callerName: callState.callerName,
-    hasLocalStream: !!localStream,
-    hasRemoteStream: !!remoteStream
-  });
-
   return (
     <VideoCall
       isActive={callState.isCallActive}
       isIncoming={callState.isIncomingCall}
       isOutgoing={callState.isOutgoingCall}
-      callerName={callState.callerName || 'Unknown'}
-      callerAvatar={'/avatar.png'} // Default avatar
+      callerName={callState.callerName || "Unknown"}
+      callerAvatar={"/avatar.png"} // Default avatar
       onAccept={acceptCall}
       onDecline={declineCall}
       onEnd={endCall}
       onToggleVideo={toggleVideo}
       onToggleAudio={toggleAudio}
       isVideoEnabled={localStream ? localStream.getVideoTracks().length > 0 : false}
-      isAudioEnabled={localStream ? localStream.getAudioTracks().some(t => t.enabled) : false}
+      isAudioEnabled={localStream ? localStream.getAudioTracks().some((t) => t.enabled) : false}
       localStream={localStream || undefined}
       remoteStream={remoteStream || undefined}
     />

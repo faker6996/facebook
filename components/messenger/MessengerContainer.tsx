@@ -1,7 +1,9 @@
 "use client";
 
 // ----- Imports -----
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { Phone, PhoneOff } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 // Local Imports
 import MessageInput from "@/components/messenger/MessageInput";
@@ -33,6 +35,8 @@ interface Props {
 
 // ----- Component Definition -----
 export default function MessengerContainer({ conversation, onClose, style }: Props) {
+  const t = useTranslations('GroupCall');
+  
   // ----- Basic State -----
   const [sender, setSender] = useState<User>({});
   const [input, setInput] = useState("");
@@ -85,19 +89,47 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
   const [currentUserRole, setCurrentUserRole] = useState<string>("member");
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [hasActiveGroupCall, setHasActiveGroupCall] = useState(false);
+  const [activeCallInitiatorId, setActiveCallInitiatorId] = useState<number | null>(null);
 
-  const isGroup = conversation.is_group === true;
+  // Memoize expensive calculations
+  const isGroup = useMemo(() => conversation.is_group === true, [conversation.is_group]);
 
-  // Debug video call buttons (only once per conversation)
+  // Group call is now handled completely by GlobalGroupVideoCallManager
+  // No local instance needed - everything goes through global instance
+
+  // Listen for global group call state changes to update active call indicator
   useEffect(() => {
-    console.log("🔍 Video call debug:", {
-      isGroup,
-      conversation_id: conversation.conversation_id,
-      other_user_id: conversation.other_user_id,
-      isOtherUserOnline,
-      showVideoCallButtons: !isGroup,
-    });
-  }, [isGroup, conversation.conversation_id, conversation.other_user_id, isOtherUserOnline]);
+    const handleCallStart = (event: any) => {
+      const eventGroupId = event.detail?.groupId;
+      
+      // Only update if this is for our group
+      if (isGroup && eventGroupId && Number(eventGroupId) === Number(conversation.conversation_id)) {
+        setHasActiveGroupCall(true);
+      }
+    };
+
+    const handleCallEnd = (event: any) => {
+      const eventGroupId = event.detail?.groupId;
+      
+      // Only update if this is for our group
+      if (isGroup && eventGroupId && Number(eventGroupId) === Number(conversation.conversation_id)) {
+        setHasActiveGroupCall(false);
+        setActiveCallInitiatorId(null);
+      }
+    };
+
+    window.addEventListener('globalGroupCallStarted', handleCallStart);
+    window.addEventListener('globalGroupCallEnded', handleCallEnd);
+
+    return () => {
+      window.removeEventListener('globalGroupCallStarted', handleCallStart);
+      window.removeEventListener('globalGroupCallEnded', handleCallEnd);
+    };
+  }, [isGroup, conversation.conversation_id]);
+
+  // Group call joining is now handled by GlobalGroupVideoCallManager
+
 
   // Video call integration
   // Global video call manager handles all video calls
@@ -169,21 +201,29 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         // Load group data if it's a group
         if (isGroup && conversation?.conversation_id && isMounted) {
           try {
-            console.log(`🔍 Loading group members for conversation ${conversation.conversation_id}`);
-            console.log(`📊 Expected member count from conversation list: ${conversation.member_count}`);
 
             const members = await callApi<GroupMember[]>(API_ROUTES.CHAT_SERVER.GROUP_MEMBERS(conversation.conversation_id!), HTTP_METHOD_ENUM.GET);
-            console.log(`📊 Actual members retrieved: ${members?.length || 0}`);
-            console.log(
-              `👥 Members:`,
-              members?.map((m) => ({ user_id: m.user_id, name: m.name }))
-            );
 
             setGroupMembers(members || []);
 
             const currentMember = members?.find((m) => m.user_id === currentUser?.id);
             if (currentMember) {
               setCurrentUserRole(currentMember.role);
+            }
+
+            // Check for active group call
+            try {
+              const activeCall = await callApi<any>(
+                API_ROUTES.CHAT_SERVER.GET_ACTIVE_GROUP_CALL(conversation.conversation_id),
+                HTTP_METHOD_ENUM.GET
+              );
+              // More strict validation - check both id exists and is not null/empty
+              const hasValidActiveCall = activeCall && activeCall.id && String(activeCall.id).trim() !== '';
+              setHasActiveGroupCall(!!hasValidActiveCall);
+              setActiveCallInitiatorId(hasValidActiveCall ? (activeCall.initiator_id || null) : null);
+            } catch (error) {
+              setHasActiveGroupCall(false);
+              setActiveCallInitiatorId(null);
             }
           } catch (error) {
             console.error("Failed to load group data:", error);
@@ -200,16 +240,15 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
     };
   }, [conversation, isGroup]);
 
-  // Video call handlers
-  const handleStartVideoCall = () => {
+  // Reset active call state when conversation changes
+  useEffect(() => {
+    setHasActiveGroupCall(false);
+    setActiveCallInitiatorId(null);
+  }, [conversation.conversation_id]);
+
+  // Video call handlers - memoized to prevent re-creation
+  const handleStartVideoCall = useCallback(() => {
     if (!isGroup && conversation.other_user_id) {
-      console.log("📞 Starting video call to user ID:", conversation.other_user_id);
-      console.log("📞 Current sender ID:", sender.id);
-      console.log("📞 Conversation details:", {
-        conversation_id: conversation.conversation_id,
-        other_user_id: conversation.other_user_id,
-        other_user_name: conversation.other_user_name,
-      });
       // Use global video call manager instead
       window.dispatchEvent(new CustomEvent('startVideoCall', {
         detail: {
@@ -219,14 +258,11 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         }
       }));
     } else {
-      console.log("📞 Cannot start video call:", { isGroup, other_user_id: conversation.other_user_id });
     }
-  };
+  }, [isGroup, conversation.other_user_id, conversation.conversation_id, conversation.other_user_name, sender.id]);
 
-  const handleStartVoiceCall = () => {
+  const handleStartVoiceCall = useCallback(() => {
     if (!isGroup && conversation.other_user_id) {
-      console.log("📞 Starting voice call to user ID:", conversation.other_user_id);
-      console.log("📞 Current sender ID:", sender.id);
       // Use global video call manager instead
       window.dispatchEvent(new CustomEvent('startVideoCall', {
         detail: {
@@ -236,9 +272,77 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
         }
       }));
     } else {
-      console.log("📞 Cannot start voice call:", { isGroup, other_user_id: conversation.other_user_id });
     }
-  };
+  }, [isGroup, conversation.other_user_id, conversation.other_user_name, sender.id]);
+
+  // Group call handlers - Following 2-person call pattern with global dispatch - memoized
+  const handleStartGroupVideoCall = useCallback(() => {
+    if (isGroup && conversation.conversation_id) {
+      
+      // Dispatch to global manager (like 2-person call pattern)
+      window.dispatchEvent(new CustomEvent('startGlobalGroupCall', {
+        detail: {
+          groupId: conversation.conversation_id,
+          groupName: conversation.name,
+          callType: 'video'
+        }
+      }));
+    }
+  }, [isGroup, conversation.conversation_id, conversation.name]);
+
+  const handleStartGroupVoiceCall = useCallback(() => {
+    if (isGroup && conversation.conversation_id) {
+      
+      // Dispatch to global manager (like 2-person call pattern)
+      window.dispatchEvent(new CustomEvent('startGlobalGroupCall', {
+        detail: {
+          groupId: conversation.conversation_id,
+          groupName: conversation.name,
+          callType: 'audio'
+        }
+      }));
+    }
+  }, [isGroup, conversation.conversation_id, conversation.name]);
+
+  const handleJoinGroupCall = useCallback(() => {
+    if (isGroup && conversation.conversation_id) {
+      
+      // Check for active call and join it
+      callApi<any>(
+        API_ROUTES.CHAT_SERVER.GET_ACTIVE_GROUP_CALL(conversation.conversation_id),
+        HTTP_METHOD_ENUM.GET
+      ).then(activeCall => {
+        if (activeCall && activeCall.id) {
+          // Dispatch join event to global manager
+          window.dispatchEvent(new CustomEvent('joinGlobalGroupCall', {
+            detail: {
+              callId: activeCall.id,
+              groupId: conversation.conversation_id,
+              groupName: conversation.name,
+              callType: activeCall.call_type
+            }
+          }));
+        }
+      }).catch(error => {
+        console.error('Failed to get active call for join:', error);
+      });
+    }
+  }, [isGroup, conversation.conversation_id, conversation.name]);
+
+  // Handler riêng cho việc reconnect khi user là initiator
+  const handleReconnectGroupCall = useCallback(() => {
+    if (isGroup && conversation.conversation_id) {
+      
+      // Dispatch start event để trigger reconnect logic trong useGroupCall
+      window.dispatchEvent(new CustomEvent('startGlobalGroupCall', {
+        detail: {
+          groupId: conversation.conversation_id,
+          groupName: conversation.name,
+          callType: 'video' // Default to video, sẽ được override trong useGroupCall nếu cần
+        }
+      }));
+    }
+  }, [isGroup, conversation.conversation_id, conversation.name]);
 
   // Video call handlers moved to GlobalVideoCallManager
   // const handleAcceptCall = () => {
@@ -285,11 +389,18 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           isOtherUserOnline={isOtherUserOnline ?? false}
           groupMembers={groupMembers}
           currentUserRole={currentUserRole}
+          currentUserId={sender.id}
           onClose={onClose}
           onStartVideoCall={handleStartVideoCall}
           onStartVoiceCall={handleStartVoiceCall}
+          onStartGroupVideoCall={handleStartGroupVideoCall}
+          onStartGroupVoiceCall={handleStartGroupVoiceCall}
           onShowGroupInfo={setShowGroupInfo}
           onShowGroupSettings={setShowGroupSettings}
+          hasActiveGroupCall={hasActiveGroupCall}
+          activeCallInitiatorId={activeCallInitiatorId}
+          onJoinGroupCall={handleJoinGroupCall}
+          onReconnectGroupCall={handleReconnectGroupCall}
         />
 
         {/* Message list - Enhanced for groups and mobile */}
@@ -311,11 +422,11 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           onReplyMessage={handleReplyMessage}
           onAddReaction={handleAddReaction}
           onRemoveReaction={handleRemoveReaction}
-          getSenderName={(senderId: number) => {
+          getSenderName={useMemo(() => (senderId: number) => {
             if (!isGroup) return "";
             const member = groupMembers.find((m) => m.user_id === senderId);
             return member?.name || "Unknown User";
-          }}
+          }, [isGroup, groupMembers])}
           onRetryLoadMessages={retryLoadMessages}
         />
 
@@ -329,16 +440,16 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           isUploading={isUploading}
           replyingTo={replyingTo}
           setReplyingTo={setReplyingTo}
-          onSendMessage={(e: React.FormEvent<HTMLFormElement>) => {
+          onSendMessage={useCallback((e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault();
             sendMessage(input, selectedFiles, setInput, setSelectedFiles, setIsUploading);
-          }}
+          }, [sendMessage, input, selectedFiles, setInput, setSelectedFiles, setIsUploading])}
         />
       </div>
 
       {/* Group Modals - Responsive for mobile */}
       {isGroup && showGroupInfo && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowGroupInfo(false)}>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGroupInfo(false)}>
           <div className="bg-card rounded-lg md:rounded-xl max-w-md w-full border shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-4">Thông tin nhóm</h3>
@@ -362,7 +473,7 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
       )}
 
       {isGroup && showGroupSettings && (currentUserRole === "admin" || currentUserRole === "moderator") && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowGroupSettings(false)}>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowGroupSettings(false)}>
           <div className="bg-card rounded-lg md:rounded-xl max-w-md w-full border shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 md:p-6">
               <h3 className="text-lg md:text-xl font-semibold mb-4">Cài đặt nhóm</h3>
@@ -376,6 +487,11 @@ export default function MessengerContainer({ conversation, onClose, style }: Pro
           </div>
         </div>
       )}
+
+      {/* Group Video Call Component - Now handled by GlobalGroupVideoCallManager */}
+      {/* Local GroupVideoCall removed to prevent duplicate rendering */}
+
+      {/* Incoming Group Call Dialog - Now handled by GlobalGroupCallModal */}
 
       {/* Video Call Component - Handled by GlobalVideoCallManager */}
       {/* All video calls are now managed globally */}

@@ -1,55 +1,78 @@
 import { NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
-
-import { middlewarePipeline } from "./lib/middlewares/pipeline";
-import { withRoleGuard } from "./lib/middlewares/role-guard";
-import { withCors, withLogger, withAuth } from "./lib/middlewares";
-import { withRateLimit } from "./lib/middlewares/rate-limit";
+import { routeProtection } from "./lib/middlewares/route-protection";
+import { middlewareRegistry } from "./lib/middlewares/extensions";
 import { routing } from "@/i18n/routing";
 
+/**
+ * Internationalization middleware
+ */
 const intlMiddleware = createIntlMiddleware({
   ...routing,
-  // Enhanced locale detection 
   localeDetection: true,
   alternateLinks: true
 });
 
+/**
+ * Main middleware pipeline
+ */
 export async function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+  
   try {
-    // Skip i18n for API routes
-    if (req.nextUrl.pathname.startsWith('/api')) {
-      return await middlewarePipeline(req, [
-        withCors,
-        withLogger,
-        withAuth,
-      ]);
+    // Handle API routes - no i18n needed
+    if (pathname.startsWith('/api')) {
+      return await routeProtection(req);
     }
 
-    const intlRes = intlMiddleware(req);
-    if (intlRes?.redirected) return intlRes;
-
-    let res = await middlewarePipeline(req, [
-      withCors,
-      // withRateLimit,
-      withLogger,
-      withAuth,
-    ]);
-
-    intlRes?.headers.forEach((value, key) => {
-      res.headers.set(key, value);
-    });
-
-    if (req.nextUrl.pathname.startsWith("/admin")) {
-      res = withRoleGuard(req, res, ["admin"]);
+    // Handle page routes with i18n + route protection
+    const intlResponse = intlMiddleware(req);
+    
+    // If i18n middleware redirected, return that response
+    if (intlResponse?.redirected) {
+      return intlResponse;
     }
 
-    return res;
-  } catch (err: any) {
-    console.error("[Middleware Error]", err);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    // Apply route protection
+    const protectionResponse = await routeProtection(req);
+    
+    // If route protection redirected, return that response  
+    if (protectionResponse.status >= 300 && protectionResponse.status < 400) {
+      return protectionResponse;
+    }
+
+    // Merge i18n headers with protection response
+    if (intlResponse?.headers) {
+      intlResponse.headers.forEach((value, key) => {
+        protectionResponse.headers.set(key, value);
+      });
+    }
+
+    // Apply middleware extensions
+    const finalResponse = await middlewareRegistry.executeAll(req, protectionResponse);
+    
+    return finalResponse;
+    
+  } catch (error) {
+    console.error("[Middleware Pipeline Error]", error);
+    
+    // Graceful fallback
+    if (pathname.startsWith('/api')) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Middleware error",
+          code: "PIPELINE_ERROR" 
+        }), 
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+    
+    // For pages, try to redirect to error page
+    return Response.redirect(new URL('/vi/error', req.url));
   }
 }
 

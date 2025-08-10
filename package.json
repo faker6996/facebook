@@ -18,6 +18,7 @@
     "docker:prod-down": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml down"
   },
   "dependencies": {
+    "@floating-ui/react": "^0.27.15",
     "@microsoft/signalr": "^8.0.7",
     "@reduxjs/toolkit": "^2.7.0",
     "@tailwindcss/postcss": "^4.1.7",
@@ -28,7 +29,7 @@
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.525.0",
-    "next": "15.3.1",
+    "next": "15.4.6",
     "next-intl": "^4.1.0",
     "nodemailer": "^7.0.5",
     "pg": "^8.16.0",

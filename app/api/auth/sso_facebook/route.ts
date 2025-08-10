@@ -9,6 +9,7 @@ import { UserInfoSso } from "@/lib/models/user";
 
 import { signJwt } from "@/lib/utils/jwt";
 import { createResponse } from "@/lib/utils/response";
+import { sessionManager } from "@/lib/utils/session-manager";
 
 import { cacheUser } from "@/lib/cache/user";
 import { ssoFacebookApp } from "@/lib/modules/auth/sso_facebook/applications/sso_facebook_app";
@@ -87,16 +88,16 @@ async function getHandler(req: NextRequest) {
   // ✅ Ghi vào Redis
   await cacheUser(user);
 
-  /* 4. Tạo JWT & redirect */
-  const token = signJwt(
-    {
-      sub: user.id!.toString(),
-      email: user.email,
-      name: user.name,
-      id: user.id!,
-    },
-    "2h"
-  );
+  /* 4. Tạo Single Session với database */
+  const sessionResult = await sessionManager.createSingleSession({
+    userId: user.id!,
+    deviceInfo: { browser: 'Facebook SSO', platform: 'Web' },
+    ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+    userAgent: req.headers.get('user-agent') || 'Facebook SSO',
+    rememberMe: false
+  });
+
+  const token = sessionResult.sessionToken;
   const res = NextResponse.redirect(`${FRONTEND_REDIRECT}/${locale}`);
   res.headers.set(
     "Set-Cookie",

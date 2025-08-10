@@ -1,6 +1,7 @@
 import React, { forwardRef } from "react";
 import { VARIANT_STYLES_BTN, SIZE_STYLES_BTN } from "@/lib/constants/constants-ui/button";
 import { cn } from "@/lib/utils/cn";
+import { Activity } from "lucide-react";
 
 // Khai báo kiểu cho props
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -58,8 +59,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           sizeStyle,
           "group",
           {
-            "cursor-pointer hover:shadow-lg hover:-translate-y-0.5": !disabled && !loading,
-            "opacity-50 cursor-not-allowed transform-none": disabled || loading,
+            "cursor-pointer transform translate-y-0 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200": !disabled && !loading,
+            "opacity-50 cursor-not-allowed": disabled || loading,
             "w-full": fullWidth,
           },
           className
@@ -67,9 +68,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         {...rest}
       >
-        <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+        <span className="absolute inset-0 bg-gradient-to-r from-primary-foreground/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         {loading ? (
-          <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+          <Activity className="w-4 h-4 animate-spin" />
         ) : (
           Icon && <Icon className={cn("transition-transform duration-200", iConClassName ? iConClassName : "w-5 h-5")} />
         )}

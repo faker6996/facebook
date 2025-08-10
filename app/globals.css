@@ -2,130 +2,176 @@
 @config "../tailwind.config.ts";
 
 :root {
-  --background: 0 0% 100%; /* #ffffff */
-  --foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+  --background: oklch(97% 0 0); /* Very light gray - subtle backdrop */
+  --foreground: oklch(20.5% 0 0); /* Very dark charcoal - main text */
 
-  --muted: 210 40% 96.1%; /* #f1f5f9 */
-  --muted-foreground: 215.4 16.3% 46.9%; /* #64748b */
+  --card: oklch(100% 0 0); /* Pure white - elevated card surfaces */
+  --card-foreground: oklch(20.5% 0 0); /* Dark charcoal - card text */
 
-  --popover: 0 0% 100%; /* #ffffff */
-  --popover-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+  --popover: oklch(100% 0 0); /* Pure white - dropdown/modal backgrounds */
+  --popover-foreground: oklch(20.5% 0 0); /* Dark charcoal - popup text */
 
-  --card: 0 0% 100%; /* #ffffff */
-  --card-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+  --primary: oklch(20.5% 0 0); /* Dark charcoal - primary buttons & links */
+  --primary-foreground: oklch(98.5% 0 0); /* Near white - text on primary buttons */
 
-  --border: 214.3 31.8% 91.4%; /* #e2e8f0 */
-  --input: 214.3 31.8% 91.4%; /* #e2e8f0 */
+  --secondary: oklch(96.1% 0 0); /* Very light gray - secondary buttons */
+  --secondary-foreground: oklch(20.5% 0 0); /* Dark charcoal - text on secondary */
 
-  --primary: 240 100% 66%; /* #4f46e5 */
-  --primary-foreground: 0 0% 100%; /* #ffffff */
+  --muted: oklch(96.1% 0 0); /* Very light gray - muted backgrounds */
+  --muted-foreground: oklch(70.8% 0 0); /* Medium gray - muted text */
 
-  --secondary: 210 30% 95%; /* #f8fafc */
-  --secondary-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+  --accent: oklch(96.1% 0 0); /* Very light gray - hover states */
+  --accent-foreground: oklch(20.5% 0 0); /* Dark charcoal - text on accents */
 
-  --accent: 210 40% 90%; /* #e2e8f0 */
-  --accent-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+  --destructive: oklch(70.4% 0.191 22.216); /* Vibrant red - error/delete actions */
+  --destructive-foreground: oklch(98.5% 0 0); /* Near white - text on red buttons */
 
-  --destructive: 0 100% 50%; /* #ff0000 */
-  --destructive-foreground: 0 0% 100%; /* #ffffff */
+  --border: oklch(20.5% 0 0 / 0.1); /* 10% transparent dark - subtle borders */
+  --input: oklch(20.5% 0 0 / 0.15); /* 15% transparent dark - input borders */
+  --ring: oklch(55.6% 0 0); /* Medium gray - focus rings */
 
-  --ring: 240 4.8% 95.9%; /* #f0f1f9 */
-  --radius: 0.5rem;
+  --radius: 0.5rem; /* 8px border radius */
 
-  --success: 142.1 76.2% 36.3%; /* #228B22 - ForestGreen */
-  --success-foreground: 0 0% 100%; /* #ffffff */
+  --success: 142.1 76.2% 36.3%; /* HSL Forest Green - success states */
+  --success-foreground: 0 0% 100%; /* Pure white - text on green */
 
-  --warning: 45 100% 51%; /* #FFC107 - Amber */
-  --warning-foreground: 222.2 47.4% 11.2%; /* #1a1a1f */
+  --warning: 45 100% 51%; /* HSL Bright amber yellow - warnings */
+  --warning-foreground: 222.2 47.4% 11.2%; /* Dark charcoal - text on yellow */
 
-  --info: 200 86% 55%; /* #3498db - Peter River */
-  --info-foreground: 0 0% 100%; /* #ffffff */
-  
+  --info: 200 86% 55%; /* HSL Bright blue - info states */
+  --info-foreground: 0 0% 100%; /* Pure white - text on blue */
+
   /* Video call specific colors */
   --video-call-overlay: 0 0% 0% / 0.3;
   --video-call-glass: 255 255 255 / 0.1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: 0deg 1.8% 11.2%; /* #1c1c1d */
-    --foreground: 210 40% 98%; /* #f9f9fa */
+.dark {
+  --background: oklch(14.5% 0 0); /* Deep charcoal black - rich dark backdrop */
+  --foreground: oklch(98.5% 0 0); /* Near white - main text on dark */
 
-    --muted: 217.2 32.6% 24%; /* #3b3b44 */
-    --muted-foreground: 215 20.2% 65.1%; /* #a1a1aa */
+  --card: oklch(20.5% 0 0); /* Dark gray - elevated card surfaces */
+  --card-foreground: oklch(98.5% 0 0); /* Near white - text on cards */
 
-    --popover: 224 71% 4%; /* #0a0a0a */
-    --popover-foreground: 210 40% 98%; /* #f9f9fa */
+  --popover: oklch(26.9% 0 0); /* Medium dark gray - floating elements */
+  --popover-foreground: oklch(98.5% 0 0); /* Near white - popup text */
 
-    --card: 195.3 5.3% 14.9%; /* #26292b */
-    --card-foreground: 210 40% 98%; /* #f9f9fa */
+  --primary: oklch(92.2% 0 0); /* Bright white - primary actions */
+  --primary-foreground: oklch(20.5% 0 0); /* Dark gray - text on bright buttons */
 
-    --border: 216 34% 22%; /* #37373f */
-    --input: 216 34% 38%; /* #52525b */
+  --secondary: oklch(26.9% 0 0); /* Medium dark gray - secondary buttons */
+  --secondary-foreground: oklch(98.5% 0 0); /* Near white - text on secondary */
 
-    --primary: 210 100% 66%; /* #3b82f6 */
-    --primary-foreground: 222.2 47.4% 1.2%; /* #050505 */
+  --muted: oklch(26.9% 0 0); /* Medium dark gray - muted areas */
+  --muted-foreground: oklch(70.8% 0 0); /* Light gray - muted text */
 
-    --secondary: 222.2 47.4% 11.2%; /* #1a1a1a */
-    --secondary-foreground: 210 40% 98%; /* #f9f9fa */
+  --accent: oklch(37.1% 0 0); /* Lighter dark gray - hover/accent states */
+  --accent-foreground: oklch(98.5% 0 0); /* Near white - text on accents */
 
-    --accent: 216 34% 17%; /* #2c2f36 */
-    --accent-foreground: 210 40% 98%; /* #f9f9fa */
+  --destructive: oklch(70.4% 0.191 22.216); /* Warm red-orange - errors/danger */
+  --destructive-foreground: oklch(98.5% 0 0); /* Near white - text on red */
 
-    --destructive: 0 62.8% 30.6%; /* #991b1b */
-    --destructive-foreground: 0 85.7% 97.3%; /* #ffecec */
+  --border: oklch(100% 0 0 / 0.1); /* 10% transparent white - subtle borders */
+  --input: oklch(100% 0 0 / 0.15); /* 15% transparent white - input borders */
+  --ring: oklch(55.6% 0 0); /* Medium gray - focus rings */
 
-    --ring: 216 34% 42%; /* #6366f1 */
+  --success: 142.1 70.6% 45.3%; /* HSL Forest Green - success states */
+  --success-foreground: 0 0% 100%; /* Pure white - text on green */
 
-    --success: 142.1 70.6% 45.3%; /* Sáng hơn một chút */
-    --success-foreground: 0 0% 100%;
+  --warning: 45 100% 51%; /* HSL Bright amber yellow - warnings */
+  --warning-foreground: 222.2 47.4% 11.2%; /* Dark charcoal - text on yellow */
 
-    --warning: 45 100% 51%; /* Giữ nguyên */
-    --warning-foreground: 222.2 47.4% 11.2%;
+  --info: 200 86% 55%; /* HSL Bright blue - info states */
+  --info-foreground: 0 0% 100%; /* Pure white - text on blue */
 
-    --info: 200 86% 55%; /* Giữ nguyên */
-    --info-foreground: 0 0% 100%;
-    
-    /* Video call specific colors for dark mode */
-    --video-call-overlay: 0 0% 0% / 0.5;
-    --video-call-glass: 255 255 255 / 0.05;
-  }
+  /* Video call specific colors for dark mode */
+  --video-call-overlay: 0 0% 0% / 0.5;
+  --video-call-glass: 255 255 255 / 0.05;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: var(--background);
+  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 /* Video Call Enhanced Animations */
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33% { transform: translateY(-10px) rotate(1deg); }
-  66% { transform: translateY(5px) rotate(-0.5deg); }
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(-0.5deg);
+  }
 }
 
 @keyframes shimmer-call {
-  0% { opacity: 0; transform: translateX(-100%) skewX(-15deg); }
-  50% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(200%) skewX(-15deg); }
+  0% {
+    opacity: 0;
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(200%) skewX(-15deg);
+  }
 }
 
 @keyframes ripple {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(4); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
 
 .animate-float {
@@ -138,12 +184,6 @@ body {
 
 .animate-ripple {
   animation: ripple 0.6s linear;
-}
-
-.dark {
-  --background: 222.2 84% 4.9%; /* dark mode */
-  --foreground: 210 40% 98%;
-  --muted-foreground: 215.4 16.3% 70%;
 }
 
 /* Video Call Component Enhancements */

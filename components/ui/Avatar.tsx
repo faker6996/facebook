@@ -52,12 +52,12 @@ export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", class
     >
       {/* Skeleton loading animation */}
       {isImageLoading && (
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted-foreground/20 to-muted animate-pulse rounded-full" />
       )}
       
       {/* Shimmer effect during loading */}
       {isImageLoading && (
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/30 to-transparent animate-shimmer rounded-full" />
       )}
 
       {src && !imageError && (
@@ -84,7 +84,7 @@ export const Avatar = ({ src, alt = "avatar", fallback = "?", size = "md", class
       )}
       
       {/* Online indicator (optional) */}
-      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+      <div className="absolute bottom-0 right-0 w-3 h-3 bg-success border-2 border-background rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
     </div>
   );
 };

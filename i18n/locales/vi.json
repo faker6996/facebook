@@ -143,7 +143,11 @@
     "adChoices": "Lựa chọn quảng cáo",
     "cookies": "Cookies",
     "viewMore": "Xem thêm",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "theme": "Giao diện",
+    "lightTheme": "Chế độ sáng",
+    "darkTheme": "Chế độ tối",
+    "systemTheme": "Theo hệ thống"
   },
 
   "VideoCall": {
@@ -161,6 +165,39 @@
     "callEnded": "Cuộc gọi đã kết thúc",
     "callFailed": "Cuộc gọi thất bại",
     "unknownCaller": "Người gọi không xác định"
+  },
+
+  "GroupCall": {
+    "incomingCall": "Cuộc gọi nhóm đến",
+    "startingCall": "Đang bắt đầu cuộc gọi nhóm...",
+    "connecting": "Đang kết nối...",
+    "connected": "đã kết nối",
+    "connectionIssues": "lỗi kết nối",
+    "acceptCall": "Nghe máy",
+    "declineCall": "Từ chối",
+    "endCall": "Kết thúc cuộc gọi",
+    "leaveCall": "Rời khỏi cuộc gọi", 
+    "toggleVideo": "Bật/tắt camera",
+    "toggleAudio": "Bật/tắt mic",
+    "toggleScreenShare": "Chia sẻ màn hình",
+    "minimize": "Thu nhỏ",
+    "maximize": "Phóng to",
+    "callStarted": "Cuộc gọi nhóm đã bắt đầu",
+    "callEnded": "Cuộc gọi nhóm đã kết thúc",
+    "participantJoined": "đã tham gia cuộc gọi",
+    "participantLeft": "đã rời khỏi cuộc gọi",
+    "connectionIssue": "Lỗi kết nối",
+    "callDuration": "Thời gian gọi",
+    "you": "Bạn",
+    "unknownUser": "Người dùng không xác định",
+    "groupVideoCall": "Gọi video nhóm",
+    "groupVoiceCall": "Gọi thoại nhóm",
+    "isCalling": "đang gọi...",
+    "videoCallButton": "Gọi video",
+    "voiceCallButton": "Gọi thoại",
+    "waitingForOthersToJoin": "Đang chờ người khác tham gia...",
+    "joinCall": "Tham gia cuộc gọi",
+    "reconnectCall": "Quay lại cuộc gọi"
   },
 
   "Messenger": {

@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils/cn';
-import { Loader2 } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  color?: 'primary' | 'white' | 'muted';
+  color?: 'primary' | 'foreground' | 'muted';
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
@@ -23,12 +23,12 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   const colorClasses = {
     primary: 'text-primary',
-    white: 'text-white',
+    foreground: 'text-foreground',
     muted: 'text-muted-foreground'
   };
 
   return (
-    <Loader2 
+    <Activity 
       className={cn(
         'animate-spin',
         sizeClasses[size],
@@ -41,7 +41,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
 interface LoadingDotsProps {
   className?: string;
-  color?: 'primary' | 'white' | 'muted';
+  color?: 'primary' | 'foreground' | 'muted';
 }
 
 export const LoadingDots: React.FC<LoadingDotsProps> = ({ 
@@ -50,7 +50,7 @@ export const LoadingDots: React.FC<LoadingDotsProps> = ({
 }) => {
   const colorClasses = {
     primary: 'bg-primary',
-    white: 'bg-white',
+    foreground: 'bg-foreground',
     muted: 'bg-muted-foreground'
   };
 

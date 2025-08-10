@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
-import { LoadingSpinner } from './Loading';
+import { Activity } from 'lucide-react';
 import { loading, LoadingState } from '@/lib/utils/loading';
 import { useTranslations } from 'next-intl';
 
@@ -38,16 +38,16 @@ export const GlobalLoading: React.FC<GlobalLoadingProps> = ({
       className={cn(
         'inset-0 z-[100000] flex items-center justify-center',
         position === 'fixed' ? 'fixed' : 'absolute',
-        backdrop && 'bg-black/20 backdrop-blur-sm',
+        backdrop && 'bg-background/90 backdrop-blur-sm',
         className
       )}
     >
-      <div className="flex flex-col items-center space-y-3">
-        <LoadingSpinner size={size} color="primary" />
+      <div className="flex items-center justify-center space-x-3 bg-card/95 backdrop-blur-sm border border-border rounded-lg px-6 py-4 shadow-lg">
+        <Activity className="w-6 h-6 animate-spin text-primary" />
         {state.text && (
-          <p className="text-sm font-medium text-foreground animate-pulse">
+          <span className="text-base font-medium text-foreground">
             {state.text}
-          </p>
+          </span>
         )}
       </div>
     </div>
@@ -71,7 +71,7 @@ export const PageLoading: React.FC<PageLoadingProps> = ({
       className
     )}>
       <div className="text-center space-y-4">
-        <LoadingSpinner size="lg" />
+        <Activity className="w-8 h-8 animate-spin text-primary mx-auto" />
         <div>
           <p className="text-lg font-medium text-foreground">
             {defaultMessage}
@@ -101,9 +101,15 @@ export const InlineLoading: React.FC<InlineLoadingProps> = ({
 }) => {
   if (!isLoading) return null;
 
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8'
+  };
+
   return (
     <div className={cn('flex items-center justify-center space-x-2', className)}>
-      <LoadingSpinner size={size} color="primary" />
+      <Activity className={cn('animate-spin text-primary', sizeClasses[size])} />
       {text && (
         <span className="text-sm text-muted-foreground animate-pulse">
           {text}
@@ -140,7 +146,7 @@ export const ButtonLoading: React.FC<ButtonLoadingProps> = ({
     >
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <LoadingSpinner size="sm" color="white" />
+          <Activity className="w-4 h-4 animate-spin text-primary-foreground" />
           {loadingText && (
             <span className="ml-2 text-sm">
               {loadingText}

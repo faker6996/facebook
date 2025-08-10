@@ -4,896 +4,811 @@ import React, { useState } from "react";
 
 // Import all UI components
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Input, { SearchInput, PasswordInput, NumberInput } from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import { Checkbox } from "@/components/ui/CheckBox";
 import { Switch } from "@/components/ui/Switch";
 import Card from "@/components/ui/Card";
 import { Badge, NotificationBadge } from "@/components/ui/Badge";
-import { Progress, CircularProgress, StepProgress } from "@/components/ui/Progress";
+import {
+  Progress,
+  CircularProgress,
+  StepProgress,
+  MiniProgress,
+  BatteryProgress,
+  SegmentedProgress,
+  LoadingProgress,
+} from "@/components/ui/Progress";
 import Modal from "@/components/ui/Modal";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, SelectDropdown } from "@/components/ui/DropdownMenu";
 import { RadioGroup, RadioGroupItem, RadioGroupWithLabel, RadioButtonGroup } from "@/components/ui/RadioGroup";
 import { Skeleton, SkeletonAvatar, SkeletonText, SkeletonPost, SkeletonMessage } from "@/components/ui/Skeleton";
 import Alert from "@/components/ui/Alert";
-import { LoadingSpinner } from "@/components/ui/Loading";
-import { InlineLoading, ButtonLoading } from "@/components/ui/GlobalLoading";
+import { LoadingSpinner, LoadingDots, LoadingBar } from "@/components/ui/Loading";
+import { InlineLoading } from "@/components/ui/GlobalLoading";
 import { loading } from "@/lib/utils/loading";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { MultiCombobox } from "@/components/ui/MultiCombobox";
+import { DatePicker, DateRangePicker, CompactDatePicker } from "@/components/ui/DatePicker";
+import { Pagination, SimplePagination, CompactPagination } from "@/components/ui/Pagination";
+import { Popover } from "@/components/ui/Popover";
+import { ScrollArea } from "@/components/ui/ScrollArea";
+import { Sheet } from "@/components/ui/Sheet";
+import { Avatar } from "@/components/ui/Avatar";
+import { Tabs } from "@/components/ui/Tab";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import { Carousel } from "@/components/ui/Carousel";
+import { Combobox } from "@/components/ui/Combobox";
 
 // Import icons
-import { Heart, MessageCircle, Share, Settings, User, Image, Video, Plus, Edit, Trash, Grid, List, Search, ChevronDown, ChevronRight, Users, Bell, Check, X, AlertTriangle, Info, Upload, Download, Play, Pause, SkipForward, Star } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Share,
+  Settings,
+  User,
+  Image,
+  Video,
+  Plus,
+  Edit,
+  Trash,
+  Grid,
+  List,
+  Search,
+  ChevronDown,
+  ChevronRight,
+  Users,
+  Bell,
+  Check,
+  X,
+  AlertTriangle,
+  Info,
+  Upload,
+  Download,
+  Play,
+  Pause,
+  SkipForward,
+  Star,
+  Calendar,
+  Home,
+  Package,
+  FileText,
+  Database,
+  Shield,
+  Zap,
+  Globe,
+  Mail,
+  Phone,
+  MapPin,
+  Tag,
+  Filter,
+  SortAsc,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
-// Import responsive utilities
-import { useResponsive, RESPONSIVE_CLASSES } from "@/lib/utils/responsive";
-import { ResponsiveLayout, ResponsiveGrid, ResponsiveContainer, ResponsiveText, MobileOnly, TabletOnly, DesktopOnly } from "@/components/layout/ResponsiveLayout";
 import { cn } from "@/lib/utils/cn";
-
-// ----- Responsive Demo Section -----
-const ResponsiveDemo = () => {
-  const { deviceType, screenSize, isMobile, isTablet, isDesktop } = useResponsive();
-
-  return (
-    <Card title="📱 Responsive Design Demo" className="mb-8">
-      <div className="space-y-6">
-        {/* Device Info */}
-        <div className="p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-semibold mb-2">Current Device Info</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="font-medium">Device Type:</span>
-              <span className={cn(
-                "ml-2 px-2 py-1 rounded text-xs",
-                deviceType === 'mobile' && "bg-red-100 text-red-800",
-                deviceType === 'tablet' && "bg-yellow-100 text-yellow-800", 
-                deviceType === 'desktop' && "bg-green-100 text-green-800"
-              )}>
-                {deviceType.toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium">Screen:</span>
-              <span className="ml-2">{screenSize.width} x {screenSize.height}px</span>
-            </div>
-            <div>
-              <span className="font-medium">Breakpoints:</span>
-              <span className="ml-2">
-                {isMobile && "📱"} {isTablet && "📟"} {isDesktop && "💻"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Responsive Text Demo */}
-        <div>
-          <h4 className="font-semibold mb-4">Responsive Typography</h4>
-          <div className="space-y-3">
-            <ResponsiveText as="h1" variant="heading" className="font-bold text-primary">
-              Responsive Heading (scales with device)
-            </ResponsiveText>
-            <ResponsiveText as="h3" variant="subheading" className="font-semibold text-muted-foreground">
-              Responsive Subheading
-            </ResponsiveText>
-            <ResponsiveText variant="body">
-              This is responsive body text that adapts to screen size. On mobile it's smaller, on desktop it's larger for better readability.
-            </ResponsiveText>
-          </div>
-        </div>
-
-        {/* Responsive Grid Demo */}
-        <div>
-          <h4 className="font-semibold mb-4">Responsive Grid Layout</h4>
-          <ResponsiveGrid variant="cards" gap="md">
-            {Array.from({ length: 6 }, (_, i) => (
-              <Card key={i} title={`Card ${i + 1}`} className="h-32">
-                <p className="text-sm text-muted-foreground">
-                  Grid adapts: 1 col mobile, 2 cols tablet, 3 cols desktop
-                </p>
-              </Card>
-            ))}
-          </ResponsiveGrid>
-        </div>
-
-        {/* Device-Specific Content */}
-        <div>
-          <h4 className="font-semibold mb-4">Device-Specific Components</h4>
-          <div className="space-y-3">
-            <MobileOnly>
-              <Alert variant="info" title="Mobile Only" description="This alert only shows on mobile devices" />
-            </MobileOnly>
-            <TabletOnly>
-              <Alert variant="warning" title="Tablet Only" description="This alert only shows on tablet devices" />
-            </TabletOnly>
-            <DesktopOnly>
-              <Alert variant="success" title="Desktop Only" description="This alert only shows on desktop devices" />
-            </DesktopOnly>
-          </div>
-        </div>
-
-        {/* Responsive Button Sizes */}
-        <div>
-          <h4 className="font-semibold mb-4">Responsive Button Sizes</h4>
-          <div className="flex flex-wrap gap-3">
-            <Button size="sm" variant="primary">Small (scales down on desktop)</Button>
-            <Button size="md" variant="success">Medium (responsive)</Button>
-            <Button size="lg" variant="info">Large (scales down on desktop)</Button>
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Buttons are larger on mobile for easier touch interaction, smaller on desktop to save space.
-          </p>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// ----- Loading System Demo Components -----
-const LoadingSystemDemo = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const handleLocalSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      // Simulate API call
-      const results = await new Promise(resolve => {
-        setTimeout(() => {
-          resolve([
-            { id: 1, name: "Nguyễn Văn A", email: "a@example.com" },
-            { id: 2, name: "Trần Thị B", email: "b@example.com" }
-          ]);
-        }, 2000);
-      });
-      setSearchResults(results as any[]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleGlobalSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    loading.show("Đang tìm kiếm toàn cục...");
-    
-    try {
-      const results = await new Promise(resolve => {
-        setTimeout(() => {
-          resolve([
-            { id: 1, name: "Global Result A", email: "a@global.com" },
-            { id: 2, name: "Global Result B", email: "b@global.com" }
-          ]);
-        }, 2000);
-      });
-      setSearchResults(results as any[]);
-    } catch (error) {
-      console.error("Search failed:", error);
-    } finally {
-      loading.hide();
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <h4 className="font-medium">Loading Demos</h4>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Tìm kiếm người dùng..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Button 
-            size="sm" 
-            onClick={handleLocalSearch}
-            disabled={isSearching}
-          >
-            {isSearching ? "Đang tìm..." : "Tìm local"}
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={handleGlobalSearch}
-          >
-            Tìm global
-          </Button>
-        </div>
-      </div>
-
-      <InlineLoading isLoading={isSearching} text="Đang tìm kiếm..." />
-
-      {searchResults.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Kết quả:</p>
-          {searchResults.map((user) => (
-            <div key={user.id} className="text-sm p-2 bg-muted/50 rounded">
-              {user.name} - {user.email}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="text-xs text-muted-foreground">
-        <strong>Local:</strong> InlineLoading component | <strong>Global:</strong> loading.wrap() cho toàn màn hình
-      </div>
-    </div>
-  );
-};
-
-const ManualLoadingDemo = () => {
-  const [result, setResult] = useState<string>("");
-
-  const handleGlobalLoading = async () => {
-    loading.show("Đang xử lý...");
-    
-    try {
-      // Simulate long operation
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      setResult("Hoàn thành!");
-    } catch (error) {
-      setResult("Có lỗi xảy ra");
-    } finally {
-      loading.hide();
-    }
-  };
-
-  const handleSimpleLoading = async () => {
-    loading.show("Xử lý với show/hide...");
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      setResult("Hoàn thành với show/hide!");
-    } catch (error) {
-      setResult("Có lỗi xảy ra");
-    } finally {
-      loading.hide();
-    }
-  };
-
-  const clearResult = () => setResult("");
-
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <h4 className="font-medium">Global Loading Control</h4>
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            onClick={handleGlobalLoading}
-          >
-            loading.show()
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={handleSimpleLoading}
-          >
-            loading.show/hide
-          </Button>
-          <Button 
-            size="sm" 
-            variant="ghost"
-            onClick={clearResult}
-          >
-            Xóa
-          </Button>
-        </div>
-      </div>
-
-      {result && (
-        <div className="text-sm p-2 bg-success/10 text-success rounded">
-          {result}
-        </div>
-      )}
-
-      <div className="text-xs text-muted-foreground">
-Sử dụng <strong>loading.show()</strong> ở đầu và <strong>loading.hide()</strong> trong finally
-      </div>
-    </div>
-  );
-};
-
-const LoadingUIDemo = () => {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <h4 className="font-medium">Loading Spinners</h4>
-        <div className="flex items-center gap-4">
-          <div className="text-center space-y-1">
-            <LoadingSpinner size="sm" />
-            <div className="text-xs text-muted-foreground">Small</div>
-          </div>
-          <div className="text-center space-y-1">
-            <LoadingSpinner size="md" />
-            <div className="text-xs text-muted-foreground">Medium</div>
-          </div>
-          <div className="text-center space-y-1">
-            <LoadingSpinner size="lg" />
-            <div className="text-xs text-muted-foreground">Large</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <h4 className="font-medium">Inline Loading</h4>
-        <div className="space-y-2">
-          <InlineLoading isLoading={true} text="Đang tải..." />
-          <InlineLoading isLoading={true} />
-          <InlineLoading isLoading={true} size="sm" />
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <h4 className="font-medium">Loading với Buttons</h4>
-        <div className="flex gap-2">
-          <ButtonLoading isLoading={true} className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm">
-            Đang gửi...
-          </ButtonLoading>
-          <ButtonLoading isLoading={false} className="bg-success text-success-foreground px-3 py-1 rounded text-sm">
-            Hoàn thành
-          </ButtonLoading>
-        </div>
-      </div>
-
-      <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded">
-        💡 <strong>Best Practice:</strong><br/>
-        <code>loading.show()</code> - Hiển thị loading<br/>
-        <code>loading.hide()</code> - Ẩn loading (luôn gọi trong finally)<br/>
-        <code>InlineLoading</code> - Loading nhỏ cho từng phần
-      </div>
-    </div>
-  );
-};
 
 const UserGuideContent: React.FC = () => {
   // State for demonstrations
   const [modalOpen, setModalOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [switchValue, setSwitchValue] = useState(false);
   const [checkboxValue, setCheckboxValue] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [passwordValue, setPasswordValue] = useState("");
+  const [numberValue, setNumberValue] = useState(0);
   const [textareaValue, setTextareaValue] = useState("");
   const [radioValue, setRadioValue] = useState("option1");
   const [selectValue, setSelectValue] = useState("");
+  const [multiSelectValue, setMultiSelectValue] = useState<string[]>([]);
+  const [comboboxValue, setComboboxValue] = useState("");
   const [progressValue, setProgressValue] = useState(45);
   const [currentStep, setCurrentStep] = useState(1);
-  const [viewMode, setViewMode] = useState("grid");
-  const [privacy, setPrivacy] = useState("friends");
-  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const { addToast } = useToast();
 
-  const handleToastDemo = (type: "success" | "error" | "warning" | "info") => {
-    const messages = {
-      success: { title: "Success!", message: "Operation completed successfully" },
-      error: { title: "Error!", message: "Something went wrong" },
-      warning: { title: "Warning!", message: "Please check your input" },
-      info: { title: "Info", message: "Here's some information" }
-    };
-
+  const handleToastDemo = () => {
     addToast({
-      type,
-      ...messages[type],
-      duration: 3000
+      title: "Success!",
+      message: "This is a success toast message.",
+      type: "success",
     });
   };
 
-  const handleLoadingDemo = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 2000);
+  const handleLoadingDemo = async () => {
+    setIsLoading(true);
+    loading.show("Processing...");
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      addToast({
+        title: "Complete!",
+        message: "Loading demo finished successfully.",
+        type: "success",
+      });
+    } finally {
+      setIsLoading(false);
+      loading.hide();
+    }
   };
 
+  const options = ["Option 1", "Option 2", "Option 3", "Option 4", "Option 5"];
+  const selectOptions = [
+    { value: "option1", label: "Option 1" },
+    { value: "option2", label: "Option 2" },
+    { value: "option3", label: "Option 3" },
+    { value: "option4", label: "Option 4" },
+    { value: "option5", label: "Option 5" },
+  ];
+  const comboboxOptions = ["React", "Next.js", "TypeScript", "Tailwind CSS"];
+
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Components", href: "/components" },
+    { label: "User Guide", href: "/user-guide" },
+  ];
+
+  const carouselImages = [
+    "https://picsum.photos/400/200?random=1",
+    "https://picsum.photos/400/200?random=2",
+    "https://picsum.photos/400/200?random=3",
+    "https://picsum.photos/400/200?random=4",
+  ];
+
+  const tabData = [
+    {
+      label: "Overview",
+      value: "overview",
+      content: (
+        <div className="p-4">
+          <h3 className="text-lg font-semibold mb-2">Component Overview</h3>
+          <p className="text-muted-foreground">
+            This user guide demonstrates all available UI components in our design system. Each component follows our design principles and
+            accessibility standards.
+          </p>
+        </div>
+      ),
+    },
+    {
+      label: "Usage",
+      value: "usage",
+      content: (
+        <div className="p-4">
+          <h3 className="text-lg font-semibold mb-2">How to Use</h3>
+          <p className="text-muted-foreground">
+            All components are TypeScript-ready and use Floating UI for positioning. They follow our design system tokens for consistent theming.
+          </p>
+        </div>
+      ),
+    },
+    {
+      label: "Examples",
+      value: "examples",
+      content: (
+        <div className="p-4">
+          <h3 className="text-lg font-semibold mb-2">Code Examples</h3>
+          <pre className="bg-muted p-3 rounded text-sm">
+            {`import Button from "@/components/ui/Button";
+
+<Button variant="primary" size="md">
+  Click me
+</Button>`}
+          </pre>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <ResponsiveContainer size="wide">
-      <div className="py-8 space-y-12">
-        <div className="text-center space-y-4">
-          <ResponsiveText as="h1" variant="heading" className="font-bold text-foreground">
-            🎨 UI Components Guide
-          </ResponsiveText>
-          <ResponsiveText variant="body" className="text-muted-foreground">
-            Complete component library for Facebook Clone project with responsive design patterns
-          </ResponsiveText>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">UI Components User Guide</h1>
+          <p className="text-xl text-muted-foreground mb-6">Comprehensive showcase of all available UI components</p>
+          <Breadcrumb items={breadcrumbItems} />
         </div>
 
-        {/* Responsive Demo - Always first */}
-        <ResponsiveDemo />
-
-      {/* Buttons Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Buttons</h2>
-        <Card>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h3 className="font-medium">Button Variants</h3>
+        {/* Buttons Section */}
+        <Card title="🔘 Buttons" className="mb-8">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Button Variants</h3>
               <div className="flex flex-wrap gap-3">
-                <Button variant="default">Default</Button>
-                <Button variant="primary">Primary</Button>
-                <Button variant="success">Success</Button>
-                <Button variant="warning">Warning</Button>
-                <Button variant="danger">Danger</Button>
-                <Button variant="info">Info</Button>
-                <Button variant="outline">Outline</Button>
-                <Button variant="ghost">Ghost</Button>
-                <Button variant="link">Link</Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-medium">Button Sizes</h3>
-              <div className="flex items-center gap-3">
-                <Button size="sm">Small</Button>
-                <Button size="md">Medium</Button>
-                <Button size="lg">Large</Button>
-                <Button size="icon"><Heart className="w-4 h-4" /></Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-medium">Button States</h3>
-              <div className="flex gap-3">
-                <Button variant="primary" icon={Plus}>With Icon</Button>
-                <Button variant="primary" loading={loading} onClick={handleLoadingDemo}>
-                  {loading ? "Loading..." : "Load Demo"}
+                <Button variant="primary" size="md">
+                  Primary
                 </Button>
-                <Button variant="primary" disabled>Disabled</Button>
+                <Button variant="default" size="md">
+                  Default
+                </Button>
+                <Button variant="outline" size="md">
+                  Outline
+                </Button>
+                <Button variant="ghost" size="md">
+                  Ghost
+                </Button>
+                <Button variant="link" size="md">
+                  Link
+                </Button>
+                <Button variant="danger" size="md">
+                  Danger
+                </Button>
+                <Button variant="success" size="md">
+                  Success
+                </Button>
+                <Button variant="warning" size="md">
+                  Warning
+                </Button>
+                <Button variant="info" size="md">
+                  Info
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Button Sizes</h3>
+              <div className="flex flex-wrap gap-3 items-center">
+                <Button variant="primary" size="sm">
+                  Small
+                </Button>
+                <Button variant="primary" size="md">
+                  Medium
+                </Button>
+                <Button variant="primary" size="lg">
+                  Large
+                </Button>
+                <Button variant="primary" size="smx">
+                  Small Extended
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Button States</h3>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="primary" disabled>
+                  Disabled
+                </Button>
+                <Button variant="primary" loading>
+                  Loading
+                </Button>
+                <Button variant="primary" icon={Plus}>
+                  With Icon
+                </Button>
+                <Button variant="outline" iconRight={ChevronRight}>
+                  Arrow
+                </Button>
               </div>
             </div>
           </div>
         </Card>
-      </section>
 
-      {/* Form Controls Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Form Controls</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Input & Textarea">
-            <div className="space-y-4">
-              <Input
-                label="Email Address"
-                placeholder="Enter your email"
-                type="email"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                description="We'll never share your email"
-              />
+        {/* Input Components Section */}
+        <Card title="📝 Input Components" className="mb-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Regular Input</label>
+                  <Input placeholder="Enter text..." value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                </div>
 
-              <Textarea
-                label="Bio"
-                placeholder="Tell us about yourself..."
-                value={textareaValue}
-                onChange={(e) => setTextareaValue(e.target.value)}
-                variant="default"
-                size="md"
-                rows={3}
-              />
+                <div>
+                  <label className="block text-sm font-medium mb-2">Search Input</label>
+                  <SearchInput placeholder="Search..." onSearch={(value) => console.log("Searching:", value)} />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <Switch
-                  checked={switchValue}
-                  onCheckedChange={setSwitchValue}
-                  label="Email Notifications"
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-2">Password Input</label>
+                  <PasswordInput placeholder="Enter password..." value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} />
+                </div>
 
-                <Checkbox
-                  checked={checkboxValue}
-                  onChange={(e) => setCheckboxValue(e.target.checked)}
-                  label="I agree to terms"
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-2">Number Input</label>
+                  <NumberInput
+                    placeholder="Enter number..."
+                    value={numberValue.toString()}
+                    onChange={(e) => setNumberValue(parseInt(e.target.value) || 0)}
+                    min={0}
+                    max={100}
+                  />
+                </div>
               </div>
-            </div>
-          </Card>
 
-          <Card title="Radio Groups">
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium mb-2">Basic Radio Group</h4>
-                <RadioGroup value={radioValue} onValueChange={setRadioValue}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Textarea</label>
+                  <Textarea placeholder="Enter long text..." value={textareaValue} onChange={(e) => setTextareaValue(e.target.value)} rows={4} />
+                </div>
+
+                <div className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="option1" id="option1" />
-                    <label htmlFor="option1" className="text-sm">Option 1</label>
+                    <Checkbox checked={checkboxValue} onChange={(e) => setCheckboxValue(e.target.checked)} id="checkbox-demo" />
+                    <label htmlFor="checkbox-demo" className="text-sm font-medium">
+                      Checkbox Example
+                    </label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="option2" id="option2" />
-                    <label htmlFor="option2" className="text-sm">Option 2</label>
+
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold">Switch Examples</h4>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-3">
+                        <Switch checked={switchValue} onCheckedChange={setSwitchValue} size="sm" label="Small Switch" />
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <Switch checked={switchValue} onCheckedChange={setSwitchValue} size="md" label="Medium Switch (Default)" />
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <Switch checked={switchValue} onCheckedChange={setSwitchValue} size="lg" label="Large Switch" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h5 className="text-xs font-medium text-muted-foreground">Variants</h5>
+                      <div className="flex flex-wrap gap-4">
+                        <Switch checked={switchValue} onCheckedChange={setSwitchValue} variant="default" label="Default" />
+                        <Switch checked={switchValue} onCheckedChange={setSwitchValue} variant="success" label="Success" />
+                        <Switch checked={switchValue} onCheckedChange={setSwitchValue} variant="warning" label="Warning" />
+                        <Switch checked={switchValue} onCheckedChange={setSwitchValue} variant="danger" label="Danger" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Switch checked={false} onCheckedChange={() => {}} disabled label="Disabled Switch" />
+                    </div>
                   </div>
-                </RadioGroup>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Selection Components */}
+        <Card title="🎯 Selection Components" className="mb-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Radio Group</label>
+                  <RadioGroup value={radioValue} onValueChange={setRadioValue}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="option1" id="option1" />
+                      <label htmlFor="option1" className="text-sm">
+                        Option 1
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="option2" id="option2" />
+                      <label htmlFor="option2" className="text-sm">
+                        Option 2
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="option3" id="option3" />
+                      <label htmlFor="option3" className="text-sm">
+                        Option 3
+                      </label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Select Dropdown</label>
+                  <SelectDropdown options={selectOptions} value={selectValue} onValueChange={setSelectValue} placeholder="Select an option..." />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Multi Combobox</label>
+                  <MultiCombobox
+                    options={options}
+                    value={multiSelectValue}
+                    onChange={setMultiSelectValue}
+                    placeholder="Search and select..."
+                    showTags={true}
+                    showClear={true}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Combobox</label>
+                  <Combobox options={comboboxOptions} value={comboboxValue} onChange={setComboboxValue} placeholder="Search options..." />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Date Components */}
+        <Card title="📅 Date Components" className="mb-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Date Picker</label>
+                <DatePicker value={selectedDate || undefined} onChange={setSelectedDate} placeholder="Select date..." />
               </div>
 
               <div>
-                <h4 className="text-sm font-medium mb-2">Button Group</h4>
-                <RadioButtonGroup
-                  items={[
-                    { value: "grid", label: "Grid", icon: Grid },
-                    { value: "list", label: "List", icon: List }
-                  ]}
-                  value={viewMode}
-                  onValueChange={setViewMode}
-                  variant="outline"
+                <label className="block text-sm font-medium mb-2">Date Range Picker</label>
+                <DateRangePicker
+                  onStartDateChange={(date) => console.log("Start date:", date)}
+                  onEndDateChange={(date) => console.log("End date:", date)}
                 />
               </div>
 
               <div>
-                <h4 className="text-sm font-medium mb-2">Select Dropdown</h4>
-                <SelectDropdown
-                  options={[
-                    { value: "public", label: "Public" },
-                    { value: "friends", label: "Friends Only" },
-                    { value: "private", label: "Only Me" }
-                  ]}
-                  value={selectValue}
-                  onValueChange={setSelectValue}
-                  placeholder="Select privacy..."
-                />
+                <label className="block text-sm font-medium mb-2">Compact Date Picker</label>
+                <CompactDatePicker value={selectedDate || undefined} onChange={setSelectedDate} />
               </div>
             </div>
-          </Card>
-        </div>
-      </section>
+          </div>
+        </Card>
 
-      {/* Progress & Loading Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Progress & Loading</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Progress Bars">
-            <div className="space-y-6">
-              <Progress
-                value={progressValue}
-                variant="primary"
-                showValue
-                label="Upload Progress"
-              />
-
-              <div className="flex items-center gap-4">
-                <CircularProgress value={75} variant="success" showValue />
-                <CircularProgress value={50} variant="warning" size={48} />
-                <CircularProgress value={25} variant="danger" size={32} />
-              </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  onClick={() => setProgressValue(Math.max(0, progressValue - 10))}
-                >
-                  -10%
-                </Button>
-                <Button 
-                  size="sm" 
-                  onClick={() => setProgressValue(Math.min(100, progressValue + 10))}
-                >
-                  +10%
-                </Button>
-              </div>
-            </div>
-          </Card>
-
-          <Card title="Step Progress">
+        {/* Progress Components */}
+        <Card title="📊 Progress Components" className="mb-8">
+          <div className="space-y-6">
             <div className="space-y-4">
-              <StepProgress
-                steps={["Basic Info", "Upload Photo", "Preferences", "Complete"]}
-                currentStep={currentStep}
-                variant="primary"
-              />
-              
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  disabled={currentStep === 0}
-                  onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                >
-                  Previous
-                </Button>
-                <Button 
-                  size="sm" 
-                  disabled={currentStep === 3}
-                  onClick={() => setCurrentStep(Math.min(3, currentStep + 1))}
-                >
-                  Next
+              <div>
+                <label className="block text-sm font-medium mb-2">Progress Bar ({progressValue}%)</label>
+                <Progress value={progressValue} className="mb-2" />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => setProgressValue(Math.max(0, progressValue - 10))}>
+                    -10%
+                  </Button>
+                  <Button size="sm" onClick={() => setProgressValue(Math.min(100, progressValue + 10))}>
+                    +10%
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Circular Progress</label>
+                  <CircularProgress value={progressValue} size={64} />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Mini Progress</label>
+                  <MiniProgress value={progressValue} />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Battery Progress</label>
+                  <BatteryProgress value={progressValue} />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Loading Progress</label>
+                  <LoadingProgress value={progressValue} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Step Progress</label>
+                <StepProgress steps={["Step 1", "Step 2", "Step 3", "Step 4"]} currentStep={currentStep} />
+                <div className="flex gap-2 mt-2">
+                  <Button size="sm" onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}>
+                    Previous
+                  </Button>
+                  <Button size="sm" onClick={() => setCurrentStep(Math.min(3, currentStep + 1))}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Segmented Progress</label>
+                <SegmentedProgress segments={5} activeSegments={3} />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Loading Components */}
+        <Card title="⏳ Loading Components" className="mb-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Loading Spinners</h3>
+                <div className="flex items-center gap-4">
+                  <div className="text-center space-y-1">
+                    <LoadingSpinner size="sm" />
+                    <div className="text-xs text-muted-foreground">Small</div>
+                  </div>
+                  <div className="text-center space-y-1">
+                    <LoadingSpinner size="md" />
+                    <div className="text-xs text-muted-foreground">Medium</div>
+                  </div>
+                  <div className="text-center space-y-1">
+                    <LoadingSpinner size="lg" />
+                    <div className="text-xs text-muted-foreground">Large</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Loading Dots</h3>
+                <div className="space-y-3">
+                  <LoadingDots />
+                  <LoadingDots color="foreground" />
+                  <LoadingDots color="muted" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Loading Bar</h3>
+                <div className="space-y-3">
+                  <LoadingBar progress={progressValue} />
+                  <LoadingBar animated />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Inline Loading</h3>
+              <div className="space-y-3">
+                <InlineLoading isLoading={isLoading} text="Processing..." />
+                <Button onClick={handleLoadingDemo} disabled={isLoading}>
+                  {isLoading ? "Loading..." : "Start Loading Demo"}
                 </Button>
               </div>
             </div>
-          </Card>
-        </div>
-      </section>
+          </div>
+        </Card>
 
-      {/* Badges & Notifications Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Badges & Notifications</h2>
-        
-        <Card>
+        {/* Feedback Components */}
+        <Card title="💬 Feedback Components" className="mb-8">
           <div className="space-y-6">
             <div>
-              <h3 className="font-medium mb-3">Badges</h3>
-              <div className="flex flex-wrap items-center gap-3">
+              <h3 className="text-lg font-semibold mb-4">Alerts</h3>
+              <div className="space-y-3">
+                <Alert variant="default" title="Default Alert" description="This is a default alert message." />
+                <Alert variant="info" title="Info Alert" description="This is an informational message." />
+                <Alert variant="success" title="Success Alert" description="Operation completed successfully!" />
+                <Alert variant="warning" title="Warning Alert" description="Please review this carefully." />
+                <Alert variant="error" title="Error Alert" description="Something went wrong." />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Toasts</h3>
+              <div className="flex gap-2">
+                <Button onClick={handleToastDemo} size="sm">
+                  Show Success Toast
+                </Button>
+                <Button
+                  onClick={() =>
+                    addToast({
+                      title: "Error!",
+                      message: "This is an error toast.",
+                      type: "error",
+                    })
+                  }
+                  variant="danger"
+                  size="sm"
+                >
+                  Show Error Toast
+                </Button>
+                <Button
+                  onClick={() =>
+                    addToast({
+                      title: "Warning!",
+                      message: "This is a warning toast.",
+                      type: "warning",
+                    })
+                  }
+                  variant="warning"
+                  size="sm"
+                >
+                  Show Warning Toast
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Badges</h3>
+              <div className="flex flex-wrap gap-3">
                 <Badge variant="default">Default</Badge>
                 <Badge variant="primary">Primary</Badge>
                 <Badge variant="success">Success</Badge>
                 <Badge variant="warning">Warning</Badge>
-                <Badge variant="danger">Danger</Badge>
-                <Badge variant="info">Info</Badge>
+                <Badge variant="danger">Error</Badge>
                 <Badge variant="outline">Outline</Badge>
-                <Badge dot variant="success" pulse />
-                <Badge count={99} />
-                <Badge count={999} maxCount={99} />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-medium mb-3">Notification Badges</h3>
-              <div className="flex items-center gap-6">
-                <NotificationBadge count={5} variant="danger">
-                  <MessageCircle className="w-6 h-6" />
+                <NotificationBadge count={5}>
+                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">🔔</div>
                 </NotificationBadge>
-                
-                <NotificationBadge dot variant="success" pulse>
-                  <User className="w-6 h-6" />
+                <NotificationBadge count={99}>
+                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">📧</div>
                 </NotificationBadge>
-                
-                <NotificationBadge count={12} position="top-left">
-                  <Heart className="w-6 h-6" />
+                <NotificationBadge count={1000}>
+                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">💬</div>
                 </NotificationBadge>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-medium mb-3">Toast Notifications</h3>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => handleToastDemo("success")}>Success</Button>
-                <Button size="sm" onClick={() => handleToastDemo("error")}>Error</Button>
-                <Button size="sm" onClick={() => handleToastDemo("warning")}>Warning</Button>
-                <Button size="sm" onClick={() => handleToastDemo("info")}>Info</Button>
               </div>
             </div>
           </div>
         </Card>
-      </section>
 
-      {/* Alerts Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Alerts</h2>
-        
-        <div className="space-y-4">
-          <Alert
-            variant="success"
-            title="Success!"
-            description="Your post has been published successfully."
-          />
-          
-          <Alert
-            variant="warning"
-            title="Warning"
-            description="Please review your privacy settings."
-          />
-          
-          <Alert
-            variant="error"
-            title="Error"
-            description="Failed to upload image. Please try again."
-          />
-          
-          <Alert
-            variant="info"
-            title="Information"
-            description="New features are now available in your dashboard."
-          />
-        </div>
-      </section>
+        {/* Navigation Components */}
+        <Card title="🧭 Navigation Components" className="mb-8">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Pagination</h3>
+              <div className="space-y-4">
+                <Pagination page={currentPage} totalPages={10} onChange={setCurrentPage} />
+                <SimplePagination page={currentPage} totalPages={10} onChange={setCurrentPage} />
+                <CompactPagination page={currentPage} totalPages={10} onChange={setCurrentPage} />
+              </div>
+            </div>
 
-      {/* Modal & Dropdown Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Modal & Dropdown</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Modal Demo">
-            <div className="space-y-4">
-              <Button onClick={() => setModalOpen(true)}>
-                Open Modal
-              </Button>
-              
-              <Modal
-                isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
-                title="Create New Post"
-                size="lg"
-              >
-                <div className="space-y-4">
-                  <Textarea
-                    placeholder="What's on your mind?"
-                    rows={3}
-                  />
-                  
-                  <div className="flex justify-between">
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" icon={Image}>Photo</Button>
-                      <Button variant="ghost" size="sm" icon={Video}>Video</Button>
-                    </div>
-                    
-                    <div className="flex gap-2">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Tabs</h3>
+              <Tabs tabs={tabData} defaultValue="overview" />
+            </div>
+          </div>
+        </Card>
+
+        {/* Overlay Components */}
+        <Card title="🔄 Overlay Components" className="mb-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Modal</h3>
+                <Button onClick={() => setModalOpen(true)}>Open Modal</Button>
+                <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Example Modal" size="md">
+                  <div className="p-6">
+                    <p className="text-muted-foreground mb-4">This is a modal dialog example with Floating UI positioning.</p>
+                    <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setModalOpen(false)}>
                         Cancel
                       </Button>
-                      <Button variant="primary">Post</Button>
+                      <Button onClick={() => setModalOpen(false)}>Confirm</Button>
                     </div>
                   </div>
-                </div>
-              </Modal>
-            </div>
-          </Card>
+                </Modal>
+              </div>
 
-          <Card title="Dropdown Menu">
-            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Sheet</h3>
+                <Button onClick={() => setSheetOpen(true)}>Open Sheet</Button>
+                <Sheet open={sheetOpen} onOpenChange={(open) => setSheetOpen(open)} title="Example Sheet" side="right">
+                  <div className="p-6">
+                    <p className="text-muted-foreground">This is a sheet component that slides in from the side.</p>
+                  </div>
+                </Sheet>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Tooltip</h3>
+                <div className="space-y-2">
+                  <Tooltip content="This is a default tooltip">
+                    <Button variant="outline">Hover me</Button>
+                  </Tooltip>
+                  <Tooltip content="Success tooltip" variant="success">
+                    <Button variant="success">Success tooltip</Button>
+                  </Tooltip>
+                  <Tooltip content="Error tooltip" variant="error">
+                    <Button variant="danger">Error tooltip</Button>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Dropdown Menu</h3>
               <DropdownMenu
-                trigger={<Button variant="outline" icon={Settings}>Options</Button>}
+                trigger={
+                  <Button variant="outline" iconRight={ChevronDown}>
+                    Dropdown Menu
+                  </Button>
+                }
               >
-                <DropdownMenuItem icon={Edit}>
-                  Edit Profile
+                <DropdownMenuItem onClick={() => console.log("Edit clicked")}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem icon={Settings}>
-                  Settings
+                <DropdownMenuItem onClick={() => console.log("Share clicked")}>
+                  <Share className="h-4 w-4 mr-2" />
+                  Share
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem destructive icon={Trash}>
-                  Delete Account
+                <DropdownMenuItem onClick={() => console.log("Delete clicked")} className="text-destructive">
+                  <Trash className="h-4 w-4 mr-2" />
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenu>
             </div>
-          </Card>
-        </div>
-      </section>
 
-      {/* Global Loading System Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Global Loading System</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Loading System Demo">
-            <LoadingSystemDemo />
-          </Card>
-
-          <Card title="Manual Loading Control">
-            <ManualLoadingDemo />
-          </Card>
-        </div>
-
-        <Card title="Loading UI Components">
-          <LoadingUIDemo />
-        </Card>
-      </section>
-
-      {/* Skeleton Loading Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Skeleton Loading</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Basic Skeletons">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <SkeletonAvatar size="lg" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-16" />
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Popover</h3>
+              <Popover trigger={<Button variant="outline">Open Popover</Button>} open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <div className="p-4 space-y-2">
+                  <h4 className="font-semibold">Popover Content</h4>
+                  <p className="text-sm text-muted-foreground">This is popover content with Floating UI positioning.</p>
+                  <Button size="sm" onClick={() => setPopoverOpen(false)}>
+                    Close
+                  </Button>
                 </div>
-              </div>
-              
-              <SkeletonText lines={3} />
-              
-              <div className="flex gap-2">
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-20" />
+              </Popover>
+            </div>
+          </div>
+        </Card>
+
+        {/* Media Components */}
+        <Card title="🖼️ Media Components" className="mb-8">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Avatar</h3>
+              <div className="flex items-center gap-4">
+                <Avatar src="https://picsum.photos/100/100?random=1" alt="User Avatar" size="sm" />
+                <Avatar src="https://picsum.photos/100/100?random=2" alt="User Avatar" size="md" />
+                <Avatar src="https://picsum.photos/100/100?random=3" alt="User Avatar" size="lg" />
+                <Avatar fallback="JD" size="md" />
               </div>
             </div>
-          </Card>
 
-          <Card title="Complex Layouts">
-            <div className="space-y-4">
-              <SkeletonMessage own={false} />
-              <SkeletonMessage own={true} />
-              <SkeletonMessage own={false} showAvatar={false} />
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Carousel</h3>
+              <Carousel>
+                {carouselImages.map((image, index) => (
+                  <div key={index} className="aspect-video bg-muted rounded-lg overflow-hidden">
+                    <img src={image} alt={`Slide ${index + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </Carousel>
             </div>
-          </Card>
-        </div>
+          </div>
+        </Card>
 
-        <SkeletonPost />
-      </section>
-
-      {/* Card Examples Section */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Card Examples</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card
-            title="Basic Card"
-            description="Simple card with title and description"
-            hoverable
-          >
-            <p className="text-sm text-muted-foreground">
-              This is the card content area where you can put any components.
-            </p>
-          </Card>
-
-          <Card
-            title="Interactive Card"
-            description="Clickable card with hover effects"
-            clickable
-            hoverable
-            onClick={() => addToast({ type: "info", message: "Card clicked!" })}
-          >
-            <div className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-destructive" />
-              <span className="text-sm">Click me!</span>
+        {/* Layout Components */}
+        <Card title="📐 Layout Components" className="mb-8">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Scroll Area</h3>
+              <ScrollArea className="h-32 w-full border rounded-md p-4">
+                <div className="space-y-2">
+                  {Array.from({ length: 20 }, (_, i) => (
+                    <div key={i} className="text-sm">
+                      Scrollable item {i + 1}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
-          </Card>
 
-          <Card
-            title="Card with Footer"
-            description="Card with action buttons in footer"
-            footer={
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">Cancel</Button>
-                <Button variant="primary" size="sm">Confirm</Button>
-              </div>
-            }
-          >
-            <p className="text-sm text-muted-foreground">
-              Card content with footer actions.
-            </p>
-          </Card>
-        </div>
-      </section>
-
-      {/* Live Form Example */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-foreground">Live Form Example</h2>
-        
-        <Card title="Create Post Form">
-          <div className="space-y-4">
-            <RadioGroupWithLabel
-              items={[
-                { value: "public", label: "Public", description: "Anyone can see this post" },
-                { value: "friends", label: "Friends", description: "Only your friends can see" },
-                { value: "private", label: "Only Me", description: "Only you can see this post" }
-              ]}
-              value={privacy}
-              onValueChange={setPrivacy}
-              variant="card"
-            />
-
-            <Textarea
-              label="What's on your mind?"
-              placeholder="Share your thoughts..."
-              variant="default"
-              rows={4}
-            />
-
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" icon={Image}>Photo</Button>
-                <Button variant="ghost" size="sm" icon={Video}>Video</Button>
-                <Badge variant="info" size="sm">{privacy}</Badge>
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline">Save Draft</Button>
-                <Button variant="primary" icon={Share}>Post</Button>
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Skeleton Loading</h3>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <SkeletonAvatar />
+                  <div className="space-y-2 flex-1">
+                    <SkeletonText className="w-1/2" />
+                    <SkeletonText className="w-3/4" />
+                  </div>
+                </div>
+                <SkeletonPost />
+                <SkeletonMessage />
               </div>
             </div>
           </div>
         </Card>
-      </section>
 
-      {/* Footer */}
-      <Card className="text-center">
-        <ResponsiveText variant="body" className="text-muted-foreground">
-          🚀 All components are production-ready with responsive design, dark mode support, and accessibility features.
-        </ResponsiveText>
-        <ResponsiveText variant="caption" className="text-muted-foreground mt-2">
-          Built with Next.js 15.3.1, TypeScript, and TailwindCSS 4.1.7
-        </ResponsiveText>
-      </Card>
+        {/* Footer */}
+        <div className="text-center py-8 border-t border-border">
+          <p className="text-muted-foreground">All components use Floating UI for positioning and follow our design system tokens.</p>
+          <p className="text-sm text-muted-foreground mt-2">Built with React, TypeScript, and Tailwind CSS</p>
+        </div>
       </div>
-    </ResponsiveContainer>
+    </div>
   );
 };
 
