@@ -143,7 +143,11 @@
     "adChoices": "Ad Choices",
     "cookies": "Cookies",
     "viewMore": "See More",
-    "language": "Language"
+    "language": "Language",
+    "theme": "Theme",
+    "lightTheme": "Light Theme",
+    "darkTheme": "Dark Theme",
+    "systemTheme": "System"
   },
 
   "VideoCall": {

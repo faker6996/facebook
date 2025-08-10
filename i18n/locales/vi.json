@@ -143,7 +143,11 @@
     "adChoices": "Lựa chọn quảng cáo",
     "cookies": "Cookies",
     "viewMore": "Xem thêm",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "theme": "Giao diện",
+    "lightTheme": "Chế độ sáng",
+    "darkTheme": "Chế độ tối",
+    "systemTheme": "Theo hệ thống"
   },
 
   "VideoCall": {
