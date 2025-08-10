@@ -21,6 +21,37 @@
       "facebookLoginFailed": "Facebook đăng nhập thất bại",
       "googleLoginFailed": "Google đăng nhập thất bại",
       "loginFailed": "Đăng nhập thất bại"
+    },
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "signUpLink": "Đăng ký"
+  },
+
+  "RegisterPage": {
+    "heading": "Tạo tài khoản của bạn",
+    "subtitle": "Tham gia với chúng tôi ngay hôm nay",
+    "nameLabel": "Họ và tên",
+    "emailLabel": "Địa chỉ email",
+    "passwordLabel": "Mật khẩu",
+    "confirmPasswordLabel": "Xác nhận mật khẩu",
+    "signUpButton": "Tạo tài khoản",
+    "dividerText": "Hoặc tiếp tục với",
+    "registering": "Đang tạo tài khoản...",
+    "registerSuccess": "Tạo tài khoản thành công!",
+    "alreadyHaveAccount": "Đã có tài khoản?",
+    "signInLink": "Đăng nhập",
+    "social": {
+      "google": "Google",
+      "facebook": "Facebook",
+      "registeringGoogle": "Đang đăng ký với Google...",
+      "registeringFacebook": "Đang đăng ký với Facebook..."
+    },
+    "errors": {
+      "passwordMismatch": "Mật khẩu không khớp",
+      "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
+      "facebookRegisterFailed": "Đăng ký Facebook thất bại",
+      "googleRegisterFailed": "Đăng ký Google thất bại",
+      "registerFailed": "Đăng ký thất bại",
+      "emailAlreadyExists": "Email đã tồn tại"
     }
   },
   "ValidationInput": {
@@ -100,7 +131,8 @@
     "noPhotos": "Chưa có ảnh nào",
     "noFriends": "Chưa có bạn bè nào",
     "findFriends": "Tìm bạn bè",
-    "user": "Người dùng"
+    "user": "Người dùng",
+    "register": "Đăng ký"
   },
 
   "ForbiddenPage": {
