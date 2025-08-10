@@ -18,8 +18,8 @@ interface Language {
 const languages: Language[] = [
   { code: "vi", name: "Tiếng Việt", flag: "🇻🇳" },
   { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "ko", name: "한국어", flag: "🇰🇷" },
-  { code: "ja", name: "日本語", flag: "🇯🇵" },
+  // { code: "ko", name: "한국어", flag: "🇰🇷" },
+  // { code: "ja", name: "日本語", flag: "🇯🇵" },
 ];
 
 export default function LanguageSwitcher() {
