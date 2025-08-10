@@ -145,6 +145,16 @@ export default function LoginContainer() {
               {t("social.facebook")}
             </Button>
           </div>
+
+          {/* Register Link */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              {t("dontHaveAccount")}{" "}
+              <Link href={`/${locale}/register`} className="text-primary hover:underline font-medium">
+                {t("signUpLink")}
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

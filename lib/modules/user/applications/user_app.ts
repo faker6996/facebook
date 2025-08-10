@@ -69,4 +69,28 @@ export const userApp = {
 
     return await userRepo.searchUsersForGroupInvite(currentUserId, query.trim(), groupId);
   },
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const user = await baseRepo.getByField<User>(User, User.columns.email, email);
+      return user;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  async createUser(userData: { name: string; email: string; password: string }): Promise<User> {
+    if (!userData.email || !userData.password || !userData.name) {
+      throw new ApiError("Name, email and password are required", 400);
+    }
+    
+    // Check if user already exists
+    const existingUser = await this.getUserByEmail(userData.email);
+    if (existingUser) {
+      throw new ApiError("User with this email already exists", 409);
+    }
+
+    const newUser = await baseRepo.insert<User>(userData);
+    return newUser;
+  },
 };

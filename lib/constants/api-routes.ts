@@ -2,6 +2,7 @@ export const API_ROUTES = {
   AUTH: {
     LOGIN: "/api/auth/login",
     LOGOUT: "/api/auth/logout",
+    REGISTER: "/api/auth/register",
     ME: "/api/auth/me",
     SSO_FACEBOOK: "/api/auth/sso_facebook",
     SSO_GOOGLE: "/api/auth/sso_google",

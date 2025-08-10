@@ -21,6 +21,37 @@
       "facebookLoginFailed": "Facebook login failed",
       "googleLoginFailed": "Google login failed",
       "loginFailed": "Login failed"
+    },
+    "dontHaveAccount": "Don't have an account?",
+    "signUpLink": "Sign up"
+  },
+
+  "RegisterPage": {
+    "heading": "Create your account",
+    "subtitle": "Join us today and get started",
+    "nameLabel": "Full name",
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm password",
+    "signUpButton": "Create account",
+    "dividerText": "Or continue with",
+    "registering": "Creating account...",
+    "registerSuccess": "Account created successfully!",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "social": {
+      "google": "Google",
+      "facebook": "Facebook",
+      "registeringGoogle": "Signing up with Google...",
+      "registeringFacebook": "Signing up with Facebook..."
+    },
+    "errors": {
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "facebookRegisterFailed": "Facebook registration failed",
+      "googleRegisterFailed": "Google registration failed",
+      "registerFailed": "Registration failed",
+      "emailAlreadyExists": "Email already exists"
     }
   },
 
@@ -115,7 +146,8 @@
     "noPhotos": "No photos yet",
     "noFriends": "No friends yet",
     "findFriends": "Find friends",
-    "user": "User"
+    "user": "User",
+    "register": "Sign up"
   },
 
   "AvatarMenu": {
